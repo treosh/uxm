@@ -20,11 +20,14 @@
   ],
   "scripts": {
     "prepublish": "babel src --out-dir dist",
-    "test": "eslint src"
+    "build": "yarn prepublish",
+    "test": "eslint src && ava test"
   },
   "devDependencies": {
+    "ava": "^0.23.0",
     "babel-cli": "^6.26.0",
     "babel-preset-env": "^1.6.1",
+    "babel-register": "^6.26.0",
     "eslint": "^4.10.0",
     "eslint-config-prettier": "^2.7.0",
     "eslint-config-standard": "^10.2.1",
@@ -33,6 +36,12 @@
     "eslint-plugin-prettier": "^2.3.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
-    "prettier": "^1.7.4"
+    "prettier": "^1.7.4",
+    "puppeteer": "^0.12.0"
+  },
+  "ava": {
+    "require": [
+      "babel-register"
+    ]
   }
 }
