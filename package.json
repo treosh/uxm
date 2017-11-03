@@ -1,0 +1,38 @@
+{
+  "name": "webperf",
+  "version": "1.0.0",
+  "description": "Key web performance metrics",
+  "repository": "https://github.com/treosh/webperf",
+  "author": "Aleksey Kulikov <alekseys.kulikov@gmail.com>",
+  "private": true,
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "Performance",
+    "Web Performance",
+    "First Paint",
+    "First Contentful Paint",
+    "Paint Timing API",
+    "Network Information API",
+    "Connection Type"
+  ],
+  "scripts": {
+    "prepublish": "babel src --out-dir dist",
+    "test": "eslint src"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "eslint": "^4.10.0",
+    "eslint-config-prettier": "^2.7.0",
+    "eslint-config-standard": "^10.2.1",
+    "eslint-plugin-import": "^2.8.0",
+    "eslint-plugin-node": "^5.2.1",
+    "eslint-plugin-prettier": "^2.3.1",
+    "eslint-plugin-promise": "^3.6.0",
+    "eslint-plugin-standard": "^3.0.1",
+    "prettier": "^1.7.4"
+  }
+}
