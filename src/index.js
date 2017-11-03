@@ -1,11 +1,46 @@
-export function metrics(opts = {}) {
+const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection
+const perf = window.performance
+
+export function metrics() {
   return {
-    connectionType: '',
+    effectiveConnectionType: effectiveConnectionType(),
     metrics: {
-      'first-paint': 0,
-      'first-contentful-paint': 0,
-      'first-interactive': 0
+      firstPaint: firstPaint(),
+      firstContentfulPaint: firstContentfulPaint(),
+      firstInteractive: firstInteractive()
     },
-    'custom-metrics': {}
+    customMetrics: customMetrics()
   }
+}
+
+// utils
+
+function effectiveConnectionType() {
+  return conn ? conn.effectiveType : ''
+}
+
+function firstPaint() {
+  if (typeof PerformancePaintTiming === 'undefined') return 0
+  const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
+  return fp ? Math.round(fp.startTime) : 0
+}
+
+function firstContentfulPaint() {
+  if (typeof PerformancePaintTiming === 'undefined') return 0
+  const fcp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-contentful-paint')
+  return fcp ? Math.round(fcp.startTime) : 0
+}
+
+function firstInteractive() {
+  if (!perf || !perf.now) return 0
+  return Math.round(perf.now())
+}
+
+function customMetrics() {
+  if (!perf || !perf.getEntriesByType) return {}
+  const entries = perf.getEntriesByType('mark').concat(perf.getEntriesByType('measure'))
+  return entries.reduce((memo, entry) => {
+    memo[entry.name] = Math.round(entry.entryType === 'mark' ? entry.startTime : entry.duration)
+    return memo
+  }, {})
 }
