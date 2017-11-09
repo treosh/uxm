@@ -1,11 +1,11 @@
-# webperf
+# uxm
 
-> Key web performance metrics
+> User Experience Metrics
 
 ## Examples
 
 ```js
-import { metrics } from 'webperf'
+import { metrics } from 'uxm'
 
 // ... load the page and all scripts
 // execute metrics in the end to collect web performance information.

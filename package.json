@@ -1,8 +1,8 @@
 {
-  "name": "webperf",
+  "name": "uxm",
   "version": "1.0.0",
   "description": "Key web performance metrics",
-  "repository": "https://github.com/treosh/webperf",
+  "repository": "https://github.com/treosh/uxm",
   "author": "Aleksey Kulikov <alekseys.kulikov@gmail.com>",
   "private": true,
   "main": "dist/index.js",
