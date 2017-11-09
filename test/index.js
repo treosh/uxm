@@ -21,8 +21,16 @@ test('treo.sh', async t => {
 
   const result = await page.evaluate(() => window.runMetrics({}))
   console.log(result)
+
   t.deepEqual(Object.keys(result), ['effectiveConnectionType', 'metrics', 'customMetrics'])
   t.is(result.effectiveConnectionType, '4g')
+  t.deepEqual(Object.keys(result.metrics), [
+    'firstPaint',
+    'firstContentfulPaint',
+    'firstInteractive',
+    'onLoad',
+    'domContentLoaded'
+  ])
   t.deepEqual(Object.keys(result.customMetrics), ['ready:home'])
 
   await browser.close()

@@ -16,9 +16,11 @@ metrics()
   "metrics": {
     "firstPaint": 3851,
     "firstContentfulPaint": 3851,
-    "firstInteractive": 7050
+    "firstInteractive": 7050,
+    "onLoad": 6940,
+    "domContentLoaded": 3840
   },
-  "custom-metrics": {
+  "customMetrics": {
     "b-pre-scripts": 3896,
     "b-stylesheets": 3762,
     "b-post-scripts": 6916

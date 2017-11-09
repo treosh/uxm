@@ -7,7 +7,9 @@ export function metrics() {
     metrics: {
       firstPaint: firstPaint(),
       firstContentfulPaint: firstContentfulPaint(),
-      firstInteractive: firstInteractive()
+      firstInteractive: firstInteractive(),
+      onLoad: onLoad(),
+      domContentLoaded: domContentLoaded()
     },
     customMetrics: customMetrics()
   }
@@ -34,6 +36,16 @@ function firstContentfulPaint() {
 function firstInteractive() {
   if (!perf || !perf.now) return 0
   return Math.round(perf.now())
+}
+
+function onLoad() {
+  if (!perf || !perf.timing) return 0
+  return perf.timing.loadEventEnd - perf.timing.fetchStart
+}
+
+function domContentLoaded() {
+  if (!perf || !perf.timing) return 0
+  return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
 function customMetrics() {

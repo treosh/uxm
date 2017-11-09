@@ -19,9 +19,8 @@
     "Connection Type"
   ],
   "scripts": {
-    "prepublish": "babel src --out-dir dist",
-    "build": "yarn prepublish",
-    "test": "eslint src && ava test"
+    "build": "babel src --out-dir dist",
+    "test": "eslint src && yarn build && ava test"
   },
   "devDependencies": {
     "ava": "^0.23.0",
