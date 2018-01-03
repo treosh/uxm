@@ -1,58 +1,87 @@
-const conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection
-const perf = window.performance
+const perf = typeof window !== 'undefined' ? window.performance : null
+const conn =
+  typeof navigator !== 'undefined'
+    ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
+    : null
+
+// public methods
 
 export function metrics() {
   return {
-    effectiveConnectionType: effectiveConnectionType(),
+    effectiveConnectionType: getEffectiveConnectionType(),
     metrics: {
-      firstPaint: firstPaint(),
-      firstContentfulPaint: firstContentfulPaint(),
-      firstInteractive: firstInteractive(),
-      onLoad: onLoad(),
-      domContentLoaded: domContentLoaded()
+      firstPaint: getFirstPaint(),
+      firstContentfulPaint: getFirstContentfulPaint(),
+      onLoad: getOnLoad(),
+      domContentLoaded: getDomContentLoaded()
     },
-    customMetrics: customMetrics()
+    now: getNow(),
+    marks: getMarks(),
+    measures: getMeasures()
+  }
+}
+
+export function mark(markName) {
+  if (perf && perf.mark) {
+    window.performance.mark(markName)
+  }
+}
+
+export function measure(measureName, startMarkName) {
+  if (perf && perf.measure) {
+    try {
+      window.performance.measure(measureName, startMarkName)
+    } catch (err) {
+      console.error(err)
+    }
   }
 }
 
 // utils
 
-function effectiveConnectionType() {
+function getEffectiveConnectionType() {
   return conn ? conn.effectiveType : ''
 }
 
-function firstPaint() {
+function getFirstPaint() {
   if (typeof PerformancePaintTiming === 'undefined') return 0
   const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
   return fp ? Math.round(fp.startTime) : 0
 }
 
-function firstContentfulPaint() {
+function getFirstContentfulPaint() {
   if (typeof PerformancePaintTiming === 'undefined') return 0
   const fcp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-contentful-paint')
   return fcp ? Math.round(fcp.startTime) : 0
 }
 
-function firstInteractive() {
-  if (!perf || !perf.now) return 0
-  return Math.round(perf.now())
-}
-
-function onLoad() {
+function getOnLoad() {
   if (!perf || !perf.timing) return 0
   return perf.timing.loadEventEnd - perf.timing.fetchStart
 }
 
-function domContentLoaded() {
+function getDomContentLoaded() {
   if (!perf || !perf.timing) return 0
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
-function customMetrics() {
+function getNow() {
+  if (!perf || !perf.now) return 0
+  return Math.round(perf.now())
+}
+
+function getMarks() {
   if (!perf || !perf.getEntriesByType) return {}
-  const entries = perf.getEntriesByType('mark').concat(perf.getEntriesByType('measure'))
-  return entries.reduce((memo, entry) => {
-    memo[entry.name] = Math.round(entry.entryType === 'mark' ? entry.startTime : entry.duration)
+  return perf.getEntriesByType('mark').reduce((memo, entry) => {
+    memo[entry.name] = Math.round(entry.startTime)
+    return memo
+  }, {})
+}
+
+function getMeasures() {
+  if (!perf || !perf.getEntriesByType) return {}
+  return perf.getEntriesByType('measure').reduce((memo, entry) => {
+    memo[entry.name] = Math.round(entry.duration)
     return memo
   }, {})
 }

@@ -2,7 +2,7 @@
 
 > User Experience Metrics
 
-## Examples
+## Example
 
 ```js
 import { metrics } from 'uxm'
@@ -14,16 +14,17 @@ metrics()
 {
   "effectiveConnectionType": "4g",
   "metrics": {
-    "firstPaint": 3851,
-    "firstContentfulPaint": 3851,
-    "firstInteractive": 7050,
-    "onLoad": 6940,
-    "domContentLoaded": 3840
+    "firstPaint": 1592,
+    "firstContentfulPaint": 1592,
+    "onLoad": 2076,
+    "domContentLoaded": 1482
   },
-  "customMetrics": {
-    "b-pre-scripts": 3896,
-    "b-stylesheets": 3762,
-    "b-post-scripts": 6916
+  "now": 2736,
+  "marks": {},
+  "measures": {
+    "b-stylesheets": 1057,
+    "b-pre-scripts": 1870,
+    "b-post-scripts": 2089
   }
 }
 ```

@@ -16,22 +16,17 @@ const browserSrc = `
 test('treo.sh', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.goto('https://treo.sh')
+  await page.goto('https://booking.com')
   await page.addScriptTag({ content: browserSrc })
 
   const result = await page.evaluate(() => window.runMetrics({}))
-  console.log(result)
+  console.log(JSON.stringify(result, null, '  '))
 
-  t.deepEqual(Object.keys(result), ['effectiveConnectionType', 'metrics', 'customMetrics'])
+  t.deepEqual(Object.keys(result), ['effectiveConnectionType', 'metrics', 'now', 'marks', 'measures'])
   t.is(result.effectiveConnectionType, '4g')
-  t.deepEqual(Object.keys(result.metrics), [
-    'firstPaint',
-    'firstContentfulPaint',
-    'firstInteractive',
-    'onLoad',
-    'domContentLoaded'
-  ])
-  t.deepEqual(Object.keys(result.customMetrics), ['ready:home'])
+  t.deepEqual(Object.keys(result.metrics), ['firstPaint', 'firstContentfulPaint', 'onLoad', 'domContentLoaded'])
+  t.deepEqual(result.marks, {})
+  t.deepEqual(Object.keys(result.measures), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])
 
   await browser.close()
 })
