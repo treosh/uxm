@@ -1,13 +1,10 @@
 const perf = typeof window !== 'undefined' ? window.performance : null
-const conn =
-  typeof navigator !== 'undefined'
-    ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
-    : null
 
 // public methods
 
 export function metrics() {
   return {
+    deviceMemory: getDeviceMemory(),
     effectiveConnectionType: getEffectiveConnectionType(),
     metrics: {
       firstPaint: getFirstPaint(),
@@ -15,7 +12,6 @@ export function metrics() {
       onLoad: getOnLoad(),
       domContentLoaded: getDomContentLoaded()
     },
-    now: getNow(),
     marks: getMarks(),
     measures: getMeasures()
   }
@@ -39,39 +35,43 @@ export function measure(measureName, startMarkName) {
 
 // utils
 
+function getDeviceMemory() {
+  const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
+  return memory ? (memory < 1 ? 'lite' : 'full') : null
+}
+
 function getEffectiveConnectionType() {
-  return conn ? conn.effectiveType : ''
+  const conn =
+    typeof navigator !== 'undefined'
+      ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
+      : null
+  return conn ? conn.effectiveType : null
 }
 
 function getFirstPaint() {
-  if (typeof PerformancePaintTiming === 'undefined') return 0
+  if (typeof PerformancePaintTiming === 'undefined') return null
   const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
-  return fp ? Math.round(fp.startTime) : 0
+  return fp ? Math.round(fp.startTime) : null
 }
 
 function getFirstContentfulPaint() {
-  if (typeof PerformancePaintTiming === 'undefined') return 0
+  if (typeof PerformancePaintTiming === 'undefined') return null
   const fcp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-contentful-paint')
-  return fcp ? Math.round(fcp.startTime) : 0
+  return fcp ? Math.round(fcp.startTime) : null
 }
 
 function getOnLoad() {
-  if (!perf || !perf.timing) return 0
+  if (!perf || !perf.timing) return null
   return perf.timing.loadEventEnd - perf.timing.fetchStart
 }
 
 function getDomContentLoaded() {
-  if (!perf || !perf.timing) return 0
+  if (!perf || !perf.timing) return null
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
-function getNow() {
-  if (!perf || !perf.now) return 0
-  return Math.round(perf.now())
-}
-
 function getMarks() {
-  if (!perf || !perf.getEntriesByType) return {}
+  if (!perf || !perf.getEntriesByType) return null
   return perf.getEntriesByType('mark').reduce((memo, entry) => {
     memo[entry.name] = Math.round(entry.startTime)
     return memo
@@ -79,7 +79,7 @@ function getMarks() {
 }
 
 function getMeasures() {
-  if (!perf || !perf.getEntriesByType) return {}
+  if (!perf || !perf.getEntriesByType) return null
   return perf.getEntriesByType('measure').reduce((memo, entry) => {
     memo[entry.name] = Math.round(entry.duration)
     return memo
