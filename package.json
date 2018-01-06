@@ -5,28 +5,32 @@
   "repository": "https://github.com/treosh/uxm",
   "author": "Aleksey Kulikov <alekseys.kulikov@gmail.com>",
   "private": true,
-  "main": "dist/index.js",
+  "source": "src/index.js",
+  "module": "dist/uxm.es.js",
+  "main": "dist/uxm.js",
+  "umd:main": "dist/uxm.umd.js",
   "files": [
     "dist"
   ],
   "keywords": [
     "Performance",
     "Web Performance",
+    "Perceived Performance",
     "First Paint",
     "First Contentful Paint",
     "Paint Timing API",
     "Network Information API",
-    "Connection Type"
+    "Chrome User Experience Report",
+    "Connection Type",
+    "PerformancePaintTiming",
+    "deviceMemory"
   ],
   "scripts": {
-    "build": "babel src --out-dir dist",
+    "build": "microbundle",
     "test": "eslint src && yarn build && ava test"
   },
   "devDependencies": {
     "ava": "^0.23.0",
-    "babel-cli": "^6.26.0",
-    "babel-preset-env": "^1.6.1",
-    "babel-register": "^6.26.0",
     "eslint": "^4.10.0",
     "eslint-config-prettier": "^2.7.0",
     "eslint-config-standard": "^10.2.1",
@@ -35,12 +39,8 @@
     "eslint-plugin-prettier": "^2.3.1",
     "eslint-plugin-promise": "^3.6.0",
     "eslint-plugin-standard": "^3.0.1",
+    "microbundle": "^0.2.4",
     "prettier": "^1.7.4",
     "puppeteer": "^0.12.0"
-  },
-  "ava": {
-    "require": [
-      "babel-register"
-    ]
   }
 }

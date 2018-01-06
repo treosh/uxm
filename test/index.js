@@ -5,11 +5,11 @@ import { join } from 'path'
 
 // read compiled src and wrap to browser compatible version
 
-const src = readFile(join(__dirname, '../dist/index.js'), 'utf8')
+const src = readFile(join(__dirname, '../dist/uxm.js'), 'utf8')
 const browserSrc = `
   window.runMetrics=function(exports){
     ${src};
-    return metrics()
+    return exports.metrics()
   }
 `
 
