@@ -22,8 +22,8 @@ test('treo.sh', async t => {
   const result = await page.evaluate(() => window.runMetrics({}))
   console.log(JSON.stringify(result, null, '  '))
 
-  t.deepEqual(Object.keys(result), ['deviceMemory', 'effectiveConnectionType', 'metrics', 'marks', 'measures'])
-  t.is(result.effectiveConnectionType, '4g')
+  t.deepEqual(Object.keys(result), ['device', 'metrics', 'marks', 'measures'])
+  t.deepEqual(result.device, { type: 'desktop', memory: 'full', effectiveConnectionType: '4g' })
   t.deepEqual(Object.keys(result.metrics), ['firstPaint', 'firstContentfulPaint', 'onLoad', 'domContentLoaded'])
   t.deepEqual(result.marks, {})
   t.deepEqual(Object.keys(result.measures), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])

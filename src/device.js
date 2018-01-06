@@ -1,7 +1,7 @@
 // based on https://github.com/matthewhudson/current-device/blob/master/src/index.js
 // returns “phone”, “tablet”, or “desktop”
 
-export function getDevice() {
+export function getDeviceType() {
   const ua = window.navigator.userAgent.toLowerCase()
   const find = str => ua.indexOf(str) !== -1
 

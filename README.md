@@ -12,19 +12,22 @@ import { metrics } from 'uxm'
 metrics()
 
 {
-  "deviceMemory": "full",
-  "effectiveConnectionType": "4g",
+  "device": {
+    "type": "desktop",
+    "memory": "full",
+    "effectiveConnectionType": "4g"
+  },
   "metrics": {
-    "firstPaint": 1342,
-    "firstContentfulPaint": 1342,
-    "onLoad": 5922,
-    "domContentLoaded": 1332
+    "firstPaint": 1502,
+    "firstContentfulPaint": 1502,
+    "onLoad": 2105,
+    "domContentLoaded": 1516
   },
   "marks": {},
   "measures": {
-    "b-stylesheets": 1121,
-    "b-pre-scripts": 1573,
-    "b-post-scripts": 1850
+    "b-stylesheets": 1005,
+    "b-pre-scripts": 1767,
+    "b-post-scripts": 2011
   }
 }
 ```
