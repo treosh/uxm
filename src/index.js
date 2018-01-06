@@ -3,6 +3,7 @@ const perf = typeof window !== 'undefined' ? window.performance : null
 
 // public methods
 
+export { getDeviceType }
 export function metrics() {
   return {
     device: {

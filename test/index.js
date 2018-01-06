@@ -13,7 +13,7 @@ const browserSrc = `
   }
 `
 
-test('treo.sh', async t => {
+test('booking.com', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.goto('https://booking.com')
