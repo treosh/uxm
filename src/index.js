@@ -1,9 +1,11 @@
+import { getDevice } from './device'
 const perf = typeof window !== 'undefined' ? window.performance : null
 
 // public methods
 
 export function metrics() {
   return {
+    deviceType: getDevice(),
     deviceMemory: getDeviceMemory(),
     effectiveConnectionType: getEffectiveConnectionType(),
     metrics: {
