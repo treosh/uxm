@@ -1,6 +1,6 @@
 # uxm
 
-> User Experience Metrics
+> UXM (User Experience Metrics) - the key web performance metrics.
 
 ## Example
 
