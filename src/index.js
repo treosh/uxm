@@ -1,9 +1,9 @@
 import { getDeviceType } from './device'
 const perf = typeof window !== 'undefined' ? window.performance : null
 
-// public methods
+// all metrics
 
-export function metrics() {
+export function uxm() {
   return {
     deviceType: getDeviceType(),
     deviceMemory: getDeviceMemory(),
@@ -19,23 +19,28 @@ export function metrics() {
   }
 }
 
+// custom metrics helpers
+
 export function mark(markName) {
   if (perf && perf.mark) {
-    window.performance.mark(markName)
+    perf.mark(markName)
   }
 }
 
 export function measure(measureName, startMarkName) {
   if (perf && perf.measure) {
     try {
-      window.performance.measure(measureName, startMarkName)
+      perf.measure(measureName, startMarkName)
     } catch (err) {
       console.error(err)
     }
   }
 }
 
+// get specific metric
+
 export { getDeviceType }
+export * from './experimental'
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
   return memory || null
@@ -85,25 +90,4 @@ export function getMeasures() {
     memo[measure.name] = Math.round(measure.duration)
     return memo
   }, {})
-}
-
-export function getResources() {
-  if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
-  const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
-  return [documentEntry].concat(
-    perf.getEntriesByType('resource').map(resource => ({
-      type: resource.initiatorType,
-      size: resource.transferSize,
-      startTime: Math.round(resource.startTime),
-      duration: Math.round(resource.duration)
-    }))
-  )
-}
-
-export function getLongTasks() {
-  if (typeof window.__lt === 'undefined') return null
-  return window.__lt.e.map(longTask => ({
-    startTime: Math.round(longTask.startTime),
-    duration: Math.round(longTask.duration)
-  }))
 }

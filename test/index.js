@@ -27,21 +27,22 @@ test('booking.com', async t => {
   await page.evaluateOnNewDocument(setupUxm)
   await page.goto(url)
 
-  const result = await page.evaluate(() => window.uxm.metrics())
+  const result = await page.evaluate(() => window.uxm.uxm())
   t.deepEqual(Object.keys(result), ['deviceType', 'deviceMemory', 'connection', 'metrics', 'marks', 'measures'])
   t.deepEqual(Object.keys(result.metrics), ['firstPaint', 'firstContentfulPaint', 'onLoad', 'domContentLoaded'])
   t.deepEqual(result.marks, {})
   t.deepEqual(Object.keys(result.measures), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])
 
-  const longTasks = await page.evaluate(() => window.uxm.getLongTasks())
-  const resources = await page.evaluate(() => window.uxm.getResources())
+  // experimental
 
-  t.true(resources.length > 0)
+  const longTasks = await page.evaluate(() => window.uxm.getLongTasks())
+  const fi = await page.evaluate(() => window.uxm.getFirstInteractive())
+
   t.true(longTasks.length > 0)
+  t.true(fi > 0)
 
   console.log(JSON.stringify(result, null, '  '))
-  console.log(JSON.stringify(longTasks, null, '  '))
-  console.log(JSON.stringify(resources, null, '  '))
+  console.log(JSON.stringify({ fi, longTasks }, null, '  '))
 
   await browser.close()
 })
