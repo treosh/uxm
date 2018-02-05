@@ -5,11 +5,9 @@ const perf = typeof window !== 'undefined' ? window.performance : null
 
 export function metrics() {
   return {
-    device: {
-      type: getDeviceType(),
-      memory: getDeviceMemory(),
-      effectiveConnectionType: getEffectiveConnectionType()
-    },
+    device: getDeviceType(),
+    memory: getDeviceMemory(),
+    connection: getConnection(),
     metrics: {
       firstPaint: getFirstPaint(),
       firstContentfulPaint: getFirstContentfulPaint(),
@@ -39,51 +37,51 @@ export function measure(measureName, startMarkName) {
 
 // utils
 
-function getDeviceMemory() {
+export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
-  return memory ? (memory < 1 ? 'lite' : 'full') : null
+  return memory || null
 }
 
-function getEffectiveConnectionType() {
+export function getConnection() {
   const conn =
     typeof navigator !== 'undefined'
       ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
       : null
-  return conn ? conn.effectiveType : null
+  return conn ? { rtt: conn.rtt, downlink: conn.downlink, effectiveType: conn.effectiveType } : null
 }
 
-function getFirstPaint() {
+export function getFirstPaint() {
   if (typeof PerformancePaintTiming === 'undefined') return null
   const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
   return fp ? Math.round(fp.startTime) : null
 }
 
-function getFirstContentfulPaint() {
+export function getFirstContentfulPaint() {
   if (typeof PerformancePaintTiming === 'undefined') return null
   const fcp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-contentful-paint')
   return fcp ? Math.round(fcp.startTime) : null
 }
 
-function getOnLoad() {
+export function getOnLoad() {
   if (!perf || !perf.timing) return null
   return perf.timing.loadEventEnd - perf.timing.fetchStart
 }
 
-function getDomContentLoaded() {
+export function getDomContentLoaded() {
   if (!perf || !perf.timing) return null
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
-function getMarks() {
-  if (!perf || !perf.getEntriesByType) return null
+export function getMarks() {
+  if (typeof PerformanceMark === 'undefined') return null
   return perf.getEntriesByType('mark').reduce((memo, entry) => {
     memo[entry.name] = Math.round(entry.startTime)
     return memo
   }, {})
 }
 
-function getMeasures() {
-  if (!perf || !perf.getEntriesByType) return null
+export function getMeasures() {
+  if (typeof PerformanceMeasure === 'undefined') return null
   return perf.getEntriesByType('measure').reduce((memo, entry) => {
     memo[entry.name] = Math.round(entry.duration)
     return memo
