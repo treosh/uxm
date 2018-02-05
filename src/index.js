@@ -72,7 +72,7 @@ export function getDomContentLoaded() {
 }
 
 export function getMarks() {
-  if (typeof PerformanceMark === 'undefined') return null
+  if (!perf || typeof PerformanceMark === 'undefined') return null
   return perf.getEntriesByType('mark').reduce((memo, mark) => {
     memo[mark.name] = Math.round(mark.startTime)
     return memo
@@ -80,7 +80,7 @@ export function getMarks() {
 }
 
 export function getMeasures() {
-  if (typeof PerformanceMeasure === 'undefined') return null
+  if (!perf || typeof PerformanceMeasure === 'undefined') return null
   return perf.getEntriesByType('measure').reduce((memo, measure) => {
     memo[measure.name] = Math.round(measure.duration)
     return memo
@@ -88,14 +88,22 @@ export function getMeasures() {
 }
 
 export function getResources() {
-  if (typeof PerformanceResourceTiming === 'undefined') return null
-  return perf.getEntriesByType('resource').reduce((memo, resource) => {
-    memo.push({
+  if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
+  const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
+  return [documentEntry].concat(
+    perf.getEntriesByType('resource').map(resource => ({
       type: resource.initiatorType,
       size: resource.transferSize,
       startTime: Math.round(resource.startTime),
       duration: Math.round(resource.duration)
-    })
-    return memo
-  }, [])
+    }))
+  )
+}
+
+export function getLongTasks() {
+  if (typeof window.__lt === 'undefined') return null
+  return window.__lt.e.map(longTask => ({
+    startTime: Math.round(longTask.startTime),
+    duration: Math.round(longTask.duration)
+  }))
 }
