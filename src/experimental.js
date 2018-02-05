@@ -85,9 +85,7 @@ function getTaskClustersInWindow(tasks, startIndex, windowEnd) {
   const clusteringWindowEnd = windowEnd + MIN_TASK_CLUSTER_PADDING
   const isInClusteringWindow = task => task.startTime < clusteringWindowEnd
   for (let i = startIndex; i < tasks.length; i++) {
-    if (!isInClusteringWindow(tasks[i])) {
-      break
-    }
+    if (!isInClusteringWindow(tasks[i])) break
 
     const task = tasks[i]
 
@@ -113,4 +111,125 @@ function getTaskClustersInWindow(tasks, startIndex, windowEnd) {
       // filter out clusters that started after the window because of our clusteringWindowEnd
       .filter(cluster => cluster.startTime < windowEnd)
   )
+}
+
+// Based on:
+// https://github.com/GoogleChrome/lighthouse/blob/master/lighthouse-core/audits/consistently-interactive.js
+
+const REQUIRED_QUIET_WINDOW = 5000
+const ALLOWED_CONCURRENT_REQUESTS = 2
+
+export function getConsistentlyInteractive() {
+  const fcp = getFirstContentfulPaint()
+  const dcl = getDomContentLoaded()
+  const longTasks = getLongTasks()
+  const resources = getResources()
+  if (!fcp || !dcl || !longTasks || !resources) return null
+
+  const ci = findOverlappingQuietPeriods(fcp, longTasks, resources)
+  return Math.max(ci.cpuQuietPeriod.start, fcp, dcl)
+}
+
+function findOverlappingQuietPeriods(fcp, longTasks, resources) {
+  const endTime = Infinity
+  const isLongEnoughQuietPeriod = period =>
+    period.end > fcp + REQUIRED_QUIET_WINDOW && period.end - period.start >= REQUIRED_QUIET_WINDOW
+
+  const networkQuietPeriods = findNetworkQuietPeriods(resources, endTime).filter(isLongEnoughQuietPeriod)
+  const cpuQuietPeriods = findCPUQuietPeriods(longTasks, endTime).filter(isLongEnoughQuietPeriod)
+
+  const cpuQueue = cpuQuietPeriods.slice()
+  const networkQueue = networkQuietPeriods.slice()
+
+  // We will check for a CPU quiet period contained within a Network quiet period or vice-versa
+  let cpuCandidate = cpuQueue.shift()
+  let networkCandidate = networkQueue.shift()
+  while (cpuCandidate && networkCandidate) {
+    if (cpuCandidate.start >= networkCandidate.start) {
+      // CPU starts later than network, window must be contained by network or we check the next
+      if (networkCandidate.end >= cpuCandidate.start + REQUIRED_QUIET_WINDOW) {
+        return {
+          cpuQuietPeriod: cpuCandidate,
+          networkQuietPeriod: networkCandidate,
+          cpuQuietPeriods,
+          networkQuietPeriods
+        }
+      } else {
+        networkCandidate = networkQueue.shift()
+      }
+    } else {
+      // Network starts later than CPU, window must be contained by CPU or we check the next
+      if (cpuCandidate.end >= networkCandidate.start + REQUIRED_QUIET_WINDOW) {
+        return {
+          cpuQuietPeriod: cpuCandidate,
+          networkQuietPeriod: networkCandidate,
+          cpuQuietPeriods,
+          networkQuietPeriods
+        }
+      } else {
+        cpuCandidate = cpuQueue.shift()
+      }
+    }
+  }
+
+  return null
+}
+
+function findNetworkQuietPeriods(resources, endTime) {
+  const timeBoundaries = resources.reduce((memo, record) => {
+    memo.push({ time: record.startTime * 1000, isStart: true })
+    memo.push({ time: record.startTime + record.duration, isStart: false })
+    return memo
+  }, [])
+
+  let numInflightRequests = 0
+  let quietPeriodStart = 0
+  const quietPeriods = []
+
+  timeBoundaries.forEach(boundary => {
+    if (boundary.isStart) {
+      // we've just started a new request. are we exiting a quiet period?
+      if (numInflightRequests === ALLOWED_CONCURRENT_REQUESTS) {
+        quietPeriods.push({ start: quietPeriodStart, end: boundary.time })
+      }
+      numInflightRequests++
+    } else {
+      numInflightRequests--
+      // we've just completed a request. are we entering a quiet period?
+      if (numInflightRequests === ALLOWED_CONCURRENT_REQUESTS) {
+        quietPeriodStart = boundary.time
+      }
+    }
+  })
+
+  // Check we ended in a quiet period
+  if (numInflightRequests <= ALLOWED_CONCURRENT_REQUESTS) {
+    quietPeriods.push({ start: quietPeriodStart, end: endTime })
+  }
+
+  return quietPeriods
+}
+
+function findCPUQuietPeriods(longTasks, endTime) {
+  if (longTasks.length === 0) {
+    return [{ start: 0, end: endTime }]
+  }
+
+  const quietPeriods = []
+  longTasks.forEach((task, index) => {
+    if (index === 0) {
+      quietPeriods.push({ start: 0, end: task.start })
+    }
+
+    if (index === longTasks.length - 1) {
+      quietPeriods.push({ start: task.startTime + task.duration, end: endTime })
+    } else {
+      quietPeriods.push({
+        start: task.startTime + task.duration,
+        end: longTasks[index + 1].startTime
+      })
+    }
+  })
+
+  return quietPeriods
 }

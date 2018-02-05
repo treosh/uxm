@@ -35,14 +35,18 @@ test('booking.com', async t => {
 
   // experimental
 
-  const longTasks = await page.evaluate(() => window.uxm.getLongTasks())
-  const fi = await page.evaluate(() => window.uxm.getFirstInteractive())
+  const [longTasks, fi, ci] = await page.evaluate(() => [
+    window.uxm.getLongTasks(),
+    window.uxm.getFirstInteractive(),
+    window.uxm.getConsistentlyInteractive()
+  ])
 
   t.true(longTasks.length > 0)
   t.true(fi > 0)
+  t.true(ci > 0)
 
   console.log(JSON.stringify(result, null, '  '))
-  console.log(JSON.stringify({ fi, longTasks }, null, '  '))
+  console.log(JSON.stringify({ fi, ci, longTasks }, null, '  '))
 
   await browser.close()
 })
