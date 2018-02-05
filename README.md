@@ -12,8 +12,8 @@ import { metrics } from 'uxm'
 metrics()
 
 {
-  "device": "desktop",
-  "memory": 8,
+  "deviceType": "desktop",
+  "deviceMemory": 8,
   "connection": {
     "rtt": 0,
     "downlink": 10,

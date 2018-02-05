@@ -22,8 +22,7 @@ test('booking.com', async t => {
   const result = await page.evaluate(() => window.runMetrics({}))
   console.log(JSON.stringify(result, null, '  '))
 
-  t.deepEqual(Object.keys(result), ['device', 'memory', 'connection', 'metrics', 'marks', 'measures'])
-  t.equal(result.device, 'desktop')
+  t.deepEqual(Object.keys(result), ['deviceType', 'deviceMemory', 'connection', 'metrics', 'marks', 'measures'])
   t.deepEqual(Object.keys(result.metrics), ['firstPaint', 'firstContentfulPaint', 'onLoad', 'domContentLoaded'])
   t.deepEqual(result.marks, {})
   t.deepEqual(Object.keys(result.measures), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])

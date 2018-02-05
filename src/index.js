@@ -5,8 +5,8 @@ const perf = typeof window !== 'undefined' ? window.performance : null
 
 export function metrics() {
   return {
-    device: getDeviceType(),
-    memory: getDeviceMemory(),
+    deviceType: getDeviceType(),
+    deviceMemory: getDeviceMemory(),
     connection: getConnection(),
     metrics: {
       firstPaint: getFirstPaint(),
@@ -35,8 +35,7 @@ export function measure(measureName, startMarkName) {
   }
 }
 
-// utils
-
+export { getDeviceType }
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
   return memory || null
@@ -74,16 +73,29 @@ export function getDomContentLoaded() {
 
 export function getMarks() {
   if (typeof PerformanceMark === 'undefined') return null
-  return perf.getEntriesByType('mark').reduce((memo, entry) => {
-    memo[entry.name] = Math.round(entry.startTime)
+  return perf.getEntriesByType('mark').reduce((memo, mark) => {
+    memo[mark.name] = Math.round(mark.startTime)
     return memo
   }, {})
 }
 
 export function getMeasures() {
   if (typeof PerformanceMeasure === 'undefined') return null
-  return perf.getEntriesByType('measure').reduce((memo, entry) => {
-    memo[entry.name] = Math.round(entry.duration)
+  return perf.getEntriesByType('measure').reduce((memo, measure) => {
+    memo[measure.name] = Math.round(measure.duration)
     return memo
   }, {})
+}
+
+export function getResources() {
+  if (typeof PerformanceResourceTiming === 'undefined') return null
+  return perf.getEntriesByType('resource').reduce((memo, resource) => {
+    memo.push({
+      type: resource.initiatorType,
+      size: resource.transferSize,
+      startTime: Math.round(resource.startTime),
+      duration: Math.round(resource.duration)
+    })
+    return memo
+  }, [])
 }
