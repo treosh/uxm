@@ -5,6 +5,7 @@ import { getFirstInteractive, getConsistentlyInteractive } from '../src'
 
 lighthouseResults.forEach(result => {
   const { index, firstContentfulPaint: fcp, domContentLoaded: dcl, longTasks } = result
+  // if (index !== 60) return // debug one test
   test(`${index}: fcp: ${fcp}ms, dcl: ${dcl}ms, longTasks: [${longTasks.map(t => values(t)).join(',')}]`, t => {
     const fi = getFirstInteractive(result)
     const ci = getConsistentlyInteractive(result)

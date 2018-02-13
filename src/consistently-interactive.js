@@ -1,4 +1,4 @@
-// find a last long task
+// naive implementation: find a last long task
 
 export function getConsistentlyInteractive({ firstContentfulPaint: fmp, domContentLoaded: dcl, longTasks }) {
   const lastLongTask = longTasks[longTasks.length - 1]
