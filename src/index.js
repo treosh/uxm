@@ -1,22 +1,30 @@
 import { getDeviceType } from './device'
+import { getFirstInteractive } from './first-interactive'
+import { getConsistentlyInteractive } from './consistently-interactive'
 const perf = typeof window !== 'undefined' ? window.performance : null
 
-// all metrics
+// expose extra API
+
+export { getDeviceType, getFirstInteractive, getConsistentlyInteractive }
+
+// get all metrics
 
 export function uxm() {
-  return {
+  const result = {
     deviceType: getDeviceType(),
     deviceMemory: getDeviceMemory(),
     connection: getConnection(),
-    metrics: {
-      firstPaint: getFirstPaint(),
-      firstContentfulPaint: getFirstContentfulPaint(),
-      onLoad: getOnLoad(),
-      domContentLoaded: getDomContentLoaded()
-    },
+    firstPaint: getFirstPaint(),
+    firstContentfulPaint: getFirstContentfulPaint(),
+    onLoad: getOnLoad(),
+    domContentLoaded: getDomContentLoaded(),
     marks: getMarks(),
-    measures: getMeasures()
+    measures: getMeasures(),
+    longTasks: getLongTasks()
   }
+  result.firstInteractive = getFirstInteractive(result)
+  result.consistentlyInteractive = getConsistentlyInteractive(result)
+  return result
 }
 
 // custom metrics helpers
@@ -37,10 +45,8 @@ export function measure(measureName, startMarkName) {
   }
 }
 
-// get specific metric
+// metric utils
 
-export { getDeviceType }
-export * from './first-interactive'
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
   return memory || null
