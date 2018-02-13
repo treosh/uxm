@@ -59,11 +59,9 @@ function findQuietWindow(fmp, traceEnd, longTasks) {
   return null
 }
 
-function getRequiredWindowSizeInMs(t) {
-  const tInSeconds = t / 1000
-  const exponentiationComponent = Math.exp(EXPONENTIATION_COEFFICIENT * tInSeconds)
-  return (4 * exponentiationComponent + 1) * 1000
-}
+// Clusters tasks after startIndex that are in the specified window if they are within
+// MIN_TASK_CLUSTER_PADDING ms of each other. Can return tasks that start outside of the window,
+// but all clusters are guaranteed to have started before windowEnd.
 
 function getTaskClustersInWindow(tasks, startIndex, windowEnd) {
   const clusters = []
@@ -106,4 +104,10 @@ function getTaskClustersInWindow(tasks, startIndex, windowEnd) {
       // filter out clusters that started after the window because of our clusteringWindowEnd
       .filter(cluster => cluster.start < windowEnd)
   )
+}
+
+function getRequiredWindowSizeInMs(t) {
+  const tInSeconds = t / 1000
+  const exponentiationComponent = Math.exp(EXPONENTIATION_COEFFICIENT * tInSeconds)
+  return (4 * exponentiationComponent + 1) * 1000
 }
