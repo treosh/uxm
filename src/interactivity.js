@@ -1,29 +1,3 @@
-import { getFirstContentfulPaint, getDomContentLoaded } from './index'
-const perf = typeof window !== 'undefined' ? window.performance : null
-
-// experimental
-
-export function getResources() {
-  if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
-  const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
-  return [documentEntry].concat(
-    perf.getEntriesByType('resource').map(resource => ({
-      type: resource.initiatorType,
-      size: resource.transferSize,
-      startTime: Math.round(resource.startTime),
-      duration: Math.round(resource.duration)
-    }))
-  )
-}
-
-export function getLongTasks() {
-  if (typeof window.__lt === 'undefined') return null
-  return window.__lt.e.map(longTask => ({
-    startTime: Math.round(longTask.startTime),
-    duration: Math.round(longTask.duration)
-  }))
-}
-
 // based on
 // https://github.com/GoogleChrome/lighthouse/blob/master/lighthouse-core/gather/computed/first-interactive.js
 
@@ -33,10 +7,7 @@ const MIN_TASK_CLUSTER_PADDING = 1000
 const MIN_TASK_CLUSTER_FMP_DISTANCE = 5000
 const EXPONENTIATION_COEFFICIENT = -Math.log(3 - 1) / 15
 
-export function getFirstInteractive() {
-  const fcp = getFirstContentfulPaint()
-  const dcl = getDomContentLoaded()
-  const longTasks = getLongTasks()
+export function getFirstInteractive({ firstContentfulPaint: fcp, domContentLoaded: dcl, longTasks }) {
   if (!fcp || !dcl || !longTasks) return null
   return Math.max(findQuietWindow(fcp, longTasks), dcl)
 }
@@ -119,11 +90,8 @@ function getTaskClustersInWindow(tasks, startIndex, windowEnd) {
 const REQUIRED_QUIET_WINDOW = 5000
 const ALLOWED_CONCURRENT_REQUESTS = 2
 
-export function getConsistentlyInteractive() {
-  const fcp = getFirstContentfulPaint()
-  const dcl = getDomContentLoaded()
-  const longTasks = getLongTasks()
-  const resources = getResources()
+export function getConsistentlyInteractive({ firstContentfulPaint: fcp, domContentLoaded: dcl, longTasks }) {
+  const resources = []
   if (!fcp || !dcl || !longTasks || !resources) return null
 
   const ci = findOverlappingQuietPeriods(fcp, longTasks, resources)

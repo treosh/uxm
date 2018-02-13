@@ -1,6 +1,6 @@
 import test from 'ava'
 import userAgents from './fixtures/user-agents.json'
-import { getDeviceType } from '../src/device'
+import { getDeviceType } from '../src'
 
 const uaIgnore = [
   'Mozilla/5.0 (Linux; U; Android-4.0.3; en-us; Xoom Build/IML77) AppleWebKit/535.7 (KHTML, like Gecko) CrMo/16.0.912.75 Safari/535.7',

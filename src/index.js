@@ -40,7 +40,7 @@ export function measure(measureName, startMarkName) {
 // get specific metric
 
 export { getDeviceType }
-export * from './experimental'
+export * from './interactivity'
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
   return memory || null
@@ -90,4 +90,25 @@ export function getMeasures() {
     memo[measure.name] = Math.round(measure.duration)
     return memo
   }, {})
+}
+
+export function getResources() {
+  if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
+  const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
+  return [documentEntry].concat(
+    perf.getEntriesByType('resource').map(resource => ({
+      type: resource.initiatorType,
+      size: resource.transferSize,
+      startTime: Math.round(resource.startTime),
+      duration: Math.round(resource.duration)
+    }))
+  )
+}
+
+export function getLongTasks() {
+  if (typeof window.__lt === 'undefined') return null
+  return window.__lt.e.map(longTask => ({
+    startTime: Math.round(longTask.startTime),
+    duration: Math.round(longTask.duration)
+  }))
 }
