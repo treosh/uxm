@@ -40,7 +40,7 @@ export function measure(measureName, startMarkName) {
 // get specific metric
 
 export { getDeviceType }
-export * from './interactivity'
+export * from './first-interactive'
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
   return memory || null
