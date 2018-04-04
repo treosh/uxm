@@ -1,11 +1,5 @@
 import { getDeviceType } from './device'
-import { getFirstInteractive } from './first-interactive'
-import { getConsistentlyInteractive } from './consistently-interactive'
 const perf = typeof window !== 'undefined' ? window.performance : null
-
-// expose extra API
-
-export { getDeviceType, getFirstInteractive, getConsistentlyInteractive }
 
 // get all metrics
 
@@ -18,16 +12,16 @@ export function uxm() {
     firstContentfulPaint: getFirstContentfulPaint(),
     onLoad: getOnLoad(),
     domContentLoaded: getDomContentLoaded(),
-    marks: getMarks(),
-    measures: getMeasures(),
-    longTasks: getLongTasks()
+    userTiming: getUserTiming()
   }
-  result.firstInteractive = getFirstInteractive(result)
-  result.consistentlyInteractive = getConsistentlyInteractive(result)
   return result
 }
 
-// custom metrics helpers
+// expose extra API
+
+export { getDeviceType }
+
+// user timing helpers
 
 export function mark(markName) {
   if (perf && perf.mark) {
@@ -82,39 +76,27 @@ export function getDomContentLoaded() {
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
-export function getMarks() {
+export function getUserTiming() {
   if (!perf || typeof PerformanceMark === 'undefined') return null
-  return perf.getEntriesByType('mark').reduce((memo, mark) => {
-    memo[mark.name] = Math.round(mark.startTime)
-    return memo
-  }, {})
-}
-
-export function getMeasures() {
-  if (!perf || typeof PerformanceMeasure === 'undefined') return null
-  return perf.getEntriesByType('measure').reduce((memo, measure) => {
-    memo[measure.name] = Math.round(measure.duration)
-    return memo
-  }, {})
+  const marks = perf.getEntriesByType('mark').map(mark => {
+    return { type: 'mark', name: mark.name, startTime: mark.startTime }
+  })
+  const measures = perf.getEntriesByType('measure').reduce(measure => {
+    return { type: 'mark', name: measure.name, startTime: measure.startTime, duration: measure.duration }
+  })
+  return marks.concat(measures)
 }
 
 export function getResources() {
   if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
   const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
-  return [documentEntry].concat(
-    perf.getEntriesByType('resource').map(resource => ({
+  const resources = perf.getEntriesByType('resource').map(resource => {
+    return {
       type: resource.initiatorType,
       size: resource.transferSize,
       startTime: Math.round(resource.startTime),
       duration: Math.round(resource.duration)
-    }))
-  )
-}
-
-export function getLongTasks() {
-  if (typeof window.__lt === 'undefined') return null
-  return window.__lt.e.map(longTask => ({
-    startTime: Math.round(longTask.startTime),
-    duration: Math.round(longTask.duration)
-  }))
+    }
+  })
+  return [documentEntry].concat(resources)
 }

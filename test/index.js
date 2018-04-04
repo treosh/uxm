@@ -38,13 +38,8 @@ test('booking.com', async t => {
     'firstContentfulPaint',
     'onLoad',
     'domContentLoaded',
-    'marks',
-    'measures',
-    'longTasks',
-    'firstInteractive',
-    'consistentlyInteractive'
+    'userTiming'
   ])
-  t.deepEqual(result.marks, {})
-  t.deepEqual(Object.keys(result.measures), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])
+  t.deepEqual(result.userTiming.map(u => u.name), ['b-stylesheets', 'b-pre-scripts', 'b-post-scripts'])
   console.log(JSON.stringify(result, null, '  '))
 })
