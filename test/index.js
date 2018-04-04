@@ -39,8 +39,8 @@ test('booking.com', async t => {
     'effectiveConnectionType',
     'firstPaint',
     'firstContentfulPaint',
-    'onLoad',
     'domContentLoaded',
+    'onLoad',
     'userTiming'
   ])
   t.deepEqual(result.userTiming.map(u => u.name), ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts'])

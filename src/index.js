@@ -10,8 +10,8 @@ export function uxm() {
     effectiveConnectionType: getEffectiveConnectionType(),
     firstPaint: getFirstPaint(),
     firstContentfulPaint: getFirstContentfulPaint(),
-    onLoad: getOnLoad(),
     domContentLoaded: getDomContentLoaded(),
+    onLoad: getOnLoad(),
     userTiming: getUserTiming()
   }
   return result
