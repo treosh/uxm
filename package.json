@@ -9,9 +9,7 @@
   "module": "dist/uxm.es.js",
   "main": "dist/uxm.js",
   "umd:main": "dist/uxm.umd.js",
-  "files": [
-    "dist"
-  ],
+  "files": ["dist"],
   "keywords": [
     "Performance",
     "Web Performance",
@@ -26,7 +24,7 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "microbundle",
+    "build": "rm -rf dist && microbundle --no-sourcemap",
     "test": "eslint src && yarn build && ava"
   },
   "devDependencies": {
@@ -46,8 +44,6 @@
     "puppeteer": "^1.2.0"
   },
   "ava": {
-    "require": [
-      "babel-register"
-    ]
+    "require": ["babel-register"]
   }
 }
