@@ -79,10 +79,15 @@ export function getDomContentLoaded() {
 export function getUserTiming() {
   if (!perf || typeof PerformanceMark === 'undefined') return null
   const marks = perf.getEntriesByType('mark').map(mark => {
-    return { type: 'mark', name: mark.name, startTime: mark.startTime }
+    return { type: 'mark', name: mark.name, startTime: Math.round(mark.startTime) }
   })
-  const measures = perf.getEntriesByType('measure').reduce(measure => {
-    return { type: 'mark', name: measure.name, startTime: measure.startTime, duration: measure.duration }
+  const measures = perf.getEntriesByType('measure').map(measure => {
+    return {
+      type: 'measure',
+      name: measure.name,
+      startTime: Math.round(measure.startTime),
+      duration: Math.round(measure.duration)
+    }
   })
   return marks.concat(measures)
 }
