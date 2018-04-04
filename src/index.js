@@ -7,7 +7,7 @@ export function uxm() {
   const result = {
     deviceType: getDeviceType(),
     deviceMemory: getDeviceMemory(),
-    connection: getConnection(),
+    effectiveConnectionType: getEffectiveConnectionType(),
     firstPaint: getFirstPaint(),
     firstContentfulPaint: getFirstContentfulPaint(),
     onLoad: getOnLoad(),
@@ -43,15 +43,15 @@ export function measure(measureName, startMarkName) {
 
 export function getDeviceMemory() {
   const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
-  return memory || null
+  return memory > 1 ? 'full' : 'lite'
 }
 
-export function getConnection() {
+export function getEffectiveConnectionType() {
   const conn =
     typeof navigator !== 'undefined'
       ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
       : null
-  return conn ? { rtt: conn.rtt, downlink: conn.downlink, effectiveType: conn.effectiveType } : null
+  return conn ? conn.effectiveType : null
 }
 
 export function getFirstPaint() {

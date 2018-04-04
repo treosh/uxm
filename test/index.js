@@ -36,7 +36,7 @@ test('booking.com', async t => {
   t.deepEqual(Object.keys(result), [
     'deviceType',
     'deviceMemory',
-    'connection',
+    'effectiveConnectionType',
     'firstPaint',
     'firstContentfulPaint',
     'onLoad',
