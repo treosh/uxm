@@ -21,12 +21,10 @@ const setupLongTasks = [
   "g.o.observe({entryTypes:['longtask']})}}();"
 ].join('')
 
-test('booking.com', async t => {
+test('booking.com - default settings', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.evaluateOnNewDocument(setupLongTasks)
   await page.evaluateOnNewDocument(setupUxm)
-  await page.emulate(devices['iPhone 6'])
   await page.goto(url)
 
   const result = await page.evaluate(() => window.uxm.uxm())
@@ -35,13 +33,30 @@ test('booking.com', async t => {
 
   t.deepEqual(Object.keys(result), [
     'deviceType',
-    'deviceMemory',
     'effectiveConnectionType',
     'firstPaint',
     'firstContentfulPaint',
     'domContentLoaded',
-    'onLoad',
-    'userTiming'
+    'onLoad'
   ])
+  t.is(result.deviceType, 'desktop')
+  t.true(result.effectiveConnectionType === '4g' || result.effectiveConnectionType === '3g')
+})
+
+test('booking.com - extra settings', async t => {
+  const browser = await puppeteer.launch()
+  const page = await browser.newPage()
+  await page.emulate(devices['iPhone 6'])
+  await page.evaluateOnNewDocument(setupLongTasks)
+  await page.evaluateOnNewDocument(setupUxm)
+  await page.goto(url, { waitUntil: 'domcontentloaded' })
+
+  const result = await page.evaluate(() =>
+    window.uxm.uxm({ deviceMemory: true, userTiming: true, longTasks: true, resources: true })
+  )
+  await browser.close()
+  console.log(JSON.stringify(result, null, '  '))
+
+  t.is(result.deviceType, 'phone')
   t.deepEqual(result.userTiming.map(u => u.name), ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts'])
 })

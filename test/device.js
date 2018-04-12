@@ -14,11 +14,11 @@ const uaIgnore = [
   'SCH-U365/1.0 NetFront/3.0.22.2.23 (GUI) MMP/2.0'
 ]
 
-Object.keys(userAgents).forEach(type => {
-  const expectedType = type === 'computer' ? 'desktop' : type
-  userAgents[type].forEach(device => {
-    if (uaIgnore.includes(device.ua)) return
-    test(JSON.stringify(Object.assign({ type: expectedType }, device)), t => {
+test('user-agents', t => {
+  Object.keys(userAgents).forEach(type => {
+    const expectedType = type === 'computer' ? 'desktop' : type
+    userAgents[type].forEach(device => {
+      if (uaIgnore.includes(device.ua)) return
       t.is(getDeviceType(device.ua), expectedType)
     })
   })

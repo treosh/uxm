@@ -1,25 +1,25 @@
-import { getDeviceType } from './device'
 const perf = typeof window !== 'undefined' ? window.performance : null
 
 // get all metrics
 
-export function uxm() {
-  const result = {
+export function uxm(opts = {}) {
+  let result = {
     deviceType: getDeviceType(),
-    deviceMemory: getDeviceMemory(),
     effectiveConnectionType: getEffectiveConnectionType(),
     firstPaint: getFirstPaint(),
     firstContentfulPaint: getFirstContentfulPaint(),
     domContentLoaded: getDomContentLoaded(),
-    onLoad: getOnLoad(),
-    userTiming: getUserTiming()
+    onLoad: getOnLoad()
   }
-  return result
+  if (opts.url) result.url = getUrl()
+  if (opts.userAgent) result.userAgent = getUserAgent()
+  if (opts.deviceMemory) result.deviceMemory = getDeviceMemory()
+  if (opts.userTiming) result.userTiming = getUserTiming()
+  if (opts.longTasks) result.longTasks = getLongTasks()
+  if (opts.resources) result.resources = getResources()
+  if (result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 100)).then(() => uxm(opts))
+  return Promise.resolve(result)
 }
-
-// expose extra API
-
-export { getDeviceType }
 
 // user timing helpers
 
@@ -39,12 +39,7 @@ export function measure(measureName, startMarkName) {
   }
 }
 
-// metric utils
-
-export function getDeviceMemory() {
-  const memory = typeof navigator !== 'undefined' ? navigator.deviceMemory : null
-  return memory > 1 ? 'full' : 'lite'
-}
+// default metrics
 
 export function getEffectiveConnectionType() {
   const conn =
@@ -76,6 +71,51 @@ export function getDomContentLoaded() {
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
+// get device type
+// based on https://github.com/matthewhudson/current-device/blob/master/src/index.js
+// returns “phone”, “tablet”, or “desktop”
+
+export function getDeviceType(ua) {
+  ua = (ua || getUserAgent()).toLowerCase()
+  const find = str => ua.indexOf(str) !== -1
+
+  // windows
+  const isWindows = find('windows')
+  const isWindowsPhone = isWindows && find('phone')
+  const isWindowsTablet = isWindows && (find('touch') && !isWindowsPhone)
+
+  // ios
+  const isIphone = !isWindows && find('iphone')
+  const isIpod = find('ipod')
+  const isIpad = find('ipad')
+
+  // android
+  const isAndroid = !isWindows && find('android')
+  const isAndroidPhone = isAndroid && find('mobile')
+  const isAndroidTablet = isAndroid && !find('mobile')
+
+  // detect device
+  const isPhone = isAndroidPhone || isIphone || isIpod || isWindowsPhone
+  const isTablet = isIpad || isAndroidTablet || isWindowsTablet
+  return isPhone ? 'phone' : isTablet ? 'tablet' : 'desktop'
+}
+
+// extra metrics
+
+export function getUrl() {
+  return window.location.href
+}
+
+export function getUserAgent() {
+  return window.navigator.userAgent
+}
+
+export function getDeviceMemory() {
+  const deviceMemory = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined
+  if (deviceMemory === undefined) return null
+  return deviceMemory > 1 ? 'full' : 'lite'
+}
+
 export function getUserTiming() {
   if (!perf || typeof PerformanceMark === 'undefined') return null
   const marks = perf.getEntriesByType('mark').map(mark => {
@@ -94,14 +134,24 @@ export function getUserTiming() {
 
 export function getResources() {
   if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
-  const documentEntry = { type: 'document', startTime: 0, duration: perf.timing.responseEnd - perf.timing.fetchStart }
-  const resources = perf.getEntriesByType('resource').map(resource => {
-    return {
-      type: resource.initiatorType,
-      size: resource.transferSize,
-      startTime: Math.round(resource.startTime),
-      duration: Math.round(resource.duration)
-    }
-  })
-  return [documentEntry].concat(resources)
+  return perf
+    .getEntriesByType('navigation')
+    .concat(perf.getEntriesByType('resource'))
+    .map(entry => {
+      return {
+        url: entry.name,
+        type: entry.initiatorType,
+        size: entry.transferSize,
+        startTime: Math.round(entry.startTime),
+        duration: Math.round(entry.duration)
+      }
+    })
+}
+
+export function getLongTasks() {
+  if (typeof window.__lt === 'undefined') return null
+  return window.__lt.e.map(longTask => ({
+    startTime: Math.round(longTask.startTime),
+    duration: Math.round(longTask.duration)
+  }))
 }
