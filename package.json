@@ -9,6 +9,7 @@
   "module": "dist/uxm.es.js",
   "main": "dist/uxm.js",
   "umd:main": "dist/uxm.umd.js",
+  "sideEffects": false,
   "files": ["dist"],
   "keywords": [
     "Performance",

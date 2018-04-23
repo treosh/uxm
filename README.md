@@ -8,7 +8,7 @@
 </p>
 
 <p align="center">
-  <a href="#usage">Usage</a> • <a href="#why">Why?</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
+  <a href="#use-cases">Use cases</a> • <a href="#example">Example</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
 </p>
 
 <br/>
@@ -19,22 +19,30 @@
 1 Kb size
 Motivation:
 Features:
-Use cases:
+
+## Use cases
 
 * Collect RUM data.
 * Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
 * Audit the page performance using Puppeteer ([example](./test/index.js)).
-* Set and list user timing metrics.
-* Dynamically evaluate performance of the user's browser and adapt your app ().
+* Easily manage [user timing](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) metrics.
+* Dynamically evaluate performance of the user's browser and adapt your app.
 
 ## Usage
 
-```js
-import uxm from 'uxm'
+Install using npm/yarn:
 
-// collect analytics in the end of loading
+    npm install --save uxm
+    yarn add uxm
+
+Import `uxm` and call it in the end of the page loading:
+
+default metrics structure base on Chrome User Experience Report
+
+```js
+import { uxm } from 'uxm'
+
 uxm().then(metrics => {  
-  // typical metrics structure
   {
     "deviceType": "desktop",
     "effectiveConnectionType": "4g",
@@ -46,14 +54,38 @@ uxm().then(metrics => {
 })
 ```
 
-## Why
+Collect just 2 metrics associated with url:
+
+```js
+import { getUrl, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
+
+const firstScreenMetrics = {
+  url: getUrl(),
+  fcp: getFirstContentfulPaint(),
+  dcl: getDomContentLoaded()
+}
+```
+
+Analyze current device and connection:
+
+```js
+import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
+
+const device = {
+  type: getDeviceType(),
+  memory: getDeviceMemory(),
+  connection: getEffectiveConnectionType()
+}
+```
 
 ## API
 
+An API is designed in the way that you can combine different functions and collect the data you need.
+
 ### uxm(opts = {})
 
-Returns a Promise that resolves after `onLoad` event triggered.
-Default response structure is defined by [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/)
+Returns a `Promise` that resolves after `onLoad` event triggered.
+A default set of metrics is defined by [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/)
 
 Options:
 
