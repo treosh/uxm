@@ -1,5 +1,5 @@
 <p align="center">
-  <a href="#"><img src="./docs/logo.png" /></a>
+  <img src="./docs/logo.png" />
 </p>
 
 <p align="center">
@@ -8,32 +8,41 @@
 </p>
 
 <p align="center">
-  <a href="#use-cases">Use cases</a> • <a href="#example">Example</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
+  <a href="#">Why?</a> • <a href="#example">Usage</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
 </p>
 
 <br/>
 <br/>
 
-...
+Modern web platform provides a lot of APIs to analyze page speed information.
+But it's hard to follow them and even harder to deal with the lack of implementation in different browsers.
 
-1 Kb size
-Motivation:
-Features:
+UXM is a modular library that allows to combine various functions and collect the data you need. Think about it, as [Lodash](https://lodash.com/) for user experience APIs.
 
-## Use cases
+**Use cases**:
 
-* Collect RUM data.
 * Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
+* Collect RUM data.
 * Audit the page performance using Puppeteer ([example](./test/index.js)).
-* Easily manage [user timing](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) metrics.
 * Dynamically evaluate performance of the user's browser and adapt your app.
+
+**Features**:
+
+* Modular design based on ES modules.
+* Small size (1kb gzip). It's usually smaller, if you remove unused functions using [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
+* Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
+* Fully featured [User Timing](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) metrics.
+* Lightweight device type parser.
+* [Long Tasks](https://www.w3.org/TR/longtasks/)
 
 ## Usage
 
-Install using npm/yarn:
+Install using yarn/npm:
 
-    npm install --save uxm
-    yarn add uxm
+```bash
+yarn add uxm
+npm i -S uxm
+```
 
 Import `uxm` and call it in the end of the page loading:
 
@@ -54,7 +63,7 @@ uxm().then(metrics => {
 })
 ```
 
-Collect just 2 metrics associated with url:
+Collect just 2 performance metrics associated with `url`:
 
 ```js
 import { getUrl, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
