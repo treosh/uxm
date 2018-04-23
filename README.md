@@ -3,12 +3,12 @@
 </p>
 
 <p align="center">
-  An utility library for collecting web performance metrics<br />
+  A utility library for collecting web performance metrics<br />
   that affect user experience.
 </p>
 
 <p align="center">
-  <a href="#">Why?</a> • <a href="#example">Usage</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
+  <a href="#">Why?</a> • <a href="#usage">Usage</a> • <a href="#api">API</a> • <a href="#credits">Credits</a>
 </p>
 
 <br/>
@@ -24,12 +24,12 @@ UXM is a modular library that allows to combine various functions and collect th
 * Collect RUM data.
 * Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
 * Audit the page performance using Puppeteer ([example](./test/index.js)).
-* Dynamically evaluate performance of the user's browser and adapt your app.
+* Dynamically evaluate the performance of the user's device and adapt the UI.
 
 **Features**:
 
 * Modular design based on ES modules.
-* Small size (1kb gzip). It's usually smaller, if you remove unused functions using [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
+* Small size (1kb gzip). It's usually smaller if you use [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
 * Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
 * Fully featured [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
 * Lightweight device type parser.
@@ -44,12 +44,13 @@ yarn add uxm
 npm i -S uxm
 ```
 
-Import `uxm` and call it in the end of the page loading to collect [CrUX like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
+Import `uxm` and call it at the end of the page loading to collect [CrUX-like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
 
 ```js
 import { uxm } from 'uxm'
 
 uxm().then(metrics => {  
+  console.log(metrics) // ->
   {
     "deviceType": "desktop",
     "effectiveConnectionType": "4g",
@@ -61,7 +62,7 @@ uxm().then(metrics => {
 })
 ```
 
-Collect just 2 performance metrics associated with `url`:
+Or collect 2 performance metrics associated with URL:
 
 ```js
 import { getUrl, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
@@ -73,7 +74,7 @@ const metrics = {
 }
 ```
 
-Analyze current device and connection:
+Or analyze current device and connection:
 
 ```js
 import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
@@ -87,19 +88,21 @@ const device = {
 
 ## API
 
-An API is designed in the way that you can combine different functions and collect the data you need.
+An API is a set of pure functions with one exception to `uxm`,
+which is a meta-function to collect multiple metrics at once.
 
 ### uxm(opts = {})
 
-Returns a `Promise` that resolves after `onLoad` event triggered.
+Returns a Promise that resolves after `load` event fired.
 A default set of metrics is defined by [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/), but you can customize them using options (`url`, `userAgent`, `deviceMemory`, `userTiming`, `longTasks`, `resources`).
 
-Pass `all` to get the full report:
+Or pass `all` to get the full report:
 
 ```js
 import { uxm } from 'uxm'
 
 uxm({ all: true }).then(metrics => {  
+  console.log(metrics) // ->
   {
     "deviceType": "phone",
     "effectiveConnectionType": "4g",
@@ -142,7 +145,7 @@ uxm({ all: true }).then(metrics => {
 
 ### mark(markName)
 
-Create [User Timing](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) mark to mark important loading event. Convenient shortcut for `window.performance.mark`.
+Create [User Timing mark](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to mark important loading event. A convenient shortcut for `window.performance.mark`.
 
 ```js
 import { mark } from 'uxm'
@@ -156,8 +159,8 @@ mark('page fully loaded')
 
 ### measure(measureName, [startMarkName])
 
-Create [User Timing](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) measure to evaluate timing between 2 marks.
-Convenient shortcut for `window.performance.measure`.
+Create [User Timing measure](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to evaluate timing between 2 marks.
+A convenient shortcut for `window.performance.measure`.
 
 ```js
 import { mark, measure } from 'uxm'
@@ -169,14 +172,14 @@ measure('fonts loaded', 'start load fonts')
 
 ### getUserTiming()
 
-Returns an array with collected performance marks/measures. Each item contains:
+It returns an array with collected performance marks/measures. Each item contains:
 
 * `type` - "mark" or "measure"
 * `name` - unique name
 * `startTime` - start time since page load
 * `duration` - measure duration
 
-Example response:
+Example:
 
 ```json
 [
@@ -196,54 +199,54 @@ Example response:
 
 ### getFirstContentfulPaint()
 
-Returns the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
+It returns the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
 [W3C draft for Paint Timing 1](https://w3c.github.io/paint-timing).
 
 ### getFirstPaint()
 
-Similar to `getFirstContentfulPaint` but different when First Paint has no content.
+It's similar to `getFirstContentfulPaint` but may contain a different value when First Paint is just background change without content.
 
 ### getDomContentLoaded()
 
-Returns the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
+It returns the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
 
 ### getOnLoad()
 
-Returns the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
-
-### getDeviceType()
-
-Returns "phone", "tablet", or "desktop" using lightweight, [heavy-tested]('./test/device.js') the User-Agent parser.
+It returns the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
 
 ### getEffectiveConnectionType()
 
-Returns the effective connection type (“slow-2g”, “2g”, “3g”, “4g”) string as determined by round-trip and bandwidth values.
+It returns the effective connection type (“slow-2g”, “2g”, “3g”, or “4g”) string as determined by round-trip and bandwidth values.
 [W3C draft for Network Information API](http://wicg.github.io/netinfo/).
+
+### getDeviceType()
+
+It returns the device type ("phone", "tablet", or "desktop") string using the lightweight [heavy-tested]('./test/device.js') user-agent parser.
 
 ### getDeviceMemory()
 
-Returns "full" or "lite" string, depends if available memory is bigger than 1 GB.
+It returns the device memory ("full" or "lite") string, depends if available memory is bigger than 1 GB.
 Learn more about [Device Memory](https://developers.google.com/web/updates/2017/12/device-memory).
 
 ### getUrl()
 
-Returns a current page URL. Convenient shortcut for `window.location.href`.
+It returns a current page URL. A convenient shortcut for `window.location.href`.
 
 ### getUserAgent()
 
-Returns a User-Agent string. Convenient shortcut for `window.navigator.userAgent`.
+It returns a User-Agent string. A convenient shortcut for `window.navigator.userAgent`.
 
 ### getResources()
 
-Returns an array with performance information for each resource on the page. Each item contains:
+It returns an array of performance information for each resource on the page. Each item contains:
 
 * `url` - resource URL
-* `type` - one of types: "navigation", "link", "img", "script", "xmlhttprequest", "font"
+* `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
 * `size` - transferred size in bytes
 * `startTime` - when load started
 * `duration` - loading time in milliseconds
 
-Example response:
+Example:
 
 ```json
 [
@@ -281,8 +284,8 @@ Example response:
 
 ### getLongTasks()
 
-Returns an array of `{ startTime, duration }` pairs.
-Until `buffered` flag supported, you need to add this script to the `<head />` in order to collect all Long Tasks:
+It returns an array of `{ startTime, duration }` pairs.
+Until `buffered` flag supported, you need to add extra script to the `<head />` to collect all Long Tasks:
 
 ```html
 <script>
