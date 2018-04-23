@@ -7,22 +7,18 @@
   that affect user experience.
 </p>
 <br/>
-<br/>
 
 <p align="center">
   <a href="#example">Usage</a> •
   <a href="#why">Why?</a> •
-  <a href="#principles">API</a>
+  <a href="#principles">API</a> •
+  <a href="#principles">Credits</a>
 </p>
 
 <br/>
 <br/>
 
 ...
-
-# UXM (User Experience Metrics)
-
->
 
 1 Kb size
 Motivation:
@@ -32,7 +28,7 @@ https://developers.google.com/web/tools/chrome-user-experience-report/
 ## Usage
 
 ```js
-import { uxm, mark } from 'uxm'
+import uxm, { mark } from 'uxm'
 
 //
 mark('page is visible')
@@ -69,9 +65,9 @@ uxm().then(metrics => {
 
 ### getOnLoad()
 
-### getEffectiveConnectionType()
-
 ### getDeviceType()
+
+### getEffectiveConnectionType()
 
 ### getDeviceMemory()
 
@@ -91,9 +87,11 @@ g.o.observe({entryTypes:['longtask']})}}();
 </script>
 ```
 
----
+## Credits
 
 Sponsored by [Treo.sh - Page speed monitoring made easy](https://treo.sh).
+
+---
 
 [![](https://travis-ci.org/treosh/uxm.png)](https://travis-ci.org/treosh/uxm)
 [![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
