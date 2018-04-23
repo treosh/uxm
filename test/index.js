@@ -54,9 +54,25 @@ test('booking.com - extra settings', async t => {
   const result = await page.evaluate(() =>
     window.uxm.uxm({ deviceMemory: true, userTiming: true, longTasks: true, resources: true })
   )
+  const result2 = await page.evaluate(() => window.uxm.uxm({ all: true }))
   await browser.close()
   console.log(JSON.stringify(result, null, '  '))
 
   t.is(result.deviceType, 'phone')
   t.deepEqual(result.userTiming.map(u => u.name), ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts'])
+
+  t.deepEqual(Object.keys(result2), [
+    'deviceType',
+    'effectiveConnectionType',
+    'firstPaint',
+    'firstContentfulPaint',
+    'domContentLoaded',
+    'onLoad',
+    'url',
+    'userAgent',
+    'deviceMemory',
+    'userTiming',
+    'longTasks',
+    'resources'
+  ])
 })

@@ -11,13 +11,13 @@ export function uxm(opts = {}) {
     domContentLoaded: getDomContentLoaded(),
     onLoad: getOnLoad()
   }
-  if (opts.url) result.url = getUrl()
-  if (opts.userAgent) result.userAgent = getUserAgent()
-  if (opts.deviceMemory) result.deviceMemory = getDeviceMemory()
-  if (opts.userTiming) result.userTiming = getUserTiming()
-  if (opts.longTasks) result.longTasks = getLongTasks()
-  if (opts.resources) result.resources = getResources()
-  if (result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 100)).then(() => uxm(opts))
+  if (opts.url || opts.all) result.url = getUrl()
+  if (opts.userAgent || opts.all) result.userAgent = getUserAgent()
+  if (opts.deviceMemory || opts.all) result.deviceMemory = getDeviceMemory()
+  if (opts.userTiming || opts.all) result.userTiming = getUserTiming()
+  if (opts.longTasks || opts.all) result.longTasks = getLongTasks()
+  if (opts.resources || opts.all) result.resources = getResources()
+  if (result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 250)).then(() => uxm(opts))
   return Promise.resolve(result)
 }
 
