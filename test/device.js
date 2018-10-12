@@ -27,7 +27,11 @@ Object.keys(userAgents).forEach(type => {
         ...device,
         deviceType: getDeviceType(device.ua)
       }
-      t.deepEqual(testDevice, expectedDevice)
+      t.deepEqual(
+        testDevice,
+        expectedDevice,
+        `Expected type of ${expectedType}, but got ${testDevice.deviceType} instead.`
+      )
     })
   })
 })
