@@ -28,7 +28,8 @@
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap",
-    "test": "eslint src && yarn build && ava"
+    "test": "eslint src && yarn build && ava",
+    "update-ua": "node -r babel-register ./test/fixtures/parse-user-agents.js"
   },
   "devDependencies": {
     "ava": "^0.25.0",
