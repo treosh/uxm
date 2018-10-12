@@ -81,22 +81,34 @@ export function getDeviceType(ua) {
 
   // windows
   const isWindows = find('windows')
-  const isWindowsPhone = isWindows && find('phone')
-  const isWindowsTablet = isWindows && (find('touch') && !isWindowsPhone)
+  const isWindowsPhone = isWindows && (find('phone') || find('zune'))
+  const isWindowsTablet = isWindows && (find('touch') && !isWindowsPhone) && !find('windows nt')
 
   // ios
   const isIphone = !isWindows && find('iphone')
   const isIpod = find('ipod')
   const isIpad = find('ipad')
 
+  // nokia
+  const isKnownPhone = find('nokia') || find('netfront')
+
+  // Specific android phone checks
+  const isKnownAndroidPhone = find('sm-g935s') || find('lg-v410') || find('mz608') || find('xoom')
+
+  // Specific android tablet checks
+  const isGalaxyTablet = !!ua.match(/gt-p\d+\s+build/)
+  const MIDTablet = find('mid build/')
+
+  const isKnownAndroidTablet = isGalaxyTablet || MIDTablet
+
   // android
   const isAndroid = !isWindows && find('android')
-  const isAndroidPhone = isAndroid && find('mobile')
-  const isAndroidTablet = isAndroid && !find('mobile')
+  const isAndroidPhone = isAndroid && (find('mobile') || isKnownAndroidPhone) && !isKnownAndroidTablet
+  const isAndroidTablet = isAndroid
 
   // detect device
-  const isPhone = isAndroidPhone || isIphone || isIpod || isWindowsPhone
-  const isTablet = isIpad || isAndroidTablet || isWindowsTablet
+  const isPhone = isAndroidPhone || isIphone || isIpod || isWindowsPhone || isKnownPhone
+  const isTablet = isIpad || isAndroidTablet || isWindowsTablet || find('tablet')
   return isPhone ? 'phone' : isTablet ? 'tablet' : 'desktop'
 }
 
