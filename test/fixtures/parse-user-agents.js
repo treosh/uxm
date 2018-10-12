@@ -8,6 +8,8 @@ import { writeFileSync as writeFile } from 'fs'
 import { join } from 'path'
 const url = 'https://developers.whatismybrowser.com/useragents/explore/hardware_type_specific/'
 
+const range = length => [...Array(length).keys()].slice(1)
+
 async function main() {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
@@ -16,7 +18,7 @@ async function main() {
   // each page contains 50 values
   for (const type of ['phone', 'tablet', 'computer']) {
     userAgents[type] = []
-    for (const pageNumber of [1, 2]) {
+    for (const pageNumber of range(5)) {
       await page.goto(`${url}/${type}/${pageNumber}`)
       const data = await page.$$eval('.table-useragents tbody > tr', trs => {
         return [].map.call(trs, tr => {
