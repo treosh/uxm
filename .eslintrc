@@ -2,6 +2,6 @@
   "extends": ["standard", "plugin:import/errors", "prettier"],
   "plugins": ["prettier"],
   "rules": {
-    "prettier/prettier": ["error", { "singleQuote": true, "semi": false, "printWidth": 120 }]
+    "prettier/prettier": "error"
   }
 }
