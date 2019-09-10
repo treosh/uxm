@@ -1,4 +1,7 @@
 interface PerformanceEntry {
+  responseStart: number
+  domContentLoadedEventEnd: number
+  loadEventEnd: number
   initiatorType: string
   transferSize: number
 }

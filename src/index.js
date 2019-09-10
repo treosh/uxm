@@ -25,6 +25,7 @@ const perf = typeof window !== 'undefined' ? window.performance : null
  * @typedef {object} UxmResult
  * @prop {DeviceType} deviceType
  * @prop {EffectiveConnectionType} effectiveConnectionType
+ * @prop {number | null} timeToFirstByte
  * @prop {number | null} firstPaint
  * @prop {number | null} firstContentfulPaint
  * @prop {number | null} domContentLoaded
@@ -49,18 +50,19 @@ export function uxm(opts = {}) {
   let result = {
     deviceType: getDeviceType(),
     effectiveConnectionType: getEffectiveConnectionType(),
+    timeToFirstByte: getTimeToFirstByte(),
     firstPaint: getFirstPaint(),
     firstContentfulPaint: getFirstContentfulPaint(),
     domContentLoaded: getDomContentLoaded(),
     onLoad: getOnLoad()
   }
+  if (!result.onLoad) return new Promise(resolve => setTimeout(resolve, 250)).then(() => uxm(opts))
   if (opts.url || opts.all) result.url = getUrl()
   if (opts.userAgent || opts.all) result.userAgent = getUserAgent()
   if (opts.deviceMemory || opts.all) result.deviceMemory = getDeviceMemory()
   if (opts.userTiming || opts.all) result.userTiming = getUserTiming()
   if (opts.longTasks || opts.all) result.longTasks = getLongTasks()
   if (opts.resources || opts.all) result.resources = getResources()
-  if (result.onLoad && result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 250)).then(() => uxm(opts))
   return Promise.resolve(result)
 }
 
@@ -135,14 +137,25 @@ export function getFirstContentfulPaint() {
 }
 
 /**
+ * Get server response timestamp.
+ *
+ * @return {number | null}
+ */
+
+export function getTimeToFirstByte() {
+  if (!perf) return null
+  return Math.round(perf.getEntriesByType('navigation')[0].responseStart)
+}
+
+/**
  * Get `DomContentLoaded` event timestamp.
  *
  * @return {number | null}
  */
 
 export function getDomContentLoaded() {
-  if (!perf || !perf.timing) return null
-  return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
+  if (!perf) return null
+  return Math.round(perf.getEntriesByType('navigation')[0].domContentLoadedEventEnd)
 }
 
 /**
@@ -152,8 +165,8 @@ export function getDomContentLoaded() {
  */
 
 export function getOnLoad() {
-  if (!perf || !perf.timing) return null
-  return perf.timing.loadEventEnd - perf.timing.fetchStart
+  if (!perf) return null
+  return Math.round(perf.getEntriesByType('navigation')[0].loadEventEnd)
 }
 
 /**

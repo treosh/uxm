@@ -21,7 +21,7 @@ const setupLongTasks = [
   "g.o.observe({entryTypes:['longtask']})}}();"
 ].join('')
 
-test('booking.com - default settings', async t => {
+test.serial('booking.com - default settings', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.evaluateOnNewDocument(setupUxm)
@@ -34,6 +34,7 @@ test('booking.com - default settings', async t => {
   t.deepEqual(Object.keys(result), [
     'deviceType',
     'effectiveConnectionType',
+    'timeToFirstByte',
     'firstPaint',
     'firstContentfulPaint',
     'domContentLoaded',
@@ -43,7 +44,7 @@ test('booking.com - default settings', async t => {
   t.true(result.effectiveConnectionType === '4g' || result.effectiveConnectionType === '3g')
 })
 
-test('booking.com - extra settings', async t => {
+test.serial('booking.com - extra settings', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
   await page.emulate(devices['iPhone 6'])
@@ -64,6 +65,7 @@ test('booking.com - extra settings', async t => {
   t.deepEqual(Object.keys(result2), [
     'deviceType',
     'effectiveConnectionType',
+    'timeToFirstByte',
     'firstPaint',
     'firstContentfulPaint',
     'domContentLoaded',
