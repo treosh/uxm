@@ -1,6 +1,6 @@
 {
   "name": "uxm",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "User experience metrics",
   "repository": "treosh/uxm",
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
@@ -29,7 +29,7 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle --no-sourcemap --no-compress",
+    "build": "rm -rf dist && microbundle --no-sourcemap",
     "test": "prettier -c src/** package.json README.md && tsc -p . && yarn build && ava test/*.js"
   },
   "ava": {

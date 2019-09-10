@@ -11,5 +11,5 @@ yarn
 yarn test
 
 # build and check .br size to claim the size under 1KB
-yarn build --compress
+yarn build
 ```
