@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  A utility library for collecting web performance metrics<br />
+  A tiny (1kb gzip) utility library for collecting web performance metrics<br />
   that affect user experience.
 </p>
 
