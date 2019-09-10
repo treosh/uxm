@@ -1,9 +1,52 @@
 const perf = typeof window !== 'undefined' ? window.performance : null
 
-// get all metrics
+/**
+ * @typedef {'phone' | 'tablet' | 'desktop' | null} DeviceType
+ * @typedef {'full' | 'lite' | null} DeviceMemory
+ * @typedef {'slow-2g' | '2g' | '3g' | '4g' | null} EffectiveConnectionType
+ *
+ * @typedef {object} UserTiming
+ * @prop {'mark' | 'measure'} type
+ * @prop {string} name
+ * @prop {number} startTime
+ * @prop {number} [duration]
+ *
+ * @typedef {object} Resource
+ * @prop {string} url
+ * @prop {string} type
+ * @prop {number} size
+ * @prop {number} startTime
+ * @prop {number} duration
+ *
+ * @typedef {object} LongTask
+ * @prop {number} startTime
+ * @prop {number} duration
+ *
+ * @typedef {object} UxmResult
+ * @prop {DeviceType} deviceType
+ * @prop {EffectiveConnectionType} effectiveConnectionType
+ * @prop {number | null} firstPaint
+ * @prop {number | null} firstContentfulPaint
+ * @prop {number | null} domContentLoaded
+ * @prop {number | null} onLoad
+ * @prop {string} [url]
+ * @prop {string} [userAgent]
+ * @prop {DeviceMemory | null} [deviceMemory]
+ * @prop {UserTiming[] | null} [userTiming]
+ * @prop {LongTask[] | null} [longTasks]
+ * @prop {Resource[] | null} [resources]
+ */
+
+/**
+ * Get all metrics.
+ *
+ * @param {{ all?: boolean, url?: boolean, userAgent?: boolean, deviceMemory?: boolean, userTiming?: boolean, longTasks?: boolean, resources?: boolean }} [opts]
+ * @return {Promise<UxmResult>}
+ */
 
 export function uxm(opts = {}) {
-  const result = {
+  /** @type {UxmResult} */
+  let result = {
     deviceType: getDeviceType(),
     effectiveConnectionType: getEffectiveConnectionType(),
     firstPaint: getFirstPaint(),
@@ -17,17 +60,30 @@ export function uxm(opts = {}) {
   if (opts.userTiming || opts.all) result.userTiming = getUserTiming()
   if (opts.longTasks || opts.all) result.longTasks = getLongTasks()
   if (opts.resources || opts.all) result.resources = getResources()
-  if (result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 250)).then(() => uxm(opts))
+  if (result.onLoad && result.onLoad < 0) return new Promise(resolve => setTimeout(resolve, 250)).then(() => uxm(opts))
   return Promise.resolve(result)
 }
 
-// user timing helpers
+/**
+ * Create a custom performance mark with `markName` name.
+ * https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark
+ *
+ * @param {string} markName
+ */
 
 export function mark(markName) {
   if (perf && perf.mark) {
     perf.mark(markName)
   }
 }
+
+/**
+ * Create performance measurement `measureName` between marks, the navigation start time, or `startMarkName`.
+ * https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure
+ *
+ * @param {string} measureName
+ * @param {string} [startMarkName]
+ */
 
 export function measure(measureName, startMarkName) {
   if (perf && perf.measure) {
@@ -39,7 +95,12 @@ export function measure(measureName, startMarkName) {
   }
 }
 
-// default metrics
+/**
+ * Get effective connection type.
+ * https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
+ *
+ * @return {EffectiveConnectionType}
+ */
 
 export function getEffectiveConnectionType() {
   const conn =
@@ -49,35 +110,63 @@ export function getEffectiveConnectionType() {
   return conn ? conn.effectiveType : null
 }
 
+/**
+ * Get `first-paint` mark.
+ *
+ * @return {number | null}
+ */
+
 export function getFirstPaint() {
-  if (typeof PerformancePaintTiming === 'undefined') return null
+  if (!perf || typeof window.PerformancePaintTiming === 'undefined') return null
   const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
   return fp ? Math.round(fp.startTime) : null
 }
 
+/**
+ * Get `first-contentful-paint` mark.
+ *
+ * @return {number | null}
+ */
+
 export function getFirstContentfulPaint() {
-  if (typeof PerformancePaintTiming === 'undefined') return null
+  if (!perf || typeof window.PerformancePaintTiming === 'undefined') return null
   const fcp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-contentful-paint')
   return fcp ? Math.round(fcp.startTime) : null
 }
 
-export function getOnLoad() {
-  if (!perf || !perf.timing) return null
-  return perf.timing.loadEventEnd - perf.timing.fetchStart
-}
+/**
+ * Get `DomContentLoaded` event timestamp.
+ *
+ * @return {number | null}
+ */
 
 export function getDomContentLoaded() {
   if (!perf || !perf.timing) return null
   return perf.timing.domContentLoadedEventEnd - perf.timing.fetchStart
 }
 
-// get device type
-// based on https://github.com/matthewhudson/current-device/blob/master/src/index.js
-// returns “phone”, “tablet”, or “desktop”
+/**
+ * Get `load` event timestamp.
+ *
+ * @return {number | null}
+ */
 
-export function getDeviceType(ua) {
-  ua = (ua || getUserAgent()).toLowerCase()
-  const find = str => ua.indexOf(str) !== -1
+export function getOnLoad() {
+  if (!perf || !perf.timing) return null
+  return perf.timing.loadEventEnd - perf.timing.fetchStart
+}
+
+/**
+ * Get device type.
+ * based on https://github.com/matthewhudson/current-device/blob/master/src/index.js
+ *
+ * @param {string} [ua]
+ * @return {DeviceType}
+ */
+
+export function getDeviceType(ua = getUserAgent()) {
+  ua = ua.toLowerCase()
+  const find = /** @param {string} str */ str => ua.indexOf(str) !== -1
 
   // windows
   const isWindows = find('windows')
@@ -100,15 +189,31 @@ export function getDeviceType(ua) {
   return isPhone ? 'phone' : isTablet ? 'tablet' : 'desktop'
 }
 
-// extra metrics
+/**
+ * Get current url.
+ *
+ * @return {String}
+ */
 
 export function getUrl() {
   return window.location.href
 }
 
+/**
+ * Get user-agent.
+ *
+ * @return {String}
+ */
+
 export function getUserAgent() {
   return window.navigator.userAgent
 }
+
+/**
+ * Get effective device memory.
+ *
+ * @return {DeviceMemory | null}
+ */
 
 export function getDeviceMemory() {
   const deviceMemory = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined
@@ -116,11 +221,19 @@ export function getDeviceMemory() {
   return deviceMemory > 1 ? 'full' : 'lite'
 }
 
+/**
+ * Get all user timings.
+ *
+ * @return {UserTiming[] | null}
+ */
+
 export function getUserTiming() {
   if (!perf || typeof PerformanceMark === 'undefined') return null
+  /** @type {UserTiming[]} */
   const marks = perf.getEntriesByType('mark').map(mark => {
     return { type: 'mark', name: mark.name, startTime: Math.round(mark.startTime) }
   })
+  /** @type {UserTiming[]} */
   const measures = perf.getEntriesByType('measure').map(measure => {
     return {
       type: 'measure',
@@ -131,6 +244,12 @@ export function getUserTiming() {
   })
   return marks.concat(measures)
 }
+
+/**
+ * Get resources.
+ *
+ * @return {Resource[] | null}
+ */
 
 export function getResources() {
   if (!perf || typeof PerformanceResourceTiming === 'undefined') return null
@@ -148,10 +267,18 @@ export function getResources() {
     })
 }
 
+/**
+ * Get collected long tasks.
+ *
+ * @return {LongTask[] | null}
+ */
+
 export function getLongTasks() {
   if (typeof window.__lt === 'undefined') return null
-  return window.__lt.e.map(longTask => ({
-    startTime: Math.round(longTask.startTime),
-    duration: Math.round(longTask.duration)
-  }))
+  return window.__lt.e.map(
+    /** @param {object} longTask */ longTask => ({
+      startTime: Math.round(longTask.startTime),
+      duration: Math.round(longTask.duration)
+    })
+  )
 }

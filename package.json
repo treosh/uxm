@@ -30,12 +30,21 @@
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap --no-compress",
-    "test": "yarn build && ava test/*.js"
+    "test": "prettier -c src/** package.json README.md && tsc -p . && yarn build && ava test/*.js"
+  },
+  "ava": {
+    "require": [
+      "esm"
+    ]
   },
   "devDependencies": {
+    "@types/node": "10",
+    "@types/puppeteer": "^1.19.1",
     "ava": "^2.3.0",
+    "esm": "^3.2.25",
     "microbundle": "^0.11.0",
     "prettier": "^1.18.2",
-    "puppeteer": "^1.19.0"
+    "puppeteer": "^1.19.0",
+    "typescript": "^3.6.2"
   }
 }

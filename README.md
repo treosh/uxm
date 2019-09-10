@@ -21,19 +21,19 @@ UXM is a modular library that allows to combine various functions and collect th
 
 **Use cases**:
 
-* Collect RUM data.
-* Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
-* Audit the page performance using Puppeteer ([example](./test/index.js)).
-* Dynamically evaluate the performance of the user's device and adapt the UI.
+- Collect RUM data.
+- Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
+- Audit the page performance using Puppeteer ([example](./test/index.js)).
+- Dynamically evaluate the performance of the user's device and adapt the UI.
 
 **Features**:
 
-* Modular design based on ES modules.
-* Small size (1kb gzip). It's usually smaller if you use [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
-* Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
-* Fully featured [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
-* Lightweight device type parser.
-* Experimental [Long Tasks](https://www.w3.org/TR/longtasks/) support for interactivity metrics.
+- Modular design based on ES modules.
+- Small size (1kb gzip). It's usually smaller if you use [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
+- Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
+- Fully featured [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
+- Lightweight device type parser.
+- Experimental [Long Tasks](https://www.w3.org/TR/longtasks/) support for interactivity metrics.
 
 ## Usage
 
@@ -49,7 +49,7 @@ Import `uxm` and call it at the end of the page loading to collect [CrUX-like da
 ```js
 import { uxm } from 'uxm'
 
-uxm().then(metrics => {  
+uxm().then(metrics => {
   console.log(metrics) // ->
   {
     "deviceType": "desktop",
@@ -101,7 +101,7 @@ Or pass `all` to get the full report:
 ```js
 import { uxm } from 'uxm'
 
-uxm({ all: true }).then(metrics => {  
+uxm({ all: true }).then(metrics => {
   console.log(metrics) // ->
   {
     "deviceType": "phone",
@@ -174,10 +174,10 @@ measure('fonts loaded', 'start load fonts')
 
 It returns an array with collected performance marks/measures. Each item contains:
 
-* `type` - "mark" or "measure"
-* `name` - unique name
-* `startTime` - start time since page load
-* `duration` - measure duration
+- `type` - "mark" or "measure"
+- `name` - unique name
+- `startTime` - start time since page load
+- `duration` - measure duration
 
 Example:
 
@@ -240,11 +240,11 @@ It returns a User-Agent string. A convenient shortcut for `window.navigator.user
 
 It returns an array of performance information for each resource on the page. Each item contains:
 
-* `url` - resource URL
-* `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
-* `size` - transferred size in bytes
-* `startTime` - when load started
-* `duration` - loading time in milliseconds
+- `url` - resource URL
+- `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
+- `size` - transferred size in bytes
+- `startTime` - when load started
+- `duration` - loading time in milliseconds
 
 Example:
 
@@ -289,9 +289,15 @@ Until `buffered` flag supported, you need to add extra script to the `<head />` 
 
 ```html
 <script>
-!function(){if('PerformanceLongTaskTiming' in window){var g=window.__lt={e:[]};
-g.o=new PerformanceObserver(function(l){g.e=g.e.concat(l.getEntries())});
-g.o.observe({entryTypes:['longtask']})}}();
+  !(function() {
+    if ('PerformanceLongTaskTiming' in window) {
+      var g = (window.__lt = { e: [] })
+      g.o = new PerformanceObserver(function(l) {
+        g.e = g.e.concat(l.getEntries())
+      })
+      g.o.observe({ entryTypes: ['longtask'] })
+    }
+  })()
 </script>
 ```
 
