@@ -1,24 +1,26 @@
 {
   "name": "uxm",
   "version": "1.0.0",
-  "description": "Key web performance metrics",
+  "description": "User experience metrics",
   "repository": "treosh/uxm",
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
-  "module": "dist/uxm.es.js",
   "main": "dist/uxm.js",
-  "umd:main": "dist/uxm.umd.js",
+  "module": "dist/uxm.es.js",
+  "unpkg": "dist/uxm.umd.js",
   "sideEffects": false,
   "files": [
     "dist"
   ],
   "keywords": [
-    "Performance",
     "Web Performance",
-    "Perceived Performance",
+    "Perceived Web Performance",
+    "User Experience",
     "First Paint",
     "First Contentful Paint",
+    "Largest Contentful Paint",
+    "First Input Delay",
     "Paint Timing API",
     "Network Information API",
     "Chrome User Experience Report",
@@ -27,27 +29,13 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle --no-sourcemap",
-    "test": "eslint src && yarn build && ava test/*.js"
+    "build": "rm -rf dist && microbundle --no-sourcemap --no-compress",
+    "test": "yarn build && ava test/*.js"
   },
   "devDependencies": {
-    "ava": "^2.0.0",
-    "eslint": "^5.16.0",
-    "eslint-config-prettier": "^4.3.0",
-    "eslint-config-standard": "^12.0.0",
-    "eslint-plugin-import": "^2.17.3",
-    "eslint-plugin-node": "^9.1.0",
-    "eslint-plugin-prettier": "^3.1.0",
-    "eslint-plugin-promise": "^4.1.1",
-    "eslint-plugin-standard": "^4.0.0",
-    "esm": "^3.2.25",
+    "ava": "^2.3.0",
     "microbundle": "^0.11.0",
-    "prettier": "^1.17.1",
-    "puppeteer": "^1.17.0"
-  },
-  "ava": {
-    "require": [
-      "esm"
-    ]
+    "prettier": "^1.18.2",
+    "puppeteer": "^1.19.0"
   }
 }

@@ -3,7 +3,7 @@ const perf = typeof window !== 'undefined' ? window.performance : null
 // get all metrics
 
 export function uxm(opts = {}) {
-  let result = {
+  const result = {
     deviceType: getDeviceType(),
     effectiveConnectionType: getEffectiveConnectionType(),
     firstPaint: getFirstPaint(),

@@ -1,7 +1,0 @@
-{
-  "extends": ["standard", "plugin:import/errors", "prettier"],
-  "plugins": ["prettier"],
-  "rules": {
-    "prettier/prettier": "error"
-  }
-}
