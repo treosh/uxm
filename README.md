@@ -91,6 +91,177 @@ const device = {
 An API is a set of pure functions with one exception to `uxm`,
 which is a meta-function to collect multiple metrics at once.
 
+### mark(markName)
+
+Create [User Timing mark](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to mark important loading event. A convenient shortcut for `window.performance.mark`.
+
+```js
+import { mark } from 'uxm'
+
+mark('page load started')
+// ...
+mark('hero image displayed')
+// ...
+mark('page fully loaded')
+```
+
+### measure(measureName, [startMarkName])
+
+Create [User Timing measure](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to evaluate timing between 2 marks.
+A convenient shortcut for `window.performance.measure`.
+
+```js
+import { mark, measure } from 'uxm'
+
+mark('start load fonts')
+// ...
+measure('fonts loaded', 'start load fonts')
+```
+
+### getUserTiming()
+
+Return an array with collected performance marks/measures. Each item contains:
+
+- `type` - "mark" or "measure"
+- `name` - unique name
+- `startTime` - start time since page load
+- `duration` - measure duration
+
+Example:
+
+```json
+[
+  {
+    "type": "mark",
+    "name": "boot",
+    "startTime": 1958
+  },
+  {
+    "type": "measure",
+    "name": "page did mount",
+    "startTime": 1958,
+    "duration": 197
+  }
+]
+```
+
+### getTimeToFirstByte()
+
+Return server response time, that is useful for backend monitoring.
+
+### getFirstContentfulPaint()
+
+Return the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
+[W3C draft for Paint Timing 1](https://w3c.github.io/paint-timing).
+
+### getFirstPaint()
+
+It's similar to `getFirstContentfulPaint` but may contain a different value when First Paint is just background change without content.
+
+### getDomContentLoaded()
+
+Return the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
+
+### getOnLoad()
+
+Return the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
+
+### getEffectiveConnectionType()
+
+Return the effective connection type (“slow-2g”, “2g”, “3g”, or “4g”) string as determined by round-trip and bandwidth values.
+[W3C draft for Network Information API](http://wicg.github.io/netinfo/).
+
+### getDeviceType()
+
+Return the device type ("phone", "tablet", or "desktop") string using the lightweight [heavy-tested]('./test/device.js') user-agent parser.
+
+### getDeviceMemory()
+
+Return the device memory ("full" or "lite") string, depends if available memory is bigger than 1 GB.
+Learn more about [Device Memory](https://developers.google.com/web/updates/2017/12/device-memory).
+
+### getUrl()
+
+Return a current page URL. A convenient shortcut for `window.location.href`.
+
+### getUserAgent()
+
+Return a User-Agent string. A convenient shortcut for `window.navigator.userAgent`.
+
+### getResources()
+
+Return an array of performance information for each resource on the page. Each item contains:
+
+- `url` - resource URL
+- `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
+- `size` - transferred size in bytes
+- `startTime` - when load started
+- `duration` - loading time in milliseconds
+
+Example:
+
+```json
+[
+  {
+    "url": "https://booking.com/",
+    "type": "navigation",
+    "size": 79263,
+    "startTime": 0,
+    "duration": 1821
+  },
+  {
+    "url": "https://q-fa.bstatic.com/mobile/css/core_not_critical_fastly.iq_ltr/8051b1d9fafb2e6339aea397447edfded9320dbb.css",
+    "type": "link",
+    "size": 54112,
+    "startTime": 515,
+    "duration": 183
+  },
+  {
+    "url": "https://r-fa.bstatic.com/mobile/images/hotelMarkerImgLoader/211f81a092a43bf96fc2a7b1dff37e5bc08fbbbf.gif",
+    "type": "img",
+    "size": 2295,
+    "startTime": 657,
+    "duration": 181
+  },
+  {
+    "url": "https://r-fa.bstatic.com/static/js/error_catcher_bec_fastly/ba8921972cc55fbf270bafe168450dd34597d5a1.js",
+    "type": "script",
+    "size": 2495,
+    "startTime": 821,
+    "duration": 43
+  },
+  ...
+]
+```
+
+### getLongTasks()
+
+Return an array of `{ startTime, duration }` pairs.
+Until `buffered` flag supported, you need to add extra script to the `<head />` to collect all Long Tasks:
+
+```html
+<script>
+  !(function() {
+    if ('PerformanceLongTaskTiming' in window) {
+      var g = (window.__lt = { e: [] })
+      g.o = new PerformanceObserver(function(l) {
+        g.e = g.e.concat(l.getEntries())
+      })
+      g.o.observe({ entryTypes: ['longtask'] })
+    }
+  })()
+</script>
+```
+
+And then get collected long-tasks using:
+
+```js
+import { getLongTasks } from 'uxm'
+getLongTasks() // [{"startTime": 672, "duration": 84}, {"startTime": 931, "duration": 84}, {"startTime": 1137, "duration": 135}]
+```
+
+Learn more about [Long Tasks](https://calendar.perfplanet.com/2017/tracking-cpu-with-long-tasks-api/).
+
 ### uxm(opts = {})
 
 Returns a Promise that resolves after `load` event fired.
@@ -142,173 +313,6 @@ uxm({ all: true }).then(metrics => {
   }
 })
 ```
-
-### mark(markName)
-
-Create [User Timing mark](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to mark important loading event. A convenient shortcut for `window.performance.mark`.
-
-```js
-import { mark } from 'uxm'
-
-mark('page load started')
-// ...
-mark('hero image displayed')
-// ...
-mark('page fully loaded')
-```
-
-### measure(measureName, [startMarkName])
-
-Create [User Timing measure](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to evaluate timing between 2 marks.
-A convenient shortcut for `window.performance.measure`.
-
-```js
-import { mark, measure } from 'uxm'
-
-mark('start load fonts')
-// ...
-measure('fonts loaded', 'start load fonts')
-```
-
-### getUserTiming()
-
-It returns an array with collected performance marks/measures. Each item contains:
-
-- `type` - "mark" or "measure"
-- `name` - unique name
-- `startTime` - start time since page load
-- `duration` - measure duration
-
-Example:
-
-```json
-[
-  {
-    "type": "mark",
-    "name": "boot",
-    "startTime": 1958
-  },
-  {
-    "type": "measure",
-    "name": "page did mount",
-    "startTime": 1958,
-    "duration": 197
-  }
-]
-```
-
-### getFirstContentfulPaint()
-
-It returns the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
-[W3C draft for Paint Timing 1](https://w3c.github.io/paint-timing).
-
-### getFirstPaint()
-
-It's similar to `getFirstContentfulPaint` but may contain a different value when First Paint is just background change without content.
-
-### getDomContentLoaded()
-
-It returns the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
-
-### getOnLoad()
-
-It returns the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
-
-### getEffectiveConnectionType()
-
-It returns the effective connection type (“slow-2g”, “2g”, “3g”, or “4g”) string as determined by round-trip and bandwidth values.
-[W3C draft for Network Information API](http://wicg.github.io/netinfo/).
-
-### getDeviceType()
-
-It returns the device type ("phone", "tablet", or "desktop") string using the lightweight [heavy-tested]('./test/device.js') user-agent parser.
-
-### getDeviceMemory()
-
-It returns the device memory ("full" or "lite") string, depends if available memory is bigger than 1 GB.
-Learn more about [Device Memory](https://developers.google.com/web/updates/2017/12/device-memory).
-
-### getUrl()
-
-It returns a current page URL. A convenient shortcut for `window.location.href`.
-
-### getUserAgent()
-
-It returns a User-Agent string. A convenient shortcut for `window.navigator.userAgent`.
-
-### getResources()
-
-It returns an array of performance information for each resource on the page. Each item contains:
-
-- `url` - resource URL
-- `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
-- `size` - transferred size in bytes
-- `startTime` - when load started
-- `duration` - loading time in milliseconds
-
-Example:
-
-```json
-[
-  {
-    "url": "https://booking.com/",
-    "type": "navigation",
-    "size": 79263,
-    "startTime": 0,
-    "duration": 1821
-  },
-  {
-    "url": "https://q-fa.bstatic.com/mobile/css/core_not_critical_fastly.iq_ltr/8051b1d9fafb2e6339aea397447edfded9320dbb.css",
-    "type": "link",
-    "size": 54112,
-    "startTime": 515,
-    "duration": 183
-  },
-  {
-    "url": "https://r-fa.bstatic.com/mobile/images/hotelMarkerImgLoader/211f81a092a43bf96fc2a7b1dff37e5bc08fbbbf.gif",
-    "type": "img",
-    "size": 2295,
-    "startTime": 657,
-    "duration": 181
-  },
-  {
-    "url": "https://r-fa.bstatic.com/static/js/error_catcher_bec_fastly/ba8921972cc55fbf270bafe168450dd34597d5a1.js",
-    "type": "script",
-    "size": 2495,
-    "startTime": 821,
-    "duration": 43
-  },
-  ...
-]
-```
-
-### getLongTasks()
-
-It returns an array of `{ startTime, duration }` pairs.
-Until `buffered` flag supported, you need to add extra script to the `<head />` to collect all Long Tasks:
-
-```html
-<script>
-  !(function() {
-    if ('PerformanceLongTaskTiming' in window) {
-      var g = (window.__lt = { e: [] })
-      g.o = new PerformanceObserver(function(l) {
-        g.e = g.e.concat(l.getEntries())
-      })
-      g.o.observe({ entryTypes: ['longtask'] })
-    }
-  })()
-</script>
-```
-
-And then get them using:
-
-```js
-import { getLongTasks } from 'uxm'
-getLongTasks() // [{"startTime": 672, "duration": 84}, {"startTime": 931, "duration": 84}, {"startTime": 1137, "duration": 135}]
-```
-
-Learn more about [Long Tasks](https://calendar.perfplanet.com/2017/tracking-cpu-with-long-tasks-api/).
 
 ## Credits
 
