@@ -120,6 +120,7 @@ export function getEffectiveConnectionType() {
 
 export function getFirstPaint() {
   if (!perf || typeof window.PerformancePaintTiming === 'undefined') return null
+  // .find is available, because PerformancePaintTiming ensures modern browser support
   const fp = perf.getEntriesByType('paint').find(({ name }) => name === 'first-paint')
   return fp ? Math.round(fp.startTime) : null
 }
@@ -144,7 +145,8 @@ export function getFirstContentfulPaint() {
 
 export function getTimeToFirstByte() {
   if (!perf) return null
-  return Math.round(perf.getEntriesByType('navigation')[0].responseStart)
+  const navEntries = perf.getEntriesByType('navigation')
+  return navEntries && navEntries[0] ? Math.round(navEntries[0].responseStart) : null
 }
 
 /**
@@ -155,7 +157,8 @@ export function getTimeToFirstByte() {
 
 export function getDomContentLoaded() {
   if (!perf) return null
-  return Math.round(perf.getEntriesByType('navigation')[0].domContentLoadedEventEnd)
+  const navEntries = perf.getEntriesByType('navigation')
+  return navEntries && navEntries[0] ? Math.round(navEntries[0].domContentLoadedEventEnd) : null
 }
 
 /**
@@ -166,7 +169,8 @@ export function getDomContentLoaded() {
 
 export function getOnLoad() {
   if (!perf) return null
-  return Math.round(perf.getEntriesByType('navigation')[0].loadEventEnd)
+  const navEntries = perf.getEntriesByType('navigation')
+  return navEntries && navEntries[0] ? Math.round(navEntries[0].loadEventEnd) : null
 }
 
 /**
