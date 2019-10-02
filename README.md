@@ -37,14 +37,39 @@ UXM is a modular library that allows to combine various functions and collect th
 
 ## Usage
 
-Install using yarn/npm:
+[![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
+[![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ```bash
-yarn add uxm
-npm i -S uxm
+npm install uxm
 ```
 
-Import `uxm` and call it at the end of the page loading to collect [CrUX-like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
+Collect loading performance metrics:
+
+```js
+import { getUrl, getTimeToFirstByte, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
+
+const metrics = {
+  url: getUrl(),
+  ttfb: getTimeToFirstByte(),
+  fcp: getFirstContentfulPaint(),
+  dcl: getDomContentLoaded()
+}
+```
+
+Analyze current device and connection:
+
+```js
+import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
+
+const device = {
+  type: getDeviceType(),
+  memory: getDeviceMemory(),
+  connection: getEffectiveConnectionType()
+}
+```
+
+Collect [CrUX-like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
 
 ```js
 import { uxm } from 'uxm'
@@ -60,30 +85,6 @@ uxm().then(metrics => {
     "onLoad": 2508
   }
 })
-```
-
-Or collect 2 performance metrics associated with URL:
-
-```js
-import { getUrl, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
-
-const metrics = {
-  url: getUrl(),
-  fcp: getFirstContentfulPaint(),
-  dcl: getDomContentLoaded()
-}
-```
-
-Or analyze current device and connection:
-
-```js
-import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
-
-const device = {
-  type: getDeviceType(),
-  memory: getDeviceMemory(),
-  connection: getEffectiveConnectionType()
-}
 ```
 
 ## API
@@ -316,8 +317,6 @@ uxm({ all: true }).then(metrics => {
 
 ## Credits
 
-Sponsored by [Treo.sh - Page speed monitoring made easy](https://treo.sh).
+[![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
 
-[![](https://github.com/treosh/uxm/workflows/CI/badge.svg)](https://github.com/treosh/uxm/actions?workflow=CI)
-[![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
-[![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
+Made with ❤️ by [Treo.sh](https://treo.sh/).
