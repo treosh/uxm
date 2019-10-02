@@ -318,7 +318,6 @@ uxm({ all: true }).then(metrics => {
 
 Sponsored by [Treo.sh - Page speed monitoring made easy](https://treo.sh).
 
-[![](https://travis-ci.org/treosh/uxm.png)](https://travis-ci.org/treosh/uxm)
+[![](https://github.com/treosh/uxm/workflows/CI/badge.svg)](https://github.com/treosh/uxm/actions?workflow=CI)
 [![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
-[![](https://img.shields.io/badge/code%20style-standard-brightgreen.svg)](http://standardjs.com/)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)

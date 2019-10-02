@@ -1,0 +1,15 @@
+name: CI
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Use node 10
+        uses: actions/setup-node@v1
+        with:
+          node-version: '10.x'
+      - name: Install deps and test
+        run: |
+          yarn install
+          yarn test
