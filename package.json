@@ -6,6 +6,7 @@
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
+  "types": "./dist/uxm.d.ts",
   "main": "dist/uxm.js",
   "module": "dist/uxm.es.js",
   "unpkg": "dist/uxm.umd.js",
@@ -29,7 +30,8 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle --no-sourcemap",
+    "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
+    "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
     "test": "prettier -c src/** package.json README.md && tsc -p . && yarn build && ava test/*.js"
   },
   "ava": {
@@ -39,12 +41,12 @@
   },
   "devDependencies": {
     "@types/node": "10",
-    "@types/puppeteer": "^1.19.1",
-    "ava": "^2.3.0",
+    "@types/puppeteer": "^1.20.0",
+    "ava": "^2.4.0",
     "esm": "^3.2.25",
     "microbundle": "^0.11.0",
     "prettier": "^1.18.2",
-    "puppeteer": "^1.19.0",
-    "typescript": "^3.6.2"
+    "puppeteer": "^1.20.0",
+    "typescript": "^3.7.0-beta"
   }
 }
