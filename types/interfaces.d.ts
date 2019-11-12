@@ -30,6 +30,9 @@ interface PerformanceEntry {
 interface PerformanceEventCallback {
   (events: PerformanceEntry[]): any
 }
+interface PerformanceMetricCallback {
+  (metric: number | null): any
+}
 
 interface Performance {
   mark(markName: string): PerformanceMark

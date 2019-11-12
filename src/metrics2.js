@@ -1,67 +1,96 @@
+import mitt from 'mitt'
 import { createPerformanceObserver } from './performance-observer'
 
-/**
- * Get First Contentful Paint. Learn more: https://web.dev/fcp/
- * @return {Promise<number | null>}
- */
+/** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} MetricType */
+// constants
+const FCP = 'first-contentful-paint'
+const FID = 'first-input-delay'
+const LCP = 'largest-contentful-paint'
+const CLS = 'cumulative-layout-shift'
 
-export function getFirstContentfulPaint() {
-  return new Promise(resolve => {
-    if (fcpObserver === null) return resolve(fcp)
-    fcpCallbacks.push(resolve)
-  })
-}
+// track events
+const emitter = mitt()
+/** @type {Object<string,number>} */
+const values = {}
 
-/** @type {number | null} */
-let fcp = null
-/** @type {function[]} */
-let fcpCallbacks = []
-let fcpObserver = createPerformanceObserver('paint', paintEvents => {
-  const fcpEvent = paintEvents.find(e => e.name === 'first-contentful-paint')
-  if (fcpEvent) {
-    fcp = Math.round(fcpEvent.startTime)
-    if (fcpObserver) fcpObserver.disconnect()
-    fcpObserver = null
-    fcpCallbacks.forEach(cb => cb(fcp))
-    fcpCallbacks = []
+export const observer = {
+  /**
+   * Subscribe on the `metric`.
+   *
+   * @param {MetricType} metricType
+   * @param {PerformanceMetricCallback} cb
+   */
+  on(metricType, cb) {
+    switch (metricType) {
+      case FCP:
+        getValueOrCreateObserver(FCP, initFcpObserver, cb)
+      case FID:
+        getValueOrCreateObserver(FID, initFidObserver, cb)
+      case CLS:
+        getValueOrCreateObserver(CLS, initClsObserver, cb)
+      default:
+        throw new Error(`Invalid metric type: ${metricType}`)
+    }
+  },
+
+  /**
+   * Unsubscribe `metric` listener.
+   *
+   * @param {MetricType} metricType
+   * @param {PerformanceMetricCallback} cb
+   */
+  off(metricType, cb) {
+    emitter.off(metricType, cb)
   }
-})
+}
+
+/** Get First Contentful Paint. Learn more: https://web.dev/fcp/ */
+export const getFirstContentfulPaint = () => getMetricValue(FCP)
+/** Get First Input Delay. Learn more: https://web.dev/fid/ */
+export const getFirstInputDelay = () => getMetricValue(FID)
+/** Get Largest Contentful Paint. Learn more: https://web.dev/lcp/ */
+export const getLargestContentfulPaint = () => getMetricValue(LCP)
+/** Get Cimmulative Layout Shift. Learn more: https://web.dev/cls/ */
+export const getCumulativeLayoutShift = () => getMetricValue(CLS)
 
 /**
- * Get First Input Delay. Learn more: https://web.dev/fid/
- * @return {Promise<number | null>}
+ * Helpers.
  */
 
-export function getFirstInputDelay() {
+/** @param {MetricType} metricName @return {Promise<number | null>} */
+function getMetricValue(metricName) {
   return new Promise(resolve => {
-    if (fidObserver === null) return resolve(fid)
-    fidCallbacks.push(resolve)
+    if (values[metricName]) return resolve(values[metricName])
+    emitter.on(metricName, resolve)
   })
 }
 
-/** @type {number | null} */
-let fid = null
-/** @type {function[]} */
-let fidCallbacks = []
-let fidObserver = createPerformanceObserver('first-input', ([fidEvent]) => {
-  fid = Math.round(fidEvent.processingStart - fidEvent.startTime)
-  if (fidObserver) fidObserver.disconnect()
-  fidObserver = null
-  fidCallbacks.forEach(cb => cb(fid))
-  fidCallbacks = []
-  // emit lcp after the first interaction
-  emitLcpEvents()
-})
+/** @param {MetricType} metricName @param {Function} observer @param {PerformanceMetricCallback} cb */
+function getValueOrCreateObserver(metricName, observer, cb) {
+  if (values[metricName]) return cb(values[metricName])
+  emitter.on(metricName, cb)
+  observer()
+}
 
-/**
- * Get Largest Contentful Paint. Learn more: https://web.dev/lcp/
- * @return {Promise<number | null>}
- */
+function initFcpObserver() {
+  let fcpObserver = createPerformanceObserver('paint', paintEvents => {
+    const fcpEvent = paintEvents.find(e => e.name === 'first-contentful-paint')
+    if (fcpEvent) {
+      values[FCP] = Math.round(fcpEvent.startTime)
+      if (fcpObserver) fcpObserver.disconnect()
+      fcpObserver = null
+      emitter.emit(FCP, values[FCP])
+    }
+  })
+}
 
-export function getLargestContentfulPaint() {
-  return new Promise(resolve => {
-    if (lcpObserver === null) return resolve(lcp)
-    lcpCallbacks.push(resolve)
+function initFidObserver() {
+  let fidObserver = createPerformanceObserver('first-input', ([fidEvent]) => {
+    values[FID] = Math.round(fidEvent.processingStart - fidEvent.startTime)
+    if (fidObserver) fidObserver.disconnect()
+    fidObserver = null
+    emitter.emit(FID, values[FID])
+    emitLcpEvents() // emit lcp after the first interaction
   })
 }
 
@@ -87,37 +116,24 @@ function lcpVisibilityChangeListener() {
 }
 document.addEventListener('visibilitychange', lcpVisibilityChangeListener, true)
 
-/**
- * Get Cimmulative Layout Shift. Learn more: https://web.dev/cls/
- * @return {Promise<number | null>}
- */
-
-export const getCumulativeLayoutShift = () => {
-  return new Promise(resolve => {
-    if (clsObserver === null) return resolve(cls)
-    clsCallbacks.push(resolve)
+function initClsObserver() {
+  let cls = 0
+  let clsObserver = createPerformanceObserver('layout-shift', lsEvents => {
+    lsEvents.forEach(lsEvent => {
+      // Only count layout shifts without recent user input.
+      if (!lsEvent.hadRecentInput) cls += lsEvent.value
+    })
   })
-}
-
-/** @type {number} */
-let cls = 0
-/** @type {function[]} */
-let clsCallbacks = []
-let clsObserver = createPerformanceObserver('layout-shift', lsEvents => {
-  lsEvents.forEach(lsEvent => {
-    // Only count layout shifts without recent user input.
-    if (!lsEvent.hadRecentInput) cls += lsEvent.value
-  })
-})
-function clsVisibilityChangeListener() {
-  if (clsObserver && document.visibilityState === 'hidden') {
-    // Force any pending records to be dispatched.
-    clsObserver.takeRecords()
-    clsObserver.disconnect()
-    clsObserver = null
-    removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
-    clsCallbacks.forEach(cb => cb(cls))
-    clsCallbacks = []
+  function clsVisibilityChangeListener() {
+    if (clsObserver && document.visibilityState === 'hidden') {
+      // Force any pending records to be dispatched.
+      clsObserver.takeRecords()
+      clsObserver.disconnect()
+      clsObserver = null
+      values[CLS] = cls
+      removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
+      emitter.emit(CLS, values[CLS])
+    }
   }
+  document.addEventListener('visibilitychange', clsVisibilityChangeListener, true)
 }
-document.addEventListener('visibilitychange', clsVisibilityChangeListener, true)
