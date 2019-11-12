@@ -4,6 +4,7 @@
     "moduleResolution": "node",
     "module": "commonjs",
     "resolveJsonModule": true,
+    "esModuleInterop": true,
     "target": "es2018",
     "allowJs": true,
     "checkJs": true,

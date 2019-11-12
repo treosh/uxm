@@ -48,5 +48,8 @@
     "prettier": "^1.18.2",
     "puppeteer": "^1.20.0",
     "typescript": "^3.7.0-beta"
+  },
+  "dependencies": {
+    "mitt": "^1.2.0"
   }
 }
