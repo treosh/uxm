@@ -71,12 +71,12 @@ export function uxm(opts = {}) {
  * https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark
  *
  * @param {string} markName
+ * @return {PerformanceMark | null}
  */
 
 export function mark(markName) {
-  if (perf && perf.mark) {
-    perf.mark(markName)
-  }
+  if (!perf || !perf.mark) return null
+  return perf.mark(markName)
 }
 
 /**
@@ -85,15 +85,16 @@ export function mark(markName) {
  *
  * @param {string} measureName
  * @param {string} [startMarkName]
+ * @return {PerformanceMeasure | null}
  */
 
 export function measure(measureName, startMarkName) {
-  if (perf && perf.measure) {
-    try {
-      perf.measure(measureName, startMarkName)
-    } catch (err) {
-      console.error(err)
-    }
+  if (!perf || !perf.measure) return null
+  try {
+    return perf.measure(measureName, startMarkName)
+  } catch (err) {
+    console.error(err)
+    return null
   }
 }
 
