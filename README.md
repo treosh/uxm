@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  A tiny (1kb gzip) utility library for collecting web performance metrics<br />
-  that affect user experience.
+  A tiny (1.5kb gzip) utility library for collecting<br />
+  user-centric performance metrics.
 </p>
 
 <p align="center">
@@ -14,26 +14,7 @@
 <br/>
 <br/>
 
-Modern web platform provides a lot of APIs to analyze page speed information.
-But it's hard to follow them and even harder to deal with the lack of implementation in different browsers.
-
-UXM is a modular library that allows to combine various functions and collect the data you need. Think about it, as [Lodash](https://lodash.com/) for user experience APIs.
-
-**Use cases**:
-
-- Collect RUM data.
-- Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
-- Audit the page performance using Puppeteer ([example](./test/index.js)).
-- Dynamically evaluate the performance of the user's device and adapt the UI.
-
-**Features**:
-
-- Modular design based on ES modules.
-- Small size (1kb gzip). It's usually smaller if you use [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
-- Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
-- Fully featured [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
-- Lightweight device type parser.
-- Experimental [Long Tasks](https://www.w3.org/TR/longtasks/) support for interactivity metrics.
+...
 
 ## Usage
 
@@ -44,275 +25,176 @@ UXM is a modular library that allows to combine various functions and collect th
 npm install uxm
 ```
 
-Collect loading performance metrics:
-
-```js
-import { getUrl, getTimeToFirstByte, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
-
-const metrics = {
-  url: getUrl(),
-  ttfb: getTimeToFirstByte(),
-  fcp: getFirstContentfulPaint(),
-  dcl: getDomContentLoaded()
-}
-```
-
-Analyze current device and connection:
-
-```js
-import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
-
-const device = {
-  type: getDeviceType(),
-  memory: getDeviceMemory(),
-  connection: getEffectiveConnectionType()
-}
-```
-
-Collect [CrUX-like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
-
-```js
-import { uxm } from 'uxm'
-
-uxm().then(metrics => {
-  console.log(metrics) // ->
-  {
-    "deviceType": "desktop",
-    "effectiveConnectionType": "4g",
-    "firstPaint": 1646,
-    "firstContentfulPaint": 1646,
-    "domContentLoaded": 1698,
-    "onLoad": 2508
-  }
-})
-```
-
 ## API
 
-An API is a set of pure functions with one exception to `uxm`,
-which is a meta-function to collect multiple metrics at once.
+### User-centric metrics
 
-### mark(markName)
+https://web.dev/metrics/#important-metrics-to-measure
 
-Create [User Timing mark](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to mark important loading event. A convenient shortcut for `window.performance.mark`.
+Subscribe to the core user-centric metrics.
+
+- FCP: metrics.on('first-contentful-paint', fcp => {})
+- LCP: metrics.on('largest-contentful-paint', lcp => {})
+- FID: metrics.on('first-input-delay', fid => {})
+- CLS: metrics.on('cumulative-layout-shift', cls => {})
+- await getFirstContentfulPaint() || getFirstInputDelay() || getLargestContentfulPaint() || getCumulativeLayoutShift()
+
+### Custom events
+
+https://web.dev/metrics/#define-your-own-metrics
+
+Subscribe on raw events and build your own metrics.
+Use `getEventsByType(type)` to get buffered events.
+
+- events.on('long-task', longTasks => {})
+- events.on('element-timing', elementTimings => {})
+- events.on('resource', resources => {})
+- events.on('layout-shift', layoutShifts => {})
+- await getEventsByType('mark' || 'measure' || 'resource' || 'element-timing' || 'layout-shift' || 'long-task', 'navigation', events => {})
+
+Profile your app and build custom metrics
+
+- mark(markName) + measure(measureName, [startMarkName], [endMarkName]) => traditional userTiming
+- time(label) + timeEnd(label) || timeEndPaint(label) => trackable constole.time|console.timeEnd, timeEndPaint waits for idle main thread for UI operations
+- events.on('measure', measures => {})
+
+### Device info
+
+Sync API to differenciate devices.
+
+- getDeviceMemory()
+- getEffectiveConnectionType()
+- getHardwareConcurrency()
+- getUrl()
+- getUserAgent()
+
+### Navigation timing
+
+Async API for back-end monitoring.
+
+- await getTimeToFirstByte()
+- await getServerTiming()
+- await getDomContentLoaded()
+- await getOnLoad()
+
+### `Deprecated` from v1
+
+- `del`: getFirstPaint() - useless, use getFirstContentfulPaint or getEventsByType('paint') and filter `first-paint`
+- `del`: getUserTimings() => use getEventsByType('mark') + getEventsByType('measure')
+- `del`: getResources() => getEventsByType('resources')
+- `del`: getLongTasks() => not buffered yet, later getEventsByType('long-task')
+- `del`: uxm(opts) => in favor of explicit config
+- `del`: getDeviceType() => better to use real device parsing or an HTTP header from CDN
+
+## Examples
+
+### Basic example
 
 ```js
-import { mark } from 'uxm'
+import { metrics } from 'uxm'
+import { reportToGoogleAnalytics } from 'uxm/google-analytics-reporter'
 
-mark('page load started')
+// report metrics
+metrics
+  .on('first-contentful-paint', fcp => reportToGoogleAnalytics({ fcp })
+  .on('largest-contentful-paint', lcp => reportToGoogleAnalytics({ lcp }))
+  .on('first-input-delay', fid => reportToGoogleAnalytics({ fid }))
+  .on('cumulative-layout-shift', cls => reportToGoogleAnalytics({ cls }))
+```
+
+### CrUX-like metrics
+
+```js
+import {
+  getTimeToFirstByte,
+  getFirstContentfulPaint,
+  getDomContentLoaded,
+  getOnLoad,
+  metrics,
+  getHardwareConcurrency,
+  getEffectiveConnectionType,
+  getDeviceMemory,
+  getUrl
+} from 'uxm'
+// later, track sessionId and debounce events
+import { reportMetrics } from 'uxm/api-reporter'
+
+const loadMetrics = {
+  ttfb: await getTimeToFirstByte(),
+  fcp: await getFirstContentfulPaint(),
+  dcl: await getDomContentLoaded(),
+  ol: await getOnLoad()
+}
+
+const device = {
+  effectiveConnectionType: getEffectiveConnectionType(),
+  url: getUrl()
+}
+
+reportMetrics({ ...loadMetrics, ...device })
+
+// report delayed metrics
+metrics
+  .on('largest-contentful-paint', lcp => reportMetrics({ lcp }))
+  .on('first-input-delay', fid => reportMetrics({ fid }))
+  .on('cumulative-layout-shift', cls => reportMetrics({ cls }))
+```
+
+### SPA Monitoring
+
+```js
+import { observer, time, timeEnd, timeEndPaint } from 'uxm'
+
+// collect CrUX metrics like in prev example
 // ...
-mark('hero image displayed')
-// ...
-mark('page fully loaded')
+// observe SPA events
+observer.on('measures', measures => reportEvents('measures', parseMeasures(measures))) // ignore <1s
+observer.on('long-tasks', longTasks => reportEvents('longTasks', parseLongTasks(longTasks))) // use only duration
+observer.on('resources', resources => reportEvents('resources', parseResources(resources))) // only XHR
+observer.on('layout-shifts', layoutShifts => reportEvents('layoutShifts', parseLayoutShifts(layoutShifts))) // round to % & only values
+
+// track performance with custom metrics
+time('render')
+await render() // perform UI render
+timeEndPaint('render') // report only after all the paints finished
+
+time('compute')
+computeSomething() // perform heavy compute and track exact time
+timeEnd('compute') // report it, use time & timeEnd as trackable console.time + console.timeEnd
 ```
 
-### measure(measureName, [startMarkName])
-
-Create [User Timing measure](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to evaluate timing between 2 marks.
-A convenient shortcut for `window.performance.measure`.
+### React
 
 ```js
-import { mark, measure } from 'uxm'
+// from
+import { useEffect } from 'react'
+import { time, timeEndPaint } from 'uxm'
 
-mark('start load fonts')
-// ...
-measure('fonts loaded', 'start load fonts')
-```
+export const App = () => {
+  time('renderApp')
+  useEffect(() => {
+    timeEndPaint('renderApp')
+  }, [])
+  return <div className="app">Hello</div>
+}
 
-### getUserTiming()
+// or:
+import { useTime } from 'uxm/react'
 
-Return an array with collected performance marks/measures. Each item contains:
+export const App = () => {
+  useTime('renderApp')
+  return <div className="app">Hello</div>
+}
 
-- `type` - "mark" or "measure"
-- `name` - unique name
-- `startTime` - start time since page load
-- `duration` - measure duration
+function useTime(label) {
+  time(label)
+  useEffect(() => {
+    timeEndPaint(label) // wait for the paint
+  }, []) // only once
+}
 
-Example:
-
-```json
-[
-  {
-    "type": "mark",
-    "name": "boot",
-    "startTime": 1958
-  },
-  {
-    "type": "measure",
-    "name": "page did mount",
-    "startTime": 1958,
-    "duration": 197
-  }
-]
-```
-
-### getTimeToFirstByte()
-
-Return server response time, that is useful for backend monitoring.
-
-### getFirstContentfulPaint()
-
-Return the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
-[W3C draft for Paint Timing 1](https://w3c.github.io/paint-timing).
-
-### getFirstPaint()
-
-It's similar to `getFirstContentfulPaint` but may contain a different value when First Paint is just background change without content.
-
-### getDomContentLoaded()
-
-Return the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
-
-### getOnLoad()
-
-Return the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
-
-### getEffectiveConnectionType()
-
-Return the effective connection type (“slow-2g”, “2g”, “3g”, or “4g”) string as determined by round-trip and bandwidth values.
-[W3C draft for Network Information API](http://wicg.github.io/netinfo/).
-
-### getDeviceType()
-
-Return the device type ("phone", "tablet", or "desktop") string using the lightweight [heavy-tested]('./test/device.js') user-agent parser.
-
-### getDeviceMemory()
-
-Return the device memory ("full" or "lite") string, depends if available memory is bigger than 1 GB.
-Learn more about [Device Memory](https://developers.google.com/web/updates/2017/12/device-memory).
-
-### getUrl()
-
-Return a current page URL. A convenient shortcut for `window.location.href`.
-
-### getUserAgent()
-
-Return a User-Agent string. A convenient shortcut for `window.navigator.userAgent`.
-
-### getResources()
-
-Return an array of performance information for each resource on the page. Each item contains:
-
-- `url` - resource URL
-- `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
-- `size` - transferred size in bytes
-- `startTime` - when load started
-- `duration` - loading time in milliseconds
-
-Example:
-
-```json
-[
-  {
-    "url": "https://booking.com/",
-    "type": "navigation",
-    "size": 79263,
-    "startTime": 0,
-    "duration": 1821
-  },
-  {
-    "url": "https://q-fa.bstatic.com/mobile/css/core_not_critical_fastly.iq_ltr/8051b1d9fafb2e6339aea397447edfded9320dbb.css",
-    "type": "link",
-    "size": 54112,
-    "startTime": 515,
-    "duration": 183
-  },
-  {
-    "url": "https://r-fa.bstatic.com/mobile/images/hotelMarkerImgLoader/211f81a092a43bf96fc2a7b1dff37e5bc08fbbbf.gif",
-    "type": "img",
-    "size": 2295,
-    "startTime": 657,
-    "duration": 181
-  },
-  {
-    "url": "https://r-fa.bstatic.com/static/js/error_catcher_bec_fastly/ba8921972cc55fbf270bafe168450dd34597d5a1.js",
-    "type": "script",
-    "size": 2495,
-    "startTime": 821,
-    "duration": 43
-  },
-  ...
-]
-```
-
-### getLongTasks()
-
-Return an array of `{ startTime, duration }` pairs.
-Until `buffered` flag supported, you need to add extra script to the `<head />` to collect all Long Tasks:
-
-```html
-<script>
-  !(function() {
-    if ('PerformanceLongTaskTiming' in window) {
-      var g = (window.__lt = { e: [] })
-      g.o = new PerformanceObserver(function(l) {
-        g.e = g.e.concat(l.getEntries())
-      })
-      g.o.observe({ entryTypes: ['longtask'] })
-    }
-  })()
-</script>
-```
-
-And then get collected long-tasks using:
-
-```js
-import { getLongTasks } from 'uxm'
-getLongTasks() // [{"startTime": 672, "duration": 84}, {"startTime": 931, "duration": 84}, {"startTime": 1137, "duration": 135}]
-```
-
-Learn more about [Long Tasks](https://calendar.perfplanet.com/2017/tracking-cpu-with-long-tasks-api/).
-
-### uxm(opts = {})
-
-Returns a Promise that resolves after `load` event fired.
-A default set of metrics is defined by [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/), but you can customize them using options (`url`, `userAgent`, `deviceMemory`, `userTiming`, `longTasks`, `resources`).
-
-Or pass `all` to get the full report:
-
-```js
-import { uxm } from 'uxm'
-
-uxm({ all: true }).then(metrics => {
-  console.log(metrics) // ->
-  {
-    "deviceType": "phone",
-    "effectiveConnectionType": "4g",
-    "firstPaint": 531,
-    "firstContentfulPaint": 531,
-    "domContentLoaded": 768,
-    "onLoad": 1317,
-    "url": "https://www.booking.com/",
-    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1",
-    "deviceMemory": "full",
-    "userTiming": [
-      {
-        "type": "measure",
-        "name": "b-stylesheets",
-        "startTime": 0,
-        "duration": 436
-      },
-      ...
-    ],
-    "longTasks": [
-      {
-        "startTime": 587,
-        "duration": 79
-      },
-      ...
-    ],
-    "resources": [
-      {
-        "url": "https://booking.com/",
-        "type": "navigation",
-        "size": 77953,
-        "startTime": 0,
-        "duration": 1568
-      },
-      ...
-    ]
-  }
-})
+// report "measures" to analytics
+observer.on('measures', (measures) => reportEvents(measures))
 ```
 
 ## Credits

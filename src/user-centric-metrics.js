@@ -12,6 +12,8 @@ const CLS = 'cumulative-layout-shift'
 const emitter = mitt()
 /** @type {Object<string,number>} */
 const values = {}
+/** @type {Object<string,boolean>} */
+const observers = {}
 
 export const observer = {
   /**
@@ -25,7 +27,9 @@ export const observer = {
       case FCP:
         getValueOrCreateObserver(FCP, initFcpObserver, cb)
       case FID:
-        getValueOrCreateObserver(FID, initFidObserver, cb)
+        getValueOrCreateObserver(FID, initFidAndLcpObserver, cb)
+      case LCP:
+        getValueOrCreateObserver(LCP, initFidAndLcpObserver, cb)
       case CLS:
         getValueOrCreateObserver(CLS, initClsObserver, cb)
       default:
@@ -69,7 +73,10 @@ function getMetricValue(metricName) {
 function getValueOrCreateObserver(metricName, observer, cb) {
   if (values[metricName]) return cb(values[metricName])
   emitter.on(metricName, cb)
-  observer()
+  if (!observers[metricName]) {
+    observer()
+    observers[metricName] = true
+  }
 }
 
 function initFcpObserver() {
@@ -84,7 +91,7 @@ function initFcpObserver() {
   })
 }
 
-function initFidObserver() {
+function initFidAndLcpObserver() {
   let fidObserver = createPerformanceObserver('first-input', ([fidEvent]) => {
     values[FID] = Math.round(fidEvent.processingStart - fidEvent.startTime)
     if (fidObserver) fidObserver.disconnect()
@@ -92,29 +99,25 @@ function initFidObserver() {
     emitter.emit(FID, values[FID])
     emitLcpEvents() // emit lcp after the first interaction
   })
-}
-
-/** @type {number | null} */
-let lcp = null
-/** @type {function[]} */
-let lcpCallbacks = []
-let lcpObserver = createPerformanceObserver('largest-contentful-paint', lcpEvents => {
-  const lastLcpEvent = lcpEvents[lcpEvents.length - 1]
-  lcp = Math.round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
-})
-function emitLcpEvents() {
-  if (lcpObserver) {
-    lcpObserver.disconnect()
-    lcpObserver = null
-    removeEventListener('visibilitychange', lcpVisibilityChangeListener, true)
-    lcpCallbacks.forEach(cb => cb(lcp))
-    lcpCallbacks = []
+  let lcp = 0
+  let lcpObserver = createPerformanceObserver('largest-contentful-paint', lcpEvents => {
+    const lastLcpEvent = lcpEvents[lcpEvents.length - 1]
+    lcp = Math.round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
+  })
+  function emitLcpEvents() {
+    if (lcpObserver) {
+      lcpObserver.disconnect()
+      lcpObserver = null
+      values[LCP] = lcp
+      removeEventListener('visibilitychange', lcpVisibilityChangeListener, true)
+      emitter.emit(LCP, values[LCP])
+    }
   }
+  function lcpVisibilityChangeListener() {
+    if (document.visibilityState === 'hidden') emitLcpEvents()
+  }
+  document.addEventListener('visibilitychange', lcpVisibilityChangeListener, true)
 }
-function lcpVisibilityChangeListener() {
-  if (document.visibilityState === 'hidden') emitLcpEvents()
-}
-document.addEventListener('visibilitychange', lcpVisibilityChangeListener, true)
 
 function initClsObserver() {
   let cls = 0
