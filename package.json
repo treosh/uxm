@@ -50,6 +50,7 @@
     "typescript": "^3.7.0-beta"
   },
   "dependencies": {
-    "mitt": "^1.2.0"
+    "mitt": "^1.2.0",
+    "round-to": "^4.0.0"
   }
 }
