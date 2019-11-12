@@ -23,7 +23,7 @@ export function getTimeToFirstByte() {
  */
 
 export function getServerTiming() {
-  return getEventsByType('navigation').then(([nav]) => (nav ? nav.serverTiming : null))
+  return getEventsByType('navigation').then(([nav]) => (nav ? nav.serverTiming || null : null))
 }
 
 /**

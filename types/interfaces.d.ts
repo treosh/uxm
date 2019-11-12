@@ -18,6 +18,19 @@ interface Navigator {
   webkitConnection: NetworkInformation
 }
 
+interface PerformanceEntry {
+  processingStart: number
+  renderTime: number
+  loadTime: number
+  serverTiming: number
+  hadRecentInput: boolean
+  value: number
+}
+
+interface PerformanceEventCallback {
+  (events: PerformanceEntry[]): any
+}
+
 interface Performance {
   mark(markName: string): PerformanceMark
   measure(measureName: string, startMarkName?: string, endMarkName?: string): PerformanceMeasure

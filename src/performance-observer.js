@@ -2,7 +2,7 @@
  * Create performance observer.
  *
  * @param {string} eventType
- * @param {function} cb
+ * @param {PerformanceEventCallback} cb
  * @return {PerformanceObserver | null}
  */
 
