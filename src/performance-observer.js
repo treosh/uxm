@@ -7,10 +7,10 @@
  */
 
 export function createPerformanceObserver(eventType, cb) {
-  const type = resolveType(eventType)
+  const type = normalizeEventType(eventType)
   const buffered = type !== 'longtask'
   if (typeof PerformanceObserver === 'undefined') return null
-  if (PerformanceObserver.supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
+  if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
   const po = new PerformanceObserver(list => cb(list.getEntries()))
   po.observe({ type, buffered })
   return po
@@ -25,12 +25,10 @@ export function createPerformanceObserver(eventType, cb) {
 
 export function getEventsByType(eventType) {
   return new Promise((resolve, reject) => {
-    const type = resolveType(eventType)
+    const type = normalizeEventType(eventType)
     if (typeof PerformanceObserver === 'undefined') return resolve([])
-    if (PerformanceObserver.supportedEntryTypes.indexOf(type) === -1) {
-      return reject(new Error(`Invalid eventType: ${type}`))
-    }
-    if (type === 'longtask') return resolve([])
+    if (supportedEntryTypes.indexOf(type) === -1) return reject(new Error(`Invalid eventType: ${type}`))
+    if (type === 'longtask') return resolve([]) // no buffering for longTasks
     const po = createPerformanceObserver(
       type,
       /** @param {PerformanceEntry[]} events */ events => {
@@ -47,22 +45,33 @@ export function getEventsByType(eventType) {
 }
 
 /**
- * Resolve event type to supported event string.
+ * Resolve event type to supported event strings:
+ * -
+ * - element-timing (because, it's the name of the spec)
+ * - long-task (two words should be separated with dash)
+ * - first-contentful-paint (that's what user would expect, "paint" is too generic)
  *
  * @param {string} eventType
  * @return {string}
  */
 
-function resolveType(eventType) {
-  switch (eventType) {
-    case 'element-timing':
-      return 'element'
-    case 'long-task':
-      return 'longtask'
-    case 'first-paint':
-    case 'first-contentful-paint':
-      return 'paint'
-    default:
-      return eventType
-  }
+function normalizeEventType(eventType) {
+  const type = eventType.toLowerCase()
+  if (type === 'element-timing') return 'element'
+  else if (type === 'long-task') return 'longtask'
+  else if (type === 'first-paint' || type === 'first-contentful-paint') return 'paint'
+  else return type
 }
+
+const supportedEntryTypes = PerformanceObserver.supportedEntryTypes || [
+  'element',
+  'first-input',
+  'largest-contentful-paint',
+  'layout-shift',
+  'longtask',
+  'mark',
+  'measure',
+  'navigation',
+  'paint',
+  'resource'
+]

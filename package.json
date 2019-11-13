@@ -39,18 +39,17 @@
       "esm"
     ]
   },
+  "dependencies": {
+    "mitt": "^1.2.0"
+  },
   "devDependencies": {
     "@types/node": "10",
-    "@types/puppeteer": "^1.20.0",
+    "@types/puppeteer": "^1.20.2",
     "ava": "^2.4.0",
     "esm": "^3.2.25",
     "microbundle": "^0.11.0",
-    "prettier": "^1.18.2",
-    "puppeteer": "^1.20.0",
-    "typescript": "^3.7.0-beta"
-  },
-  "dependencies": {
-    "mitt": "^1.2.0",
-    "round-to": "^4.0.0"
+    "prettier": "^1.19.1",
+    "puppeteer": "^2.0.0",
+    "typescript": "^3.7.2"
   }
 }

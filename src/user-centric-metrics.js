@@ -15,15 +15,15 @@ const values = {}
 /** @type {Object<string,boolean>} */
 const observers = {}
 
-export const observer = {
+export const metrics = {
   /**
    * Subscribe on the `metric`.
    *
-   * @param {MetricType} metricType
+   * @param {string} metricType
    * @param {PerformanceMetricCallback} cb
    */
   on(metricType, cb) {
-    switch (metricType) {
+    switch (normalizeMetricType(metricType)) {
       case FCP:
         getValueOrCreateObserver(FCP, initFcpObserver, cb)
       case FID:
@@ -139,4 +139,14 @@ function initClsObserver() {
     }
   }
   document.addEventListener('visibilitychange', clsVisibilityChangeListener, true)
+}
+
+/** @param {string} metricType @return {string} */
+function normalizeMetricType(metricType) {
+  const metric = metricType.toLowerCase()
+  if (metric === 'fcp') return FCP
+  else if (metric === 'fid') return FID
+  else if (metric === 'lcp') return LCP
+  else if (metric === 'cls') return CLS
+  else return metric
 }
