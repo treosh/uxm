@@ -1,4 +1,19 @@
 import mitt from 'mitt'
+
+const PO = typeof PerformanceObserver !== 'undefined' ? window.PerformanceObserver : null
+const entryTypes = PO && PO.supportedEntryTypes ? PO.supportedEntryTypes : null
+const supportedEntryTypes = entryTypes || [
+  'element',
+  'first-input',
+  'largest-contentful-paint',
+  'layout-shift',
+  'longtask',
+  'mark',
+  'measure',
+  'navigation',
+  'paint',
+  'resource'
+]
 /** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
 
 export const performanceEvents = {
@@ -13,7 +28,9 @@ export const performanceEvents = {
     if (!this._emitter) this._emitter = mitt()
     if (!this._observers[type]) {
       createPerformanceObserver(type, events => {
-        if (this._emitter) this._emitter.emit(eventType, events)
+        if (this._emitter) {
+          this._emitter.emit(eventType, events)
+        }
       })
       this._observers[type] = true
     }
@@ -46,12 +63,11 @@ export const performanceEvents = {
  */
 
 export function createPerformanceObserver(eventType, cb) {
+  if (!PO) return null
   const type = normalizeEventType(eventType)
   const buffered = type !== 'longtask'
-  console.log('createPerformanceObserver', type)
-  if (typeof PerformanceObserver === 'undefined') return null
   if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
-  const po = new window.PerformanceObserver(list => cb(list.getEntries()))
+  const po = new PO(list => cb(list.getEntries()))
   po.observe({ type, buffered })
   return po
 }
@@ -65,8 +81,8 @@ export function createPerformanceObserver(eventType, cb) {
 
 export function getEventsByType(eventType) {
   return new Promise((resolve, reject) => {
+    if (!PO) return resolve([])
     const type = normalizeEventType(eventType)
-    if (typeof PerformanceObserver === 'undefined') return resolve([])
     if (supportedEntryTypes.indexOf(type) === -1) return reject(new Error(`Invalid eventType: ${type}`))
     if (type === 'longtask') return resolve([]) // no buffering for longTasks
     let observer = createPerformanceObserver(
@@ -105,20 +121,3 @@ function normalizeEventType(eventType) {
   else if (type === 'lcp') return 'largest-contentful-paint'
   else return type
 }
-
-const entryTypes =
-  typeof PerformanceObserver !== 'undefined' && window.PerformanceObserver.supportedEntryTypes
-    ? window.PerformanceObserver.supportedEntryTypes
-    : null
-const supportedEntryTypes = entryTypes || [
-  'element',
-  'first-input',
-  'largest-contentful-paint',
-  'layout-shift',
-  'longtask',
-  'mark',
-  'measure',
-  'navigation',
-  'paint',
-  'resource'
-]

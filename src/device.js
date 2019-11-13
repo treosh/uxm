@@ -1,3 +1,9 @@
+/** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
+const nav = typeof navigator !== 'undefined' ? navigator : null
+
+/** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
+/** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */
+
 /**
  * Get effective connection type.
  * https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
@@ -6,23 +12,19 @@
  */
 
 export function getEffectiveConnectionType() {
-  const conn =
-    typeof navigator !== 'undefined'
-      ? navigator.connection || navigator.mozConnection || navigator.webkitConnection
-      : null
+  const conn = nav ? nav.connection || nav.mozConnection || nav.webkitConnection : null
   return conn ? conn.effectiveType : null
 }
 
 /**
  * Get device memory in GB rounded to 2.
+ * https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
  *
  * @return {number | null}
  */
 
 export function getDeviceMemory() {
-  const deviceMemory = typeof navigator !== 'undefined' ? navigator.deviceMemory : undefined
-  if (deviceMemory === undefined) return null
-  return deviceMemory
+  return nav ? nav.deviceMemory || null : null
 }
 
 /**
@@ -32,15 +34,13 @@ export function getDeviceMemory() {
  */
 
 export function getHardwareConcurrency() {
-  const hardwareConcurrency = typeof navigator !== 'undefined' ? navigator.hardwareConcurrency : undefined
-  if (hardwareConcurrency === undefined) return null
-  return hardwareConcurrency
+  return nav ? nav.hardwareConcurrency || null : null
 }
 
 /**
  * Get current url.
  *
- * @return {String}
+ * @return {string}
  */
 
 export function getUrl() {
@@ -50,9 +50,9 @@ export function getUrl() {
 /**
  * Get user-agent header.
  *
- * @return {String}
+ * @return {string | null}
  */
 
 export function getUserAgent() {
-  return window.navigator.userAgent
+  return nav ? nav.userAgent : null
 }

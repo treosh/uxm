@@ -177,10 +177,10 @@ https://web.dev/metrics/#define-your-own-metrics
 Subscribe on raw events and build your own metrics.
 Use `getEventsByType(type)` to get buffered events.
 
-- events.on('long-task', longTasks => {})
-- events.on('element-timing', elementTimings => {})
-- events.on('resource', resources => {})
-- events.on('layout-shift', layoutShifts => {})
+- performanceEvents.on('long-task', longTasks => {})
+- performanceEvents.on('element-timing', elementTimings => {})
+- performanceEvents.on('resource', resources => {})
+- performanceEvents.on('layout-shift', layoutShifts => {})
 - await getEventsByType('mark' || 'measure' || 'resource' || 'element-timing' || 'layout-shift' || 'long-task', 'navigation', events => {})
 - createPerformanceObserver(eventType, cb)
 
@@ -188,7 +188,7 @@ Profile your app and build custom metrics
 
 - mark(markName) + measure(measureName, [startMarkName], [endMarkName]) => traditional userTiming
 - time(label) + timeEnd(label) || timeEndPaint(label) => trackable constole.time|console.timeEnd, timeEndPaint waits for idle main thread for UI operations
-- events.on('measure', measures => {})
+- performanceEvents.on('measure', measures => {})
 
 ### Device info
 
