@@ -15,11 +15,11 @@ export function getTimeToFirstByte() {
  * Get server timing.
  * Learn more: https://web.dev/custom-metrics/#server-timing-api
  *
- * @return {Promise<object | null>}
+ * @return {Promise<object[] | null>}
  */
 
 export function getServerTiming() {
-  return getEventsByType('navigation').then(([nav]) => (nav ? nav.serverTiming || null : null))
+  return getEventsByType('navigation').then(([nav]) => (nav ? nav.serverTiming || [] : null))
 }
 
 /**

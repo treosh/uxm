@@ -59,7 +59,9 @@ function normalizeEventType(eventType) {
   const type = eventType.toLowerCase()
   if (type === 'element-timing') return 'element'
   else if (type === 'long-task') return 'longtask'
-  else if (type === 'first-paint' || type === 'first-contentful-paint') return 'paint'
+  else if (type === 'fcp' || type === 'first-paint' || type === 'first-contentful-paint') return 'paint'
+  else if (type === 'fid' || type === 'first-input-delay') return 'first-input'
+  else if (type === 'lcp') return 'largest-contentful-paint'
   else return type
 }
 

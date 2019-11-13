@@ -49,24 +49,17 @@ export const metrics = {
 }
 
 /** Get First Contentful Paint. Learn more: https://web.dev/fcp/ */
-export const getFirstContentfulPaint = () => getMetricValue(FCP)
+export const getFirstContentfulPaint = () => getMetricValue(FCP, initFcpObserver)
 /** Get First Input Delay. Learn more: https://web.dev/fid/ */
-export const getFirstInputDelay = () => getMetricValue(FID)
+export const getFirstInputDelay = () => getMetricValue(FID, initFidAndLcpObserver)
 /** Get Largest Contentful Paint. Learn more: https://web.dev/lcp/ */
-export const getLargestContentfulPaint = () => getMetricValue(LCP)
+export const getLargestContentfulPaint = () => getMetricValue(LCP, initFidAndLcpObserver)
 /** Get Cimmulative Layout Shift. Learn more: https://web.dev/cls/ */
-export const getCumulativeLayoutShift = () => getMetricValue(CLS)
+export const getCumulativeLayoutShift = () => getMetricValue(CLS, initClsObserver)
 
-/**
- * Helpers.
- */
-
-/** @param {MetricType} metricName @return {Promise<number | null>} */
-function getMetricValue(metricName) {
-  return new Promise(resolve => {
-    if (values[metricName]) return resolve(values[metricName])
-    emitter.on(metricName, resolve)
-  })
+/** @param {MetricType} metricName @param {Function} observer @return {Promise<number | null>} */
+function getMetricValue(metricName, observer) {
+  return new Promise(resolve => getValueOrCreateObserver(metricName, observer, resolve))
 }
 
 /** @param {MetricType} metricName @param {Function} observer @param {PerformanceMetricCallback} cb */

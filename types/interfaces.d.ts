@@ -22,7 +22,7 @@ interface PerformanceEntry {
   processingStart: number
   renderTime: number
   loadTime: number
-  serverTiming: number
+  serverTiming: object[]
   hadRecentInput: boolean
   value: number
 }
