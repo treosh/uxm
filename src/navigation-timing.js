@@ -34,8 +34,8 @@ export function getDomContentLoaded() {
 }
 
 /**
- * Get `DOMContentLoaded` event.
- * Learn more: https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+ * Get `loadEventEnd` event.
+ * Learn more: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/loadEventEnd
  *
  * @return {Promise<object | null>}
  */
