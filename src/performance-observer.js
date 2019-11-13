@@ -1,3 +1,42 @@
+import mitt from 'mitt'
+/** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
+
+export const performanceEvents = {
+  /**
+   * Subscribe on the `metric`.
+   *
+   * @param {string} eventType
+   * @param {PerformanceEventCallback} cb
+   */
+  on(eventType, cb) {
+    const type = normalizeEventType(eventType)
+    if (!this._emitter) this._emitter = mitt()
+    if (!this._observers[type]) {
+      createPerformanceObserver(type, events => {
+        if (this._emitter) this._emitter.emit(eventType, events)
+      })
+      this._observers[type] = true
+    }
+    this._emitter.on(eventType, cb)
+    return performanceEvents
+  },
+
+  /**
+   * Unsubscribe `metric` listener.
+   *
+   * @param {string} eventType
+   * @param {PerformanceEventCallback} cb
+   */
+  off(eventType, cb) {
+    if (this._emitter) this._emitter.off(normalizeEventType(eventType), cb)
+  },
+
+  /** @type {mitt.Emitter | null} */
+  _emitter: null,
+  /** @type {Object<string,boolean>} */
+  _observers: {}
+}
+
 /**
  * Create performance observer.
  *
@@ -9,9 +48,10 @@
 export function createPerformanceObserver(eventType, cb) {
   const type = normalizeEventType(eventType)
   const buffered = type !== 'longtask'
+  console.log('createPerformanceObserver', type)
   if (typeof PerformanceObserver === 'undefined') return null
   if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
-  const po = new PerformanceObserver(list => cb(list.getEntries()))
+  const po = new window.PerformanceObserver(list => cb(list.getEntries()))
   po.observe({ type, buffered })
   return po
 }
@@ -29,16 +69,17 @@ export function getEventsByType(eventType) {
     if (typeof PerformanceObserver === 'undefined') return resolve([])
     if (supportedEntryTypes.indexOf(type) === -1) return reject(new Error(`Invalid eventType: ${type}`))
     if (type === 'longtask') return resolve([]) // no buffering for longTasks
-    const po = createPerformanceObserver(
+    let observer = createPerformanceObserver(
       type,
       /** @param {PerformanceEntry[]} events */ events => {
-        if (po) po.disconnect()
+        if (observer) observer.disconnect()
+        observer = null
         clearTimeout(timeout)
         resolve(events)
       }
     )
     const timeout = setTimeout(() => {
-      if (po) po.disconnect()
+      if (observer) observer.disconnect()
       resolve([])
     }, 250)
   })
@@ -65,7 +106,11 @@ function normalizeEventType(eventType) {
   else return type
 }
 
-const supportedEntryTypes = PerformanceObserver.supportedEntryTypes || [
+const entryTypes =
+  typeof PerformanceObserver !== 'undefined' && window.PerformanceObserver.supportedEntryTypes
+    ? window.PerformanceObserver.supportedEntryTypes
+    : null
+const supportedEntryTypes = entryTypes || [
   'element',
   'first-input',
   'largest-contentful-paint',

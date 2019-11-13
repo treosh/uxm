@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  A tiny (1.5kb gzip) utility library for collecting<br />
+  A tiny (1.8kb gzip) utility library for collecting<br />
   user-centric performance metrics.
 </p>
 

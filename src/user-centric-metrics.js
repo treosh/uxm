@@ -1,19 +1,14 @@
 import mitt from 'mitt'
 import { createPerformanceObserver } from './performance-observer'
+import { round } from './utils'
 
-/** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} MetricType */
-// constants
 const FCP = 'first-contentful-paint'
 const FID = 'first-input-delay'
 const LCP = 'largest-contentful-paint'
 const CLS = 'cumulative-layout-shift'
 
-// track events
-const emitter = mitt()
-/** @type {Object<string,number>} */
-const values = {}
-/** @type {Object<string,boolean>} */
-const observers = {}
+/** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} MetricType */
+/** @typedef {(metric: number | null) => any} PerformanceMetricCallback */
 
 export const metrics = {
   /**
@@ -23,37 +18,29 @@ export const metrics = {
    * @param {PerformanceMetricCallback} cb
    */
   on(metricType, cb) {
-    switch (normalizeMetricType(metricType)) {
-      case FCP:
-        getValueOrCreateObserver(FCP, initFcpObserver, cb)
-      case FID:
-        getValueOrCreateObserver(FID, initFidAndLcpObserver, cb)
-      case LCP:
-        getValueOrCreateObserver(LCP, initFidAndLcpObserver, cb)
-      case CLS:
-        getValueOrCreateObserver(CLS, initClsObserver, cb)
-      default:
-        throw new Error(`Invalid metric type: ${metricType}`)
-    }
+    const metric = normalizeMetricType(metricType)
+    if (metric === FCP) getValueOrCreateObserver(FCP, initFcpObserver, cb)
+    else if (metric === FID) getValueOrCreateObserver(FID, initFidObserver, cb)
+    else if (metric === LCP) getValueOrCreateObserver(LCP, initLcpObserver, cb)
+    else if (metric === CLS) getValueOrCreateObserver(CLS, initClsObserver, cb)
+    else throw new Error(`Invalid metric type: ${metricType}`)
+    return metrics
   },
 
-  /**
-   * Unsubscribe `metric` listener.
-   *
-   * @param {MetricType} metricType
-   * @param {PerformanceMetricCallback} cb
-   */
-  off(metricType, cb) {
-    emitter.off(metricType, cb)
-  }
+  /** @type {import('mitt').Emitter | null} */
+  _emitter: null,
+  /** @type {Object<string,number>} */
+  _values: {},
+  /** @type {Object<string,true>} */
+  _observers: {}
 }
 
 /** Get First Contentful Paint. Learn more: https://web.dev/fcp/ */
 export const getFirstContentfulPaint = () => getMetricValue(FCP, initFcpObserver)
 /** Get First Input Delay. Learn more: https://web.dev/fid/ */
-export const getFirstInputDelay = () => getMetricValue(FID, initFidAndLcpObserver)
+export const getFirstInputDelay = () => getMetricValue(FID, initFidObserver)
 /** Get Largest Contentful Paint. Learn more: https://web.dev/lcp/ */
-export const getLargestContentfulPaint = () => getMetricValue(LCP, initFidAndLcpObserver)
+export const getLargestContentfulPaint = () => getMetricValue(LCP, initLcpObserver)
 /** Get Cimmulative Layout Shift. Learn more: https://web.dev/cls/ */
 export const getCumulativeLayoutShift = () => getMetricValue(CLS, initClsObserver)
 
@@ -64,52 +51,63 @@ function getMetricValue(metricName, observer) {
 
 /** @param {MetricType} metricName @param {Function} observer @param {PerformanceMetricCallback} cb */
 function getValueOrCreateObserver(metricName, observer, cb) {
-  if (values[metricName]) return cb(values[metricName])
-  emitter.on(metricName, cb)
-  if (!observers[metricName]) {
+  if (metrics._values[metricName]) return cb(metrics._values[metricName]) // buffered by default
+  if (!metrics._emitter) metrics._emitter = mitt()
+  metrics._emitter.on(metricName, cb)
+  if (!metrics._observers[metricName]) {
     observer()
-    observers[metricName] = true
+    metrics._observers[metricName] = true
   }
 }
 
 function initFcpObserver() {
-  let fcpObserver = createPerformanceObserver('paint', paintEvents => {
+  let fcpObserver = createPerformanceObserver(FCP, paintEvents => {
     const fcpEvent = paintEvents.find(e => e.name === 'first-contentful-paint')
-    if (fcpEvent) {
-      values[FCP] = Math.round(fcpEvent.startTime)
-      if (fcpObserver) fcpObserver.disconnect()
+    if (fcpEvent && fcpObserver) {
+      metrics._values[FCP] = round(fcpEvent.startTime)
+      fcpObserver.disconnect()
       fcpObserver = null
-      emitter.emit(FCP, values[FCP])
+      if (metrics._emitter) metrics._emitter.emit(FCP, metrics._values[FCP])
     }
   })
 }
 
-function initFidAndLcpObserver() {
-  let fidObserver = createPerformanceObserver('first-input', ([fidEvent]) => {
-    values[FID] = Math.round(fidEvent.processingStart - fidEvent.startTime)
-    if (fidObserver) fidObserver.disconnect()
-    fidObserver = null
-    emitter.emit(FID, values[FID])
-    emitLcpEvents() // emit lcp after the first interaction
+function initFidObserver() {
+  let fidObserver = createPerformanceObserver(FID, ([fidEvent]) => {
+    if (fidObserver) {
+      metrics._values[FID] = round(fidEvent.processingStart - fidEvent.startTime)
+      fidObserver.disconnect()
+      fidObserver = null
+      if (metrics._emitter) metrics._emitter.emit(FID, metrics._values[FID])
+    }
   })
+}
+
+function initLcpObserver() {
   let lcp = 0
-  let lcpObserver = createPerformanceObserver('largest-contentful-paint', lcpEvents => {
+  let lcpObserver = createPerformanceObserver(LCP, lcpEvents => {
     const lastLcpEvent = lcpEvents[lcpEvents.length - 1]
-    lcp = Math.round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
+    lcp = round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
   })
-  function emitLcpEvents() {
+  // force emit after the first interactiion
+  let fidObserver = createPerformanceObserver(FID, () => {
+    if (fidObserver) {
+      fidObserver.disconnect()
+      fidObserver = null
+      emitLcpEvent()
+    }
+  })
+  function emitLcpEvent() {
     if (lcpObserver) {
+      lcpObserver.takeRecords()
       lcpObserver.disconnect()
       lcpObserver = null
-      values[LCP] = lcp
-      removeEventListener('visibilitychange', lcpVisibilityChangeListener, true)
-      emitter.emit(LCP, values[LCP])
+      metrics._values[LCP] = lcp
+      document.removeEventListener('visibilitychange', emitLcpEvent, true)
+      if (metrics._emitter) metrics._emitter.emit(LCP, metrics._values[LCP])
     }
   }
-  function lcpVisibilityChangeListener() {
-    if (document.visibilityState === 'hidden') emitLcpEvents()
-  }
-  document.addEventListener('visibilitychange', lcpVisibilityChangeListener, true)
+  document.addEventListener('visibilitychange', emitLcpEvent, true)
 }
 
 function initClsObserver() {
@@ -117,18 +115,21 @@ function initClsObserver() {
   let clsObserver = createPerformanceObserver('layout-shift', lsEvents => {
     lsEvents.forEach(lsEvent => {
       // Only count layout shifts without recent user input.
-      if (!lsEvent.hadRecentInput) cls += lsEvent.value
+      // collect percentage value
+      if (!lsEvent.hadRecentInput) {
+        cls = round(cls + 100 * lsEvent.value, 3)
+      }
     })
   })
   function clsVisibilityChangeListener() {
-    if (clsObserver && document.visibilityState === 'hidden') {
+    if (clsObserver) {
       // Force any pending records to be dispatched.
       clsObserver.takeRecords()
       clsObserver.disconnect()
       clsObserver = null
-      values[CLS] = cls
-      removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
-      emitter.emit(CLS, values[CLS])
+      metrics._values[CLS] = cls
+      document.removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
+      if (metrics._emitter) metrics._emitter.emit(CLS, metrics._values[CLS])
     }
   }
   document.addEventListener('visibilitychange', clsVisibilityChangeListener, true)
