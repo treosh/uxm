@@ -1,14 +1,5 @@
 import roundTo from 'round-to'
-
-let options = {
-  debug: false
-}
-
-/** @param {object} newOptions @return {object} */
-export function setOptions(newOptions) {
-  options = { ...options, ...newOptions }
-  return options
-}
+import { config } from './config'
 
 /** @param {number} val @param {number} [precision] @return {number} */
 export function round(val, precision = 0) {
@@ -17,5 +8,5 @@ export function round(val, precision = 0) {
 
 /** @param {string} str @param {any} args */
 export function debug(str, ...args) {
-  if (options.debug) console.log(`%c${str}`, 'color: #3398DB', ...args)
+  if (config.debug) console.log(`%c${str}`, 'color: #3398DB', ...args)
 }

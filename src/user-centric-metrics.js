@@ -10,6 +10,12 @@ const CLS = 'cumulative-layout-shift'
 /** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} MetricType */
 /** @typedef {(metric: number | null) => any} PerformanceMetricCallback */
 
+const emitter = mitt()
+/** @type {Object<string,number>} */
+const values = {}
+/** @type {Object<string,true>} */
+const observers = {}
+
 export const metrics = {
   /**
    * Subscribe on the `metric`.
@@ -25,14 +31,7 @@ export const metrics = {
     else if (metric === CLS) getValueOrCreateObserver(CLS, initClsObserver, cb)
     else throw new Error(`Invalid metric type: ${metricType}`)
     return metrics
-  },
-
-  /** @type {import('mitt').Emitter | null} */
-  _emitter: null,
-  /** @type {Object<string,number>} */
-  _values: {},
-  /** @type {Object<string,true>} */
-  _observers: {}
+  }
 }
 
 /** Get First Contentful Paint. Learn more: https://web.dev/fcp/ */
@@ -51,16 +50,15 @@ function getMetricValue(metricName, observer) {
 
 /** @param {MetricType} metricName @param {Function} observer @param {PerformanceMetricCallback} cb */
 function getValueOrCreateObserver(metricName, observer, cb) {
-  if (metrics._values[metricName]) {
-    debug('get buffered metric value for "%s": %s', metricName, metrics._values[metricName])
-    return cb(metrics._values[metricName]) // buffered by default
+  if (values[metricName]) {
+    debug('get buffered metric value: %s=%s', metricName, values[metricName])
+    return cb(values[metricName]) // buffered by default
   }
-  if (!metrics._emitter) metrics._emitter = mitt()
-  metrics._emitter.on(metricName, cb)
-  if (!metrics._observers[metricName]) {
-    debug('init observer: "%s"', metricName)
+  emitter.on(metricName, cb)
+  if (!observers[metricName]) {
+    debug('init observer: %s', metricName)
     observer()
-    metrics._observers[metricName] = true
+    observers[metricName] = true
   }
 }
 
@@ -68,11 +66,11 @@ function initFcpObserver() {
   let fcpObserver = createPerformanceObserver(FCP, paintEvents => {
     const fcpEvent = paintEvents.find(e => e.name === 'first-contentful-paint')
     if (fcpEvent && fcpObserver) {
-      metrics._values[FCP] = round(fcpEvent.startTime)
+      values[FCP] = round(fcpEvent.startTime)
       fcpObserver.disconnect()
       fcpObserver = null
-      debug('capture "%s": %sms', FCP, metrics._values[FCP])
-      if (metrics._emitter) metrics._emitter.emit(FCP, metrics._values[FCP])
+      debug('capture: %s=%sms', FCP, values[FCP])
+      if (emitter) emitter.emit(FCP, values[FCP])
     }
   })
 }
@@ -80,11 +78,11 @@ function initFcpObserver() {
 function initFidObserver() {
   let fidObserver = createPerformanceObserver(FID, ([fidEvent]) => {
     if (fidObserver) {
-      metrics._values[FID] = round(fidEvent.processingStart - fidEvent.startTime)
+      values[FID] = round(fidEvent.processingStart - fidEvent.startTime)
       fidObserver.disconnect()
       fidObserver = null
-      debug('capture "%s": %sms', FID, metrics._values[FID])
-      if (metrics._emitter) metrics._emitter.emit(FID, metrics._values[FID])
+      debug('capture: %s=%sms', FID, values[FID])
+      if (emitter) emitter.emit(FID, values[FID])
     }
   })
 }
@@ -109,10 +107,10 @@ function initLcpObserver() {
       lcpObserver.takeRecords()
       lcpObserver.disconnect()
       lcpObserver = null
-      metrics._values[LCP] = lcp
+      values[LCP] = lcp
       document.removeEventListener('visibilitychange', lcpVisibilityChangeListener, true)
-      debug('capture "%s": %sms', LCP, metrics._values[LCP])
-      if (metrics._emitter) metrics._emitter.emit(LCP, metrics._values[LCP])
+      debug('capture: %s=%sms', LCP, values[LCP])
+      if (emitter) emitter.emit(LCP, values[LCP])
     }
   }
   function lcpVisibilityChangeListener() {
@@ -140,10 +138,10 @@ function initClsObserver() {
       clsObserver.takeRecords()
       clsObserver.disconnect()
       clsObserver = null
-      metrics._values[CLS] = cls
-      debug('capture "%s": %s%', CLS, metrics._values[CLS])
+      values[CLS] = cls
+      debug('capture: %s=%s%', CLS, values[CLS])
       document.removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
-      if (metrics._emitter) metrics._emitter.emit(CLS, metrics._values[CLS])
+      if (emitter) emitter.emit(CLS, values[CLS])
     }
   }
   document.addEventListener('visibilitychange', clsVisibilityChangeListener, true)

@@ -1,5 +1,10 @@
 import mitt from 'mitt'
 import { debug } from './utils'
+import { config } from './config'
+
+/** @type {Object<string,boolean>} */
+const observers = {}
+const emitter = mitt()
 
 const PO = typeof PerformanceObserver !== 'undefined' ? window.PerformanceObserver : null
 const entryTypes = PO && PO.supportedEntryTypes ? PO.supportedEntryTypes : null
@@ -26,16 +31,14 @@ export const performanceEvents = {
    */
   on(eventType, cb) {
     const type = normalizeEventType(eventType)
-    if (!this._emitter) this._emitter = mitt()
-    if (!this._observers[type]) {
+    if (!observers[type]) {
       createPerformanceObserver(type, events => {
-        if (this._emitter) {
-          this._emitter.emit(eventType, events)
-        }
+        if (document.hidden && !config.emitWhenHidden) return
+        emitter.emit(eventType, events)
       })
-      this._observers[type] = true
+      observers[type] = true
     }
-    this._emitter.on(eventType, cb)
+    emitter.on(eventType, cb)
     return performanceEvents
   },
 
@@ -46,13 +49,8 @@ export const performanceEvents = {
    * @param {PerformanceEventCallback} cb
    */
   off(eventType, cb) {
-    if (this._emitter) this._emitter.off(normalizeEventType(eventType), cb)
-  },
-
-  /** @type {mitt.Emitter | null} */
-  _emitter: null,
-  /** @type {Object<string,boolean>} */
-  _observers: {}
+    emitter.off(normalizeEventType(eventType), cb)
+  }
 }
 
 /**
@@ -70,7 +68,7 @@ export function createPerformanceObserver(eventType, cb) {
   if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
   const po = new PO(list => cb(list.getEntries()))
   po.observe({ type, buffered })
-  debug('create performance observer for "%s"', type)
+  debug('create performance observer: %s', type)
   return po
 }
 
