@@ -1,6 +1,6 @@
 import mitt from 'mitt'
 import { createPerformanceObserver } from './performance-observer'
-import { round } from './utils'
+import { round, debug } from './utils'
 
 const FCP = 'first-contentful-paint'
 const FID = 'first-input-delay'
@@ -51,10 +51,14 @@ function getMetricValue(metricName, observer) {
 
 /** @param {MetricType} metricName @param {Function} observer @param {PerformanceMetricCallback} cb */
 function getValueOrCreateObserver(metricName, observer, cb) {
-  if (metrics._values[metricName]) return cb(metrics._values[metricName]) // buffered by default
+  if (metrics._values[metricName]) {
+    debug('get buffered metric value for "%s": %s', metricName, metrics._values[metricName])
+    return cb(metrics._values[metricName]) // buffered by default
+  }
   if (!metrics._emitter) metrics._emitter = mitt()
   metrics._emitter.on(metricName, cb)
   if (!metrics._observers[metricName]) {
+    debug('init observer: "%s"', metricName)
     observer()
     metrics._observers[metricName] = true
   }
@@ -67,6 +71,7 @@ function initFcpObserver() {
       metrics._values[FCP] = round(fcpEvent.startTime)
       fcpObserver.disconnect()
       fcpObserver = null
+      debug('capture "%s": %sms', FCP, metrics._values[FCP])
       if (metrics._emitter) metrics._emitter.emit(FCP, metrics._values[FCP])
     }
   })
@@ -78,6 +83,7 @@ function initFidObserver() {
       metrics._values[FID] = round(fidEvent.processingStart - fidEvent.startTime)
       fidObserver.disconnect()
       fidObserver = null
+      debug('capture "%s": %sms', FID, metrics._values[FID])
       if (metrics._emitter) metrics._emitter.emit(FID, metrics._values[FID])
     }
   })
@@ -94,6 +100,7 @@ function initLcpObserver() {
     if (fidObserver) {
       fidObserver.disconnect()
       fidObserver = null
+      debug('force LCP after the first input')
       emitLcpEvent()
     }
   })
@@ -103,11 +110,16 @@ function initLcpObserver() {
       lcpObserver.disconnect()
       lcpObserver = null
       metrics._values[LCP] = lcp
-      document.removeEventListener('visibilitychange', emitLcpEvent, true)
+      document.removeEventListener('visibilitychange', lcpVisibilityChangeListener, true)
+      debug('capture "%s": %sms', LCP, metrics._values[LCP])
       if (metrics._emitter) metrics._emitter.emit(LCP, metrics._values[LCP])
     }
   }
-  document.addEventListener('visibilitychange', emitLcpEvent, true)
+  function lcpVisibilityChangeListener() {
+    debug('visibilitychange: LCP')
+    emitLcpEvent()
+  }
+  document.addEventListener('visibilitychange', lcpVisibilityChangeListener, true)
 }
 
 function initClsObserver() {
@@ -122,12 +134,14 @@ function initClsObserver() {
     })
   })
   function clsVisibilityChangeListener() {
+    debug('visibilitychange: LCS')
     if (clsObserver) {
       // Force any pending records to be dispatched.
       clsObserver.takeRecords()
       clsObserver.disconnect()
       clsObserver = null
       metrics._values[CLS] = cls
+      debug('capture "%s": %s%', CLS, metrics._values[CLS])
       document.removeEventListener('visibilitychange', clsVisibilityChangeListener, true)
       if (metrics._emitter) metrics._emitter.emit(CLS, metrics._values[CLS])
     }

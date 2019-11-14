@@ -1,4 +1,5 @@
 import mitt from 'mitt'
+import { debug } from './utils'
 
 const PO = typeof PerformanceObserver !== 'undefined' ? window.PerformanceObserver : null
 const entryTypes = PO && PO.supportedEntryTypes ? PO.supportedEntryTypes : null
@@ -69,6 +70,7 @@ export function createPerformanceObserver(eventType, cb) {
   if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
   const po = new PO(list => cb(list.getEntries()))
   po.observe({ type, buffered })
+  debug('create performance observer for "%s"', type)
   return po
 }
 
@@ -88,14 +90,21 @@ export function getEventsByType(eventType) {
     let observer = createPerformanceObserver(
       type,
       /** @param {PerformanceEntry[]} events */ events => {
-        if (observer) observer.disconnect()
-        observer = null
+        if (observer) {
+          observer.disconnect()
+          observer = null
+        }
         clearTimeout(timeout)
+        debug('getEventsByType: timeout, resolve with %s event(s)', events.length)
         resolve(events)
       }
     )
     const timeout = setTimeout(() => {
-      if (observer) observer.disconnect()
+      if (observer) {
+        observer.disconnect()
+        observer = null
+      }
+      debug('getEventsByType: timeout, resolve with empty events')
       resolve([])
     }, 250)
   })

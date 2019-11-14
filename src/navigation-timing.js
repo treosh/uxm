@@ -1,4 +1,3 @@
-import { getEventsByType } from './performance-observer'
 import { round } from './utils'
 
 /**
@@ -9,7 +8,7 @@ import { round } from './utils'
  */
 
 export function getTimeToFirstByte() {
-  return getEventsByType('navigation').then(([nav]) => (nav ? round(nav.responseStart) : null))
+  return getNavigation().then(nav => (nav ? round(nav.responseStart) : null))
 }
 
 /**
@@ -20,7 +19,7 @@ export function getTimeToFirstByte() {
  */
 
 export function getServerTiming() {
-  return getEventsByType('navigation').then(([nav]) => (nav ? nav.serverTiming || [] : null))
+  return getNavigation().then(nav => (nav ? nav.serverTiming || [] : null))
 }
 
 /**
@@ -31,13 +30,13 @@ export function getServerTiming() {
  */
 
 export function getDomContentLoaded() {
-  return getEventsByType('navigation').then(([nav]) => {
+  return getNavigation().then(nav => {
     if (!nav) return null
     if (nav.domContentLoadedEventEnd) return round(nav.domContentLoadedEventEnd)
     return new Promise(resolve => {
       const dclListener = () => {
-        getDomContentLoaded().then(val => resolve(val))
         window.removeEventListener('DOMContentLoaded', dclListener, true)
+        getDomContentLoaded().then(resolve)
       }
       window.addEventListener('DOMContentLoaded', dclListener, true)
     })
@@ -52,15 +51,22 @@ export function getDomContentLoaded() {
  */
 
 export function getOnLoad() {
-  return getEventsByType('navigation').then(([nav]) => {
+  return getNavigation().then(nav => {
     if (!nav) return null
     if (nav.loadEventEnd) return round(nav.loadEventEnd)
     return new Promise(resolve => {
       const loadListener = () => {
-        getOnLoad().then(val => resolve(val))
         window.removeEventListener('load', loadListener, true)
+        getOnLoad().then(resolve)
       }
       window.addEventListener('load', loadListener, true)
     })
+  })
+}
+
+function getNavigation() {
+  return new Promise(resolve => {
+    if (!performance) return resolve(null)
+    resolve((performance.getEntriesByType('navigation') || [null])[0])
   })
 }
