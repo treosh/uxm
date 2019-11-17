@@ -1,9 +1,9 @@
 <p align="center">
-  <img src="./docs/logo.png" />
+  <img width="1045" alt="UXM - User Experience Metrics" src="https://user-images.githubusercontent.com/158189/69014933-46249f80-098f-11ea-98d4-095d112afd56.png">
 </p>
 
 <p align="center">
-  A tiny (1.8kb gzip) utility library for collecting<br />
+  A tiny (2kb gzip) utility library for collecting<br />
   user-centric performance metrics.
 </p>
 
@@ -66,7 +66,7 @@ import {
 // later, track sessionId and debounce events
 import { reportMetrics } from 'uxm/api-reporter'
 
-const loadMetrics = {
+const loadingMetrics = {
   ttfb: await getTimeToFirstByte(),
   fcp: await getFirstContentfulPaint(),
   dcl: await getDomContentLoaded(),
@@ -78,7 +78,7 @@ const device = {
   url: getUrl()
 }
 
-reportMetrics({ ...loadMetrics, ...device })
+reportMetrics({ ...loadingMetrics, ...device })
 
 // report delayed metrics
 metrics
