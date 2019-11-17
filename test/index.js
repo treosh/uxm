@@ -6,7 +6,7 @@ import { join } from 'path'
 // read compiled src and wrap to browser compatible version
 const uxmBundle = readFile(join(__dirname, '../dist/uxm.bundle.js'), 'utf8')
 
-test.serial('booking.com - loading metrics', async t => {
+test.serial('basic test', async t => {
   const url = 'https://treo.sh/'
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
@@ -36,13 +36,14 @@ test.serial('booking.com - loading metrics', async t => {
   })
 
   await page.click('a[href="/signup"]')
+  await new Promise(resolve => setTimeout(resolve, 1000))
   const uxMetrics = await page.evaluate(() => window.uxMetrics)
   await browser.close()
 
   console.log({ uxMetrics, navigationMetrics, dimensions })
 
-  t.true(uxMetrics.fcp > 300 && typeof uxMetrics.fcp === 'number')
-  t.true(uxMetrics.lcp > 500 && uxMetrics.lcp > uxMetrics.fcp && typeof uxMetrics.lcp === 'number')
+  t.true(uxMetrics.fcp > 100 && typeof uxMetrics.fcp === 'number')
+  t.true(uxMetrics.lcp > 300 && uxMetrics.lcp > uxMetrics.fcp && typeof uxMetrics.lcp === 'number')
   t.true(uxMetrics.fid >= 1 && typeof uxMetrics.fid === 'number')
 
   t.true(navigationMetrics.ttfb > 300 && typeof navigationMetrics.ttfb === 'number')
