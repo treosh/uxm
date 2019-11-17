@@ -1,8 +1,7 @@
-/** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
-const nav = typeof navigator !== 'undefined' ? navigator : null
-
 /** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
 /** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */
+/** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
+const nav = typeof navigator !== 'undefined' ? navigator : null
 
 /**
  * Get effective connection type.
@@ -44,7 +43,7 @@ export function getHardwareConcurrency() {
  */
 
 export function getUrl() {
-  return window.location.href
+  return location.href
 }
 
 /**

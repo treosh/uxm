@@ -2,31 +2,20 @@ import mitt from 'mitt'
 import { debug } from './utils'
 import { config } from './config'
 
+/** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
+/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
+/** @typedef {StrictEventType | 'eliment-timing' | 'long-task'} EventType */
+
 /** @type {Object<string,boolean>} */
 const observers = {}
 const emitter = mitt()
-
-const PO = typeof PerformanceObserver !== 'undefined' ? window.PerformanceObserver : null
-const entryTypes = PO && PO.supportedEntryTypes ? PO.supportedEntryTypes : null
-const supportedEntryTypes = entryTypes || [
-  'element',
-  'first-input',
-  'largest-contentful-paint',
-  'layout-shift',
-  'longtask',
-  'mark',
-  'measure',
-  'navigation',
-  'paint',
-  'resource'
-]
-/** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
+const PO = typeof PerformanceObserver !== 'undefined' ? PerformanceObserver : null
 
 export const performanceEvents = {
   /**
    * Subscribe on the `metric`.
    *
-   * @param {string} eventType
+   * @param {EventType} eventType
    * @param {PerformanceEventCallback} cb
    */
   on(eventType, cb) {
@@ -45,7 +34,7 @@ export const performanceEvents = {
   /**
    * Unsubscribe `metric` listener.
    *
-   * @param {string} eventType
+   * @param {EventType} eventType
    * @param {PerformanceEventCallback} cb
    */
   off(eventType, cb) {
@@ -56,7 +45,7 @@ export const performanceEvents = {
 /**
  * Create performance observer.
  *
- * @param {string} eventType
+ * @param {EventType} eventType
  * @param {PerformanceEventCallback} cb
  * @return {PerformanceObserver | null}
  */
@@ -65,44 +54,33 @@ export function createPerformanceObserver(eventType, cb) {
   if (!PO) return null
   const type = normalizeEventType(eventType)
   const buffered = type !== 'longtask'
-  if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid eventType: ${type}`)
+  if ((PO.supportedEntryTypes || []).indexOf(type) === -1) throw new Error(`Invalid event: ${type}`)
   const po = new PO(list => cb(list.getEntries()))
   po.observe({ type, buffered })
-  debug('create performance observer: %s', type)
+  debug('new PO %s', type)
   return po
 }
 
 /**
  * Get buffered events by `type`.
  *
- * @param {string} eventType
+ * @param {EventType} eventType
  * @return {Promise<PerformanceEntry[]>}
  */
 
 export function getEventsByType(eventType) {
-  return new Promise((resolve, reject) => {
-    if (!PO) return resolve([])
+  return new Promise(resolve => {
     const type = normalizeEventType(eventType)
-    if (supportedEntryTypes.indexOf(type) === -1) return reject(new Error(`Invalid eventType: ${type}`))
-    if (type === 'longtask') return resolve([]) // no buffering for longTasks
-    let observer = createPerformanceObserver(
-      type,
-      /** @param {PerformanceEntry[]} events */ events => {
-        if (observer) {
-          observer.disconnect()
-          observer = null
-        }
-        clearTimeout(timeout)
-        debug('getEventsByType: timeout, resolve with %s event(s)', events.length)
-        resolve(events)
-      }
-    )
+    if (!PO || type === 'longtask') return resolve([]) // no buffering for longTasks
+    let observer = createPerformanceObserver(type, events => {
+      if (observer) observer.disconnect()
+      clearTimeout(timeout)
+      debug('get %s event(s)', events.length)
+      resolve(events)
+    })
     const timeout = setTimeout(() => {
-      if (observer) {
-        observer.disconnect()
-        observer = null
-      }
-      debug('getEventsByType: timeout, resolve with empty events')
+      if (observer) observer.disconnect()
+      debug('get events timeout')
       resolve([])
     }, 250)
   })
@@ -115,16 +93,12 @@ export function getEventsByType(eventType) {
  * - long-task (two words should be separated with dash)
  * - first-contentful-paint (that's what user would expect, "paint" is too generic)
  *
- * @param {string} eventType
- * @return {string}
+ * @param {EventType} eventType
+ * @return {StrictEventType}
  */
 
 function normalizeEventType(eventType) {
   const type = eventType.toLowerCase()
-  if (type === 'element-timing') return 'element'
-  else if (type === 'long-task') return 'longtask'
-  else if (type === 'fcp' || type === 'first-paint' || type === 'first-contentful-paint') return 'paint'
-  else if (type === 'fid' || type === 'first-input-delay') return 'first-input'
-  else if (type === 'lcp') return 'largest-contentful-paint'
-  else return type
+  // @ts-ignore
+  return type === 'element-timing' ? 'element' : type === 'long-task' ? 'longtask' : type
 }

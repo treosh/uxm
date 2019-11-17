@@ -35,10 +35,10 @@ export function getDomContentLoaded() {
     if (nav.domContentLoadedEventEnd) return round(nav.domContentLoadedEventEnd)
     return new Promise(resolve => {
       const dclListener = () => {
-        window.removeEventListener('DOMContentLoaded', dclListener, true)
+        removeEventListener('DOMContentLoaded', dclListener, true)
         getDomContentLoaded().then(resolve)
       }
-      window.addEventListener('DOMContentLoaded', dclListener, true)
+      addEventListener('DOMContentLoaded', dclListener, true)
     })
   })
 }
@@ -56,15 +56,15 @@ export function getOnLoad() {
     if (nav.loadEventEnd) return round(nav.loadEventEnd)
     return new Promise(resolve => {
       const loadListener = () => {
-        window.removeEventListener('load', loadListener, true)
+        removeEventListener('load', loadListener, true)
         getOnLoad().then(resolve)
       }
-      window.addEventListener('load', loadListener, true)
+      addEventListener('load', loadListener, true)
     })
   })
 }
 
-function getNavigation() {
+export function getNavigation() {
   return new Promise(resolve => {
     if (!performance) return resolve(null)
     resolve((performance.getEntriesByType('navigation') || [null])[0])

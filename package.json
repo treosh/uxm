@@ -41,8 +41,7 @@
     ]
   },
   "dependencies": {
-    "mitt": "^1.2.0",
-    "round-to": "^4.0.0"
+    "mitt": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "10",
