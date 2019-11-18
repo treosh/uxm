@@ -1,7 +1,4 @@
-import { round } from './utils'
-
-const perf = typeof performance !== 'undefined' ? performance : null
-const raf = typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : setImmediate || setTimeout
+import { perf, raf, round } from './utils'
 
 /** @typedef {{ entryType: "mark", name: string, startTime: number }} UserTimingMark */
 /** @typedef {{ entryType: "measure", name: string, startTime: number, duration: number }} UserTimingMeasure */

@@ -1,5 +1,8 @@
 import { config } from './config'
 
+export const perf = typeof performance !== 'undefined' ? performance : null
+export const raf = typeof requestAnimationFrame !== 'undefined' ? requestAnimationFrame : setImmediate || setTimeout
+
 /**
  * Round: https://stackoverflow.com/a/18358056
  * @param {number} val @param {number} [precision] @return {number}

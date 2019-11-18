@@ -39,11 +39,11 @@ export function getHardwareConcurrency() {
 /**
  * Get current url.
  *
- * @return {string}
+ * @return {string | null}
  */
 
 export function getUrl() {
-  return location.href
+  return typeof location !== 'undefined' ? location.href : null
 }
 
 /**

@@ -1,4 +1,4 @@
-import { round } from './utils'
+import { round, debug, perf, raf } from './utils'
 
 /**
  * Get Time to First Byte.
@@ -26,17 +26,20 @@ export function getServerTiming() {
  * Get `DOMContentLoaded` event.
  * Learn more: https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
  *
+ * @param {boolean} [isAfterPromise]
  * @return {Promise<number | null>}
  */
 
-export function getDomContentLoaded() {
+export function getDomContentLoaded(isAfterPromise = false) {
   return getNavigation().then(nav => {
     if (!nav) return null
     if (nav.domContentLoadedEventEnd) return round(nav.domContentLoadedEventEnd)
+    if (isAfterPromise) return null
     return new Promise(resolve => {
       const dclListener = () => {
+        debug('DCL listener')
         removeEventListener('DOMContentLoaded', dclListener, true)
-        getDomContentLoaded().then(resolve)
+        raf(() => getDomContentLoaded(true).then(resolve))
       }
       addEventListener('DOMContentLoaded', dclListener, true)
     })
@@ -47,17 +50,20 @@ export function getDomContentLoaded() {
  * Get `loadEventEnd` event.
  * Learn more: https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming/loadEventEnd
  *
+ * @param {boolean} [isAfterPromise]
  * @return {Promise<number | null>}
  */
 
-export function getOnLoad() {
+export function getOnLoad(isAfterPromise = false) {
   return getNavigation().then(nav => {
     if (!nav) return null
     if (nav.loadEventEnd) return round(nav.loadEventEnd)
+    if (isAfterPromise) return null
     return new Promise(resolve => {
       const loadListener = () => {
+        debug('load listener')
         removeEventListener('load', loadListener, true)
-        getOnLoad().then(resolve)
+        raf(() => getOnLoad(true).then(resolve))
       }
       addEventListener('load', loadListener, true)
     })
@@ -66,7 +72,7 @@ export function getOnLoad() {
 
 export function getNavigation() {
   return new Promise(resolve => {
-    if (!performance) return resolve(null)
-    resolve((performance.getEntriesByType('navigation') || [null])[0])
+    if (!perf) return resolve(null)
+    resolve((perf.getEntriesByType('navigation') || [null])[0])
   })
 }
