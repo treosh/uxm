@@ -31,9 +31,9 @@
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
-    "build:rollup": "rollup -c test/rollup.js",
+    "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build:rollup && ava test/index.js && yarn build"
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build"
   },
   "ava": {
     "require": [

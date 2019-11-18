@@ -9,8 +9,3 @@ interface PerformanceEntry {
   hadRecentInput: boolean
   value: number
 }
-
-interface Performance {
-  mark(markName: string): PerformanceMark
-  measure(measureName: string, startMarkName?: string, endMarkName?: string): PerformanceMeasure
-}

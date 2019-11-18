@@ -16,3 +16,6 @@ export function round(val, precision = 0) {
 export function debug(str, ...args) {
   if (config.debug) console.log(`%cuxm: ${str}`, 'color: #3398DB', ...args)
 }
+
+/** @param {any} args */
+export const warn = (...args) => console.warn(...args)

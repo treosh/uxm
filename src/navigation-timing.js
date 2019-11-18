@@ -8,7 +8,13 @@ import { round, debug, perf, raf } from './utils'
  */
 
 export function getTimeToFirstByte() {
-  return getNavigation().then(nav => (nav ? round(nav.responseStart) : null))
+  return getNavigation().then(nav => {
+    if (!nav && perf && perf.timing && perf.timing.responseStart) {
+      debug('no navigation event, use timing')
+      return round(perf.timing.responseStart - perf.timing.navigationStart)
+    }
+    return round(nav.responseStart)
+  })
 }
 
 /**
@@ -32,7 +38,10 @@ export function getServerTiming() {
 
 export function getDomContentLoaded(isAfterPromise = false) {
   return getNavigation().then(nav => {
-    if (!nav) return null
+    if (!nav && perf && perf.timing && perf.timing.domContentLoadedEventEnd) {
+      debug('no navigation event, use timing')
+      return round(perf.timing.domContentLoadedEventEnd - perf.timing.navigationStart)
+    }
     if (nav.domContentLoadedEventEnd) return round(nav.domContentLoadedEventEnd)
     if (isAfterPromise) return null
     return new Promise(resolve => {
@@ -56,7 +65,10 @@ export function getDomContentLoaded(isAfterPromise = false) {
 
 export function getOnLoad(isAfterPromise = false) {
   return getNavigation().then(nav => {
-    if (!nav) return null
+    if (!nav && perf && perf.timing && perf.timing.loadEventEnd) {
+      debug('no navigation event, use timing')
+      return round(perf.timing.loadEventEnd - perf.timing.navigationStart)
+    }
     if (nav.loadEventEnd) return round(nav.loadEventEnd)
     if (isAfterPromise) return null
     return new Promise(resolve => {

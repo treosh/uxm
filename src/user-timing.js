@@ -1,4 +1,4 @@
-import { perf, raf, round } from './utils'
+import { perf, raf, round, warn } from './utils'
 
 /** @typedef {{ entryType: "mark", name: string, startTime: number }} UserTimingMark */
 /** @typedef {{ entryType: "measure", name: string, startTime: number, duration: number }} UserTimingMeasure */
@@ -14,8 +14,18 @@ import { perf, raf, round } from './utils'
 
 export function mark(markName) {
   if (!perf || !perf.mark) return null
-  const m = perf.mark(markName)
-  return { entryType: 'mark', name: m.name, startTime: round(m.startTime) }
+  try {
+    /** @type {PerformanceMark | void} */
+    let m = perf.mark(markName)
+    if (typeof m === 'undefined') {
+      const entries = perf.getEntriesByName(markName)
+      m = entries[entries.length - 1]
+    }
+    return { entryType: 'mark', name: m.name, startTime: round(m.startTime) }
+  } catch (err) {
+    warn(err)
+    return null
+  }
 }
 
 /**
@@ -31,10 +41,15 @@ export function mark(markName) {
 export function measure(measureName, startMarkName, endMarkName) {
   if (!perf || !perf.measure) return null
   try {
-    const m = perf.measure(measureName, startMarkName, endMarkName)
+    /** @type {PerformanceMeasure | void} */
+    let m = perf.measure(measureName, startMarkName, endMarkName)
+    if (typeof m === 'undefined') {
+      const entries = perf.getEntriesByName(measureName)
+      m = entries[entries.length - 1]
+    }
     return { entryType: 'measure', name: m.name, startTime: round(m.startTime), duration: round(m.duration) }
   } catch (err) {
-    console.error(err)
+    warn(err)
     return null
   }
 }

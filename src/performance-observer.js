@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import { debug } from './utils'
+import { debug, warn, perf } from './utils'
 import { config } from './config'
 
 /** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
@@ -54,11 +54,18 @@ export function createPerformanceObserver(eventType, cb) {
   if (!PO) return null
   const type = normalizeEventType(eventType)
   const buffered = type !== 'longtask'
-  if ((PO.supportedEntryTypes || []).indexOf(type) === -1) throw new Error(`Invalid event: ${type}`)
-  const po = new PO(list => cb(list.getEntries()))
-  po.observe({ type, buffered })
-  debug('new PO %s', type)
-  return po
+  if (Array.isArray(PO.supportedEntryTypes) && PO.supportedEntryTypes.indexOf(type) === -1) {
+    throw new Error(`Invalid event: ${type}`)
+  }
+  try {
+    const po = new PO(list => cb(list.getEntries()))
+    po.observe({ type, buffered })
+    debug('new PO %s', type)
+    return po
+  } catch (err) {
+    warn(err)
+    return null
+  }
 }
 
 /**
@@ -78,6 +85,10 @@ export function getEventsByType(eventType) {
       debug('get %s event(s)', events.length)
       resolve(events)
     })
+    if (!observer && perf && perf.getEntriesByType) {
+      debug('no observer, use getEntriesByType')
+      return resolve(perf.getEntriesByType(eventType) || [])
+    }
     const timeout = setTimeout(() => {
       if (observer) observer.disconnect()
       debug('get events timeout')
