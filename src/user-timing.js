@@ -1,4 +1,4 @@
-import { perf, raf, round, warn } from './utils'
+import { perf, raf, round, warn, isUndefined } from './utils'
 
 /** @typedef {{ entryType: "mark", name: string, startTime: number }} UserTimingMark */
 /** @typedef {{ entryType: "measure", name: string, startTime: number, duration: number }} UserTimingMeasure */
@@ -17,11 +17,11 @@ export function mark(markName) {
   try {
     /** @type {PerformanceMark | void} */
     let m = perf.mark(markName)
-    if (typeof m === 'undefined') {
+    if (isUndefined(m)) {
       const entries = perf.getEntriesByName(markName)
       m = entries[entries.length - 1]
     }
-    return { entryType: 'mark', name: m.name, startTime: round(m.startTime) }
+    return m ? { entryType: 'mark', name: m.name, startTime: round(m.startTime) } : null
   } catch (err) {
     warn(err)
     return null
@@ -43,11 +43,11 @@ export function measure(measureName, startMarkName, endMarkName) {
   try {
     /** @type {PerformanceMeasure | void} */
     let m = perf.measure(measureName, startMarkName, endMarkName)
-    if (typeof m === 'undefined') {
+    if (isUndefined(m)) {
       const entries = perf.getEntriesByName(measureName)
       m = entries[entries.length - 1]
     }
-    return { entryType: 'measure', name: m.name, startTime: round(m.startTime), duration: round(m.duration) }
+    return m ? { entryType: 'measure', name: m.name, startTime: round(m.startTime), duration: round(m.duration) } : null
   } catch (err) {
     warn(err)
     return null
@@ -83,12 +83,12 @@ export function timeEnd(label) {
  * It's similar to console.timeEnd(label) but async.
  *
  * @param {string} label
- * @param {UserTimingTimeEndPaintCallback} [cb]
+ * @param {UserTimingTimeEndPaintCallback} [callback]
  */
 
-export function timeEndPaint(label, cb) {
+export function timeEndPaint(label, callback) {
   raf(() => {
     const m = timeEnd(label)
-    if (typeof cb === 'function') cb(m)
+    if (callback) callback(m)
   })
 }

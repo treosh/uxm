@@ -1,70 +1,46 @@
-import mitt from 'mitt'
-import { debug, warn, perf } from './utils'
-import { config } from './config'
+import { debug, warn, perf, isUndefined } from './utils'
 
 /** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
-/** @typedef {StrictEventType | 'eliment-timing' | 'long-task'} EventType */
+/** @typedef {StrictEventType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EventType */
 
-/** @type {Object<string,boolean>} */
-const observers = {}
-const emitter = mitt()
-const PO = typeof PerformanceObserver !== 'undefined' ? PerformanceObserver : null
-
-export const performanceEvents = {
-  /**
-   * Subscribe on the `metric`.
-   *
-   * @param {EventType} eventType
-   * @param {PerformanceEventCallback} cb
-   */
-  on(eventType, cb) {
-    const type = normalizeEventType(eventType)
-    if (!observers[type]) {
-      createPerformanceObserver(type, events => {
-        if (document.hidden && !config.emitWhenHidden) return
-        emitter.emit(eventType, events)
-      })
-      observers[type] = true
-    }
-    emitter.on(eventType, cb)
-    return performanceEvents
-  },
-
-  /**
-   * Unsubscribe `metric` listener.
-   *
-   * @param {EventType} eventType
-   * @param {PerformanceEventCallback} cb
-   */
-  off(eventType, cb) {
-    emitter.off(normalizeEventType(eventType), cb)
-  }
-}
+const PO = isUndefined(PerformanceObserver) ? null : PerformanceObserver
+const isTypeSupported = PO && PO.supportedEntryTypes
+const supportedEventTypes = [
+  'element',
+  'first-input',
+  'largest-contentful-paint',
+  'layout-shift',
+  'longtask',
+  'mark',
+  'measure',
+  'navigation',
+  'paint',
+  'resource'
+]
 
 /**
  * Create performance observer.
  *
  * @param {EventType} eventType
- * @param {PerformanceEventCallback} cb
- * @return {PerformanceObserver | null}
+ * @param {PerformanceEventCallback} callback
+ * @param {object} [options]
+ * @return {PerformanceObserver}
  */
 
-export function createPerformanceObserver(eventType, cb) {
-  if (!PO) return null
+export function createEventsObserver(eventType, callback, options = {}) {
   const type = normalizeEventType(eventType)
-  const buffered = type !== 'longtask'
-  if (Array.isArray(PO.supportedEntryTypes) && PO.supportedEntryTypes.indexOf(type) === -1) {
-    throw new Error(`Invalid event: ${type}`)
-  }
+  if (supportedEventTypes.indexOf(type) === -1) throw new Error(`Invalid event: ${type}`)
+  if (!PO) return createFakeObserver()
   try {
-    const po = new PO(list => cb(list.getEntries()))
-    po.observe({ type, buffered })
-    debug('new PO %s', type)
+    const opts = isTypeSupported ? { type, ...options } : { entryTypes: [type], ...options }
+    const po = new PO(list => callback(list.getEntries()))
+    po.observe(opts)
+    debug('new PO(%s, %j)', type, opts)
     return po
   } catch (err) {
     warn(err)
-    return null
+    return createFakeObserver()
   }
 }
 
@@ -76,21 +52,26 @@ export function createPerformanceObserver(eventType, cb) {
  */
 
 export function getEventsByType(eventType) {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     const type = normalizeEventType(eventType)
-    if (!PO || type === 'longtask') return resolve([]) // no buffering for longTasks
-    let observer = createPerformanceObserver(type, events => {
-      if (observer) observer.disconnect()
-      clearTimeout(timeout)
-      debug('get %s event(s)', events.length)
-      resolve(events)
-    })
-    if (!observer && perf && perf.getEntriesByType) {
-      debug('no observer, use getEntriesByType')
-      return resolve(perf.getEntriesByType(eventType) || [])
+    if (supportedEventTypes.indexOf(type) === -1) return reject(new Error(`Invalid event: ${type}`))
+    if (perf && ['mark', 'measure', 'resource', 'navigation'].indexOf(type) >= 0) {
+      debug('use sync API')
+      return resolve(perf.getEntriesByType(type))
     }
+    if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks
+    const observer = createEventsObserver(
+      type,
+      events => {
+        observer.disconnect()
+        clearTimeout(timeout)
+        debug('get %s event(s)', events.length)
+        resolve(events)
+      },
+      { buffered: true } // "buffered" flag supported only in Chrome
+    )
     const timeout = setTimeout(() => {
-      if (observer) observer.disconnect()
+      observer.disconnect()
       debug('get events timeout')
       resolve([])
     }, 250)
@@ -98,8 +79,24 @@ export function getEventsByType(eventType) {
 }
 
 /**
+ * Create a fake performance observer interface when the object is not available.
+ * The behaviour is similar to Firefox when `type` is not supported.
+ *
+ * @return {PerformanceObserver}
+ */
+
+function createFakeObserver() {
+  return {
+    observe() {},
+    disconnect() {},
+    takeRecords() {
+      return []
+    }
+  }
+}
+
+/**
  * Resolve event type to supported event strings:
- * -
  * - element-timing (because, it's the name of the spec)
  * - long-task (two words should be separated with dash)
  * - first-contentful-paint (that's what user would expect, "paint" is too generic)
@@ -111,5 +108,11 @@ export function getEventsByType(eventType) {
 function normalizeEventType(eventType) {
   const type = eventType.toLowerCase()
   // @ts-ignore
-  return type === 'element-timing' ? 'element' : type === 'long-task' ? 'longtask' : type
+  return type === 'element-timing'
+    ? 'element'
+    : type === 'long-task'
+    ? 'longtask'
+    : type === 'first-contentful-paint'
+    ? 'paint'
+    : type
 }

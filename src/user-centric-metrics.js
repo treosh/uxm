@@ -1,5 +1,5 @@
 import mitt from 'mitt'
-import { createPerformanceObserver } from './performance-observer'
+import { createEventsObserver } from './performance-observer'
 import { round, debug } from './utils'
 
 const FCP = 'first-contentful-paint'
@@ -65,7 +65,7 @@ function getValueOrCreateObserver(metricName, observer, cb) {
 }
 
 function initFcpObserver() {
-  let fcpObserver = createPerformanceObserver('paint', paintEvents => {
+  let fcpObserver = createEventsObserver('paint', paintEvents => {
     const fcpEvent = paintEvents.find(e => e.name === FCP)
     if (fcpEvent && fcpObserver) {
       values[FCP] = round(fcpEvent.startTime)
@@ -77,7 +77,7 @@ function initFcpObserver() {
 }
 
 function initFidObserver() {
-  let fidObserver = createPerformanceObserver('first-input', ([fidEvent]) => {
+  let fidObserver = createEventsObserver('first-input', ([fidEvent]) => {
     if (fidObserver) {
       values[FID] = round(fidEvent.processingStart - fidEvent.startTime)
       fidObserver.disconnect()
@@ -89,12 +89,12 @@ function initFidObserver() {
 
 function initLcpObserver() {
   let lcp = 0
-  let lcpObserver = createPerformanceObserver('largest-contentful-paint', lcpEvents => {
+  let lcpObserver = createEventsObserver('largest-contentful-paint', lcpEvents => {
     const lastLcpEvent = lcpEvents[lcpEvents.length - 1]
     lcp = round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
   })
   // force emit after the first interactiion
-  let fidObserver = createPerformanceObserver('first-input', () => {
+  let fidObserver = createEventsObserver('first-input', () => {
     if (fidObserver) {
       fidObserver.disconnect()
       debug('force LCP after FID')
@@ -120,10 +120,10 @@ function initLcpObserver() {
 
 function initClsObserver() {
   let cls = 0
-  let clsObserver = createPerformanceObserver('layout-shift', lsEvents => {
+  let clsObserver = createEventsObserver('layout-shift', lsEvents => {
     lsEvents.forEach(lsEvent => {
       // Only count layout shifts without recent user input.
-      // collect percentage value
+      // and collect percentage value
       if (!lsEvent.hadRecentInput) {
         cls = round(cls + 100 * lsEvent.value, 4)
       }
