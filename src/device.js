@@ -1,7 +1,9 @@
+import { isUndefined } from './utils'
+
 /** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
 /** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */
 /** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
-const nav = typeof navigator !== 'undefined' ? navigator : null
+const nav = isUndefined(navigator) ? null : navigator
 
 /**
  * Get effective connection type.
@@ -10,9 +12,8 @@ const nav = typeof navigator !== 'undefined' ? navigator : null
  * @return {EffectiveConnectionType | null}
  */
 
-export function getEffectiveConnectionType() {
-  const conn = nav ? nav.connection || nav.mozConnection || nav.webkitConnection : null
-  return conn ? conn.effectiveType : null
+export function getConnectionType() {
+  return nav && nav.connection ? nav.connection.effectiveType : null
 }
 
 /**
@@ -32,7 +33,7 @@ export function getDeviceMemory() {
  * @return {number | null}
  */
 
-export function getHardwareConcurrency() {
+export function getCpus() {
   return nav ? nav.hardwareConcurrency || null : null
 }
 
@@ -43,7 +44,7 @@ export function getHardwareConcurrency() {
  */
 
 export function getUrl() {
-  return typeof location !== 'undefined' ? location.href : null
+  return isUndefined(location) ? location.href : null
 }
 
 /**
