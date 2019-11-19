@@ -1,5 +1,5 @@
 import { getEventsByType, createEventsObserver } from './performance-observer'
-import { round, debug } from './utils'
+import { round, debug, warn } from './utils'
 
 /** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} StrictMetricType */
 /** @typedef {StrictMetricType | 'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
@@ -9,7 +9,6 @@ const FCP = 'first-contentful-paint'
 const FID = 'first-input-delay'
 const LCP = 'largest-contentful-paint'
 const CLS = 'cumulative-layout-shift'
-const visibilityChange = 'visibilitychange'
 
 /**
  * Get metric by `metricType`.
@@ -26,10 +25,10 @@ export function getMetricByType(metricType) {
     switch (metric) {
       case FCP:
         return computeFcp(events)
-      case LCP:
-        return computeLcp(events)
       case FID:
         return computeFid(events)
+      case LCP:
+        return computeLcp(events)
       case CLS:
         return computeCls(events)
     }
@@ -52,6 +51,7 @@ export function createMetricObserver(metricType, callback) {
         paintEvents => {
           const fcp = computeFcp(paintEvents)
           if (fcp) {
+            debug(FCP)
             fcpObserver.disconnect()
             callback(fcp)
           }
@@ -63,6 +63,7 @@ export function createMetricObserver(metricType, callback) {
       const fidObserver = createEventsObserver(
         'first-input',
         fidEvents => {
+          debug(FID)
           fidObserver.disconnect()
           callback(computeFid(fidEvents))
         },
@@ -70,28 +71,8 @@ export function createMetricObserver(metricType, callback) {
       )
       break
     case LCP:
-      let lcp = 0
-      let lcpVisibilityChangeListener = () => {
-        debug('%s %s', visibilityChange, LCP)
-        lcpObserver.disconnect()
-        document.removeEventListener(visibilityChange, lcpVisibilityChangeListener, true)
-        callback(lcp)
-      }
-      let lcpObserver = createEventsObserver(LCP, lcpEvents => (lcp = computeLcp(lcpEvents)), opts)
-      document.addEventListener(visibilityChange, lcpVisibilityChangeListener, true)
-      break
     case CLS:
-      let cls = 0
-      let clsVisibilityChangeListener = () => {
-        debug('%s %s', visibilityChange, CLS)
-        clsObserver.takeRecords()
-        clsObserver.disconnect()
-        document.removeEventListener(visibilityChange, clsVisibilityChangeListener, true)
-        callback(cls)
-      }
-      let clsObserver = createEventsObserver('layout-shift', lsEvents => (cls += computeCls(lsEvents)), opts)
-      document.addEventListener(visibilityChange, clsVisibilityChangeListener, true)
-      break
+      warn('%s observer is not supported yet', metricType)
   }
 }
 
