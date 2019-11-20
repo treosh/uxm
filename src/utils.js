@@ -14,9 +14,6 @@ debug.enable = false // disable debug by default
 /** @param {any} args */
 export const warn = (...args) => console.warn(...args)
 
-/** @param {any} val @return {boolean} */
-export const isUndefined = val => typeof val === 'undefined'
-
 // constants
-export const perf = isUndefined(performance) ? null : performance
-export const raf = isUndefined(requestAnimationFrame) ? setTimeout : requestAnimationFrame
+export const perf = typeof performance === 'undefined' ? null : performance
+export const raf = typeof requestAnimationFrame === 'undefined' ? setTimeout : requestAnimationFrame

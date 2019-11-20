@@ -1,4 +1,4 @@
-import { perf, raf, round, warn, isUndefined } from './utils'
+import { perf, raf, round, warn } from './utils'
 
 /** @typedef {{ entryType: "mark", name: string, startTime: number }} UserTimingMark */
 /** @typedef {{ entryType: "measure", name: string, startTime: number, duration: number }} UserTimingMeasure */
@@ -17,7 +17,7 @@ export function mark(markName) {
   try {
     /** @type {PerformanceMark | void} */
     let m = perf.mark(markName)
-    if (isUndefined(m)) {
+    if (typeof m === 'undefined') {
       const entries = perf.getEntriesByName(markName)
       m = entries[entries.length - 1]
     }
@@ -43,7 +43,7 @@ export function measure(measureName, startMarkName, endMarkName) {
   try {
     /** @type {PerformanceMeasure | void} */
     let m = perf.measure(measureName, startMarkName, endMarkName)
-    if (isUndefined(m)) {
+    if (typeof m === 'undefined') {
       const entries = perf.getEntriesByName(measureName)
       m = entries[entries.length - 1]
     }

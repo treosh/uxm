@@ -1,9 +1,7 @@
-import { isUndefined } from './utils'
-
 /** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
 /** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */
 /** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
-const nav = isUndefined(navigator) ? null : navigator
+const nav = typeof navigator === 'undefined' ? null : navigator
 
 /**
  * Get effective connection type.
@@ -44,7 +42,7 @@ export function getCpus() {
  */
 
 export function getUrl() {
-  return isUndefined(location) ? location.href : null
+  return typeof location === 'undefined' ? null : location.href
 }
 
 /**

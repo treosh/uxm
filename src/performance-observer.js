@@ -1,10 +1,10 @@
-import { debug, warn, perf, isUndefined } from './utils'
+import { debug, warn, perf } from './utils'
 
 /** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
 /** @typedef {StrictEventType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EventType */
 
-const PO = isUndefined(PerformanceObserver) ? null : PerformanceObserver
+const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
 const isTypeSupported = PO && PO.supportedEntryTypes
 const supportedEventTypes = [
   'element',
@@ -36,7 +36,7 @@ export function createEventsObserver(eventType, callback, options = {}) {
     const opts = isTypeSupported ? { type, ...options } : { entryTypes: [type], ...options }
     const po = new PO(list => callback(list.getEntries()))
     po.observe(opts)
-    debug('new PO(%s, %j)', type, opts)
+    debug('new PO(%o)', opts)
     return po
   } catch (err) {
     warn(err)
