@@ -9,7 +9,7 @@ const loc = typeof location === 'undefined' ? null : location
  * - Effective connection type: https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
  * - Device memory in GB rounded to 2: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
  *
- * @return {{ url?: string, userAgent?: string, connection?: EffectiveConnectionType, deviceMemory?: number, cpus?: number }}
+ * @return {{ url?: string, userAgent?: string, connection?: EffectiveConnectionType, memory?: number, cpus?: number }}
  */
 
 export function getDeviceInfo() {
@@ -17,7 +17,7 @@ export function getDeviceInfo() {
     url: loc ? loc.href : undefined,
     userAgent: nav ? nav.userAgent : undefined,
     connection: nav && nav.connection ? nav.connection.effectiveType : undefined,
-    deviceMemory: nav ? nav.deviceMemory : undefined,
+    memory: nav ? nav.deviceMemory : undefined,
     cpus: nav ? nav.hardwareConcurrency : undefined
   }
 }

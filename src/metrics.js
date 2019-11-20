@@ -45,7 +45,7 @@ export function getMetricByType(metricType) {
 export function observeMetric(metricType, callback) {
   switch (normalizeMetricType(metricType)) {
     case FCP:
-      const fcpObserver = observeEvents({ type: FCP, buffered: true }, paintEvents => {
+      observeEvents({ type: FCP, buffered: true }, (paintEvents, fcpObserver) => {
         const fcp = computeFcp(paintEvents)
         if (fcp) {
           debug(FCP)
@@ -55,7 +55,7 @@ export function observeMetric(metricType, callback) {
       })
       break
     case FID:
-      const fidObserver = observeEvents({ type: 'first-input', buffered: true }, fidEvents => {
+      observeEvents({ type: 'first-input', buffered: true }, (fidEvents, fidObserver) => {
         debug(FID)
         fidObserver.disconnect()
         callback(computeFid(fidEvents))

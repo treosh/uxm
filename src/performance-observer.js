@@ -1,24 +1,20 @@
 import { debug, warn, perf } from './utils'
 
-/** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
+/** @typedef {(events: PerformanceEntry[], observer: PerformanceObserver) => any} PerformanceEventCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
 /** @typedef {StrictEventType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EventType */
 /** @typedef {{ type: EventType, buffered?: boolean }} EventOptions */
 
 const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
-const isTypeSupported = PO && PO.supportedEntryTypes
-const supportedEventTypes = [
+const legacySupportedEntryTypes = ['mark', 'measure', 'resource', 'navigation']
+const supportedEventTypes = legacySupportedEntryTypes.concat([
   'element',
   'first-input',
   'largest-contentful-paint',
   'layout-shift',
   'longtask',
-  'mark',
-  'measure',
-  'navigation',
-  'paint',
-  'resource'
-]
+  'paint'
+])
 
 /**
  * Create performance observer.
@@ -36,8 +32,14 @@ export function observeEvents(eventType, callback) {
   if (typeof callback !== 'function') throw new Error('Invalid callback')
   if (!PO) return createFakeObserver()
   try {
-    const po = new PO(list => callback(list.getEntries()))
-    const finalOpts = isTypeSupported ? opts : { entryTypes: [opts.type] }
+    /** @type {PerformanceObserver} */
+    const po = new PO(list => {
+      const events = list.getEntries()
+      debug('got %s event(s) of %s', events.length, opts.type)
+      callback(events, po)
+    })
+    if ((PO.supportedEntryTypes || legacySupportedEntryTypes).indexOf(opts.type) === -1) return createFakeObserver()
+    const finalOpts = legacySupportedEntryTypes.indexOf(opts.type) === -1 ? opts : { entryTypes: [opts.type] }
     po.observe(finalOpts)
     debug('new PO(%o)', finalOpts)
     return po
@@ -57,7 +59,7 @@ export function observeEvents(eventType, callback) {
 export function getEventsByType(eventType) {
   const type = normalizeEventType(eventType)
   return new Promise(resolve => {
-    if (perf && ['mark', 'measure', 'resource', 'navigation'].indexOf(type) >= 0) {
+    if (perf && legacySupportedEntryTypes.indexOf(type) >= 0) {
       debug('use sync API')
       return resolve(perf.getEntriesByType(type))
     }
@@ -65,7 +67,6 @@ export function getEventsByType(eventType) {
     const observer = observeEvents({ type, buffered: true }, events => {
       observer.disconnect()
       clearTimeout(timeout)
-      debug('got %s event(s)', events.length)
       resolve(events)
     })
     const timeout = setTimeout(() => {
