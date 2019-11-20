@@ -75,6 +75,7 @@ function computeFcp(paintEvents) {
 
 /** @param {PerformanceEntry[]} lcpEvents */
 function computeLcp(lcpEvents) {
+  if (!lcpEvents.length) return null
   const lastLcpEvent = lcpEvents[lcpEvents.length - 1]
   return round(lastLcpEvent.renderTime || lastLcpEvent.loadTime)
 }
@@ -86,6 +87,7 @@ function computeFid([fidEvent]) {
 
 /** @param {PerformanceEntry[]} lsEvents */
 function computeCls(lsEvents) {
+  if (!lsEvents.length) return null
   const cls = lsEvents.reduce((memo, lsEvent) => {
     // Only count layout shifts without recent user input.
     // and collect percentage value

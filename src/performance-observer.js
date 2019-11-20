@@ -65,12 +65,12 @@ export function getEventsByType(eventType) {
     const observer = observeEvents({ type, buffered: true }, events => {
       observer.disconnect()
       clearTimeout(timeout)
-      debug('get %s event(s)', events.length)
+      debug('got %s event(s)', events.length)
       resolve(events)
     })
     const timeout = setTimeout(() => {
       observer.disconnect()
-      debug('get events timeout')
+      debug('got events timeout')
       resolve([])
     }, 250)
   })
