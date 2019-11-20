@@ -3,6 +3,7 @@ import { debug, warn, perf } from './utils'
 /** @typedef {(events: PerformanceEntry[]) => any} PerformanceEventCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
 /** @typedef {StrictEventType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EventType */
+/** @typedef {{ type: EventType, buffered?: boolean }} EventOptions */
 
 const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
 const isTypeSupported = PO && PO.supportedEntryTypes
@@ -22,21 +23,23 @@ const supportedEventTypes = [
 /**
  * Create performance observer.
  *
- * @param {EventType} eventType
+ * @param {EventType | EventOptions} eventType
  * @param {PerformanceEventCallback} callback
- * @param {object} [options]
  * @return {PerformanceObserver}
  */
 
-export function createEventsObserver(eventType, callback, options = {}) {
-  const type = normalizeEventType(eventType)
-  if (supportedEventTypes.indexOf(type) === -1) throw new Error(`Invalid event: ${type}`)
+export function observeEvents(eventType, callback) {
+  const opts =
+    typeof eventType === 'string'
+      ? { type: normalizeEventType(eventType) }
+      : { type: normalizeEventType(eventType.type), ...(eventType.buffered && { buffered: eventType.buffered }) }
+  if (typeof callback !== 'function') throw new Error('Invalid callback')
   if (!PO) return createFakeObserver()
   try {
-    const opts = isTypeSupported ? { type, ...options } : { entryTypes: [type], ...options }
     const po = new PO(list => callback(list.getEntries()))
-    po.observe(opts)
-    debug('new PO(%o)', opts)
+    const finalOpts = isTypeSupported ? opts : { entryTypes: [opts.type] }
+    po.observe(finalOpts)
+    debug('new PO(%o)', finalOpts)
     return po
   } catch (err) {
     warn(err)
@@ -52,24 +55,19 @@ export function createEventsObserver(eventType, callback, options = {}) {
  */
 
 export function getEventsByType(eventType) {
-  return new Promise((resolve, reject) => {
-    const type = normalizeEventType(eventType)
-    if (supportedEventTypes.indexOf(type) === -1) return reject(new Error(`Invalid event: ${type}`))
+  const type = normalizeEventType(eventType)
+  return new Promise(resolve => {
     if (perf && ['mark', 'measure', 'resource', 'navigation'].indexOf(type) >= 0) {
       debug('use sync API')
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks
-    const observer = createEventsObserver(
-      type,
-      events => {
-        observer.disconnect()
-        clearTimeout(timeout)
-        debug('get %s event(s)', events.length)
-        resolve(events)
-      },
-      { buffered: true } // "buffered" flag supported only in Chrome
-    )
+    const observer = observeEvents({ type, buffered: true }, events => {
+      observer.disconnect()
+      clearTimeout(timeout)
+      debug('get %s event(s)', events.length)
+      resolve(events)
+    })
     const timeout = setTimeout(() => {
       observer.disconnect()
       debug('get events timeout')
@@ -107,12 +105,15 @@ function createFakeObserver() {
 
 function normalizeEventType(eventType) {
   const type = eventType.toLowerCase()
+  const normalizedType =
+    type === 'element-timing'
+      ? 'element'
+      : type === 'long-task'
+      ? 'longtask'
+      : type === 'first-contentful-paint'
+      ? 'paint'
+      : type
+  if (supportedEventTypes.indexOf(normalizedType) === -1) throw new Error(`Invalid event: ${eventType}`)
   // @ts-ignore
-  return type === 'element-timing'
-    ? 'element'
-    : type === 'long-task'
-    ? 'longtask'
-    : type === 'first-contentful-paint'
-    ? 'paint'
-    : type
+  return normalizedType
 }

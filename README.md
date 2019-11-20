@@ -206,7 +206,3 @@ Events & Metrics:
 [![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
 
 Made with ❤️ at [Treo.sh](https://treo.sh/).
-
-```
-
-```

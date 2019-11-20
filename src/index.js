@@ -1,6 +1,6 @@
 export * from './performance-observer'
 export * from './user-timing'
 export * from './navigation-timing'
-export * from './device'
+export * from './device-info'
 export * from './metrics'
 export { debug } from './utils'

@@ -1,4 +1,4 @@
-import { getEventsByType, createEventsObserver } from './performance-observer'
+import { getEventsByType, observeEvents } from './performance-observer'
 import { round, debug, warn } from './utils'
 
 /** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} StrictMetricType */
@@ -42,33 +42,24 @@ export function getMetricByType(metricType) {
  * @param {MetricObserverCallback} callback
  */
 
-export function createMetricObserver(metricType, callback) {
-  const opts = { buffered: true }
+export function observeMetric(metricType, callback) {
   switch (normalizeMetricType(metricType)) {
     case FCP:
-      const fcpObserver = createEventsObserver(
-        FCP,
-        paintEvents => {
-          const fcp = computeFcp(paintEvents)
-          if (fcp) {
-            debug(FCP)
-            fcpObserver.disconnect()
-            callback(fcp)
-          }
-        },
-        opts
-      )
+      const fcpObserver = observeEvents({ type: FCP, buffered: true }, paintEvents => {
+        const fcp = computeFcp(paintEvents)
+        if (fcp) {
+          debug(FCP)
+          fcpObserver.disconnect()
+          callback(fcp)
+        }
+      })
       break
     case FID:
-      const fidObserver = createEventsObserver(
-        'first-input',
-        fidEvents => {
-          debug(FID)
-          fidObserver.disconnect()
-          callback(computeFid(fidEvents))
-        },
-        opts
-      )
+      const fidObserver = observeEvents({ type: 'first-input', buffered: true }, fidEvents => {
+        debug(FID)
+        fidObserver.disconnect()
+        callback(computeFid(fidEvents))
+      })
       break
     case LCP:
     case CLS:
