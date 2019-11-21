@@ -17,3 +17,24 @@ export const warn = (...args) => console.warn(...args)
 // constants
 export const perf = typeof performance === 'undefined' ? null : performance
 export const raf = typeof requestAnimationFrame === 'undefined' ? setTimeout : requestAnimationFrame
+
+/** @type {function[]} */
+let visiblityChangeCallbacks = []
+let isVisibilitChangeEnabled = false
+
+/** @param {function} callback */
+export function onVisibilityChange(callback) {
+  visiblityChangeCallbacks.push(callback)
+  if (isVisibilitChangeEnabled) return
+  document.addEventListener(
+    'visibilitychange',
+    function visibilityChangeListener() {
+      if (document.visibilityState === 'hidden') {
+        visiblityChangeCallbacks.forEach(cb => cb())
+        visiblityChangeCallbacks = []
+        document.removeEventListener('visibilitychange', visibilityChangeListener, true)
+      }
+    },
+    true
+  )
+}

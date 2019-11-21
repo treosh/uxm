@@ -13,8 +13,10 @@ test.serial('basic test', async t => {
   await page.evaluateOnNewDocument(uxmBundle)
   await page.goto(url)
 
-  const navTiming = await page.evaluate(() => uxm.getNavigationTiming())
   const device = await page.evaluate(() => uxm.getDeviceInfo())
+  await page.evaluate(() => {
+    uxm.onNavigation(navTiming => (window.navTiming = navTiming))
+  })
   await page.evaluate(() => {
     window.uxMetrics = {}
     uxm.observeMetric('fcp', fcp => (uxMetrics.fcp = fcp))
@@ -27,7 +29,7 @@ test.serial('basic test', async t => {
 
   await page.click('a[href="/signup"]')
   await new Promise(resolve => setTimeout(resolve, 1000))
-  const uxMetrics = await page.evaluate(() => window.uxMetrics)
+  const [uxMetrics, navTiming] = await page.evaluate(() => [window.uxMetrics, window.navTiming])
   await browser.close()
 
   console.log({ uxMetrics, navTiming, device })
@@ -39,9 +41,11 @@ test.serial('basic test', async t => {
   t.true(navTiming.timeToFirstByte > 300 && typeof navTiming.timeToFirstByte === 'number')
   t.true(navTiming.domContentLoaded > 500 && typeof navTiming.domContentLoaded === 'number')
   t.true(navTiming.load > 500 && typeof navTiming.load === 'number')
+  t.true(navTiming.serverTiming.length === 0)
 
   t.true(device.url === url)
-  t.true(device.connection === '4g' || device.connection === '3g')
-  t.true(device.memory >= 1 && typeof device.memory === 'number')
-  t.true(device.cpus >= 1 && typeof device.cpus === 'number')
+  t.true(device.deviceType === 'desktop')
+  t.true(device.deviceMemory >= 1 && typeof device.deviceMemory === 'number')
+  t.true(device.effectiveConnectionType === '4g' || device.effectiveConnectionType === '3g')
+  t.true(device.hardwareConcurrency >= 1 && typeof device.hardwareConcurrency === 'number')
 })
