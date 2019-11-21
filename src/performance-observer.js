@@ -35,7 +35,7 @@ export function observeEvents(eventType, callback) {
     /** @type {PerformanceObserver} */
     const po = new PO(list => {
       const events = list.getEntries()
-      debug('got %s event(s) of %s', events.length, opts.type)
+      debug('got %s %s event(s)', events.length, opts.type)
       callback(events, po)
     })
     if ((PO.supportedEntryTypes || legacySupportedEntryTypes).indexOf(opts.type) === -1) return createFakeObserver()

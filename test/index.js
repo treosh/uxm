@@ -37,8 +37,8 @@ test.serial('basic test', async t => {
   t.true(uxMetrics.fid >= 1 && typeof uxMetrics.fid === 'number')
 
   t.true(navTiming.timeToFirstByte > 300 && typeof navTiming.timeToFirstByte === 'number')
-  t.true(navTiming.domContentLoaded > 800 && typeof navTiming.domContentLoaded === 'number')
-  t.true(navTiming.load > 1000 && typeof navTiming.load === 'number')
+  t.true(navTiming.domContentLoaded > 500 && typeof navTiming.domContentLoaded === 'number')
+  t.true(navTiming.load > 500 && typeof navTiming.load === 'number')
 
   t.true(device.url === url)
   t.true(device.connection === '4g' || device.connection === '3g')
