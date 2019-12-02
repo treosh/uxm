@@ -1,4 +1,3 @@
-// @ts-check
 import { perf, round, raf } from './utils'
 /** @typedef {(metrics: { timeToFirstByte: number, domContentLoaded: number, load: number, serverTiming: object[] } | null) => any} NavigationCallback */
 

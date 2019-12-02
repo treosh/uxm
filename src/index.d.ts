@@ -8,4 +8,8 @@ interface PerformanceEntry {
   serverTiming: object[]
   hadRecentInput: boolean
   value: number
+  element: HTMLElement
+  size: number
+  transferSize: number
+  initiatorType: string
 }

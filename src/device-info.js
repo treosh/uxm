@@ -1,4 +1,3 @@
-// @ts-check
 /** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
 /** @typedef {'phone' | 'tablet' | 'desktop'} DeviceType */
 /** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */

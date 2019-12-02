@@ -19,28 +19,28 @@ test.serial('basic test', async t => {
   })
   await page.evaluate(() => {
     window.uxMetrics = {}
-    uxm.observeMetric('fcp', fcp => (uxMetrics.fcp = fcp))
-    uxm.observeMetric('lcp', lcp => (uxMetrics.lcp = lcp))
-    uxm.observeMetric('fid', fid => (uxMetrics.fid = fid))
+    uxm.createMetricObserver('fcp', fcp => (uxMetrics.fcp = fcp))
+    uxm.createMetricObserver('fid', fid => (uxMetrics.fid = fid))
+    uxm.createMetricObserver({ type: 'lcp', maxTimeout: 1000 }, lcp => (uxMetrics.lcp = lcp))
     // it's not possible to get CLS in headless mode
     // https://github.com/GoogleChrome/puppeteer/issues/1462#issuecomment-356623793
-    uxm.observeMetric('cls', cls => (uxMetrics.cls = cls))
+    uxm.createMetricObserver('cls', cls => (uxMetrics.cls = cls))
   })
 
   await page.click('a[href="/signup"]')
-  await new Promise(resolve => setTimeout(resolve, 1000))
+  await new Promise(resolve => setTimeout(resolve, 2000))
   const [uxMetrics, navTiming] = await page.evaluate(() => [window.uxMetrics, window.navTiming])
   await browser.close()
 
   console.log({ uxMetrics, navTiming, device })
 
-  t.true(uxMetrics.fcp > 100 && typeof uxMetrics.fcp === 'number')
-  // t.true(uxMetrics.lcp > 300 && uxMetrics.lcp > uxMetrics.fcp && typeof uxMetrics.lcp === 'number')
-  t.true(uxMetrics.fid >= 1 && typeof uxMetrics.fid === 'number')
+  t.true(uxMetrics.fcp.value > 100 && typeof uxMetrics.fcp.value === 'number')
+  t.true(uxMetrics.lcp.value > 100 && typeof uxMetrics.lcp.value === 'number')
+  t.true(uxMetrics.fid.value >= 1 && typeof uxMetrics.fid.value === 'number')
 
-  t.true(navTiming.timeToFirstByte > 300 && typeof navTiming.timeToFirstByte === 'number')
-  t.true(navTiming.domContentLoaded > 500 && typeof navTiming.domContentLoaded === 'number')
-  t.true(navTiming.load > 500 && typeof navTiming.load === 'number')
+  t.true(navTiming.timeToFirstByte > 100 && typeof navTiming.timeToFirstByte === 'number')
+  t.true(navTiming.domContentLoaded > 200 && typeof navTiming.domContentLoaded === 'number')
+  t.true(navTiming.load > 300 && typeof navTiming.load === 'number')
   t.true(navTiming.serverTiming.length === 0)
 
   t.true(device.url === url)

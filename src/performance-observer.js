@@ -1,13 +1,14 @@
 import { debug, warn, perf } from './utils'
 
-/** @typedef {(events: PerformanceEntry[], observer: PerformanceObserver) => any} PerformanceEventCallback */
-/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEventType */
-/** @typedef {StrictEventType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EventType */
-/** @typedef {{ type: EventType, buffered?: boolean }} EventOptions */
+/** @typedef {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} EntriesCallback */
+/** @typedef {(entry: PerformanceEntry) => any} EntryCallback */
+/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEntryType */
+/** @typedef {StrictEntryType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EntryType */
+/** @typedef {{ type: EntryType, buffered?: boolean, filter?: EntryCallback, map?: EntryCallback }} EntryOpts */
 
 const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
 const legacySupportedEntryTypes = ['mark', 'measure', 'resource', 'navigation']
-const supportedEventTypes = legacySupportedEntryTypes.concat([
+const supportedEntryTypes = legacySupportedEntryTypes.concat([
   'element',
   'first-input',
   'largest-contentful-paint',
@@ -17,26 +18,40 @@ const supportedEventTypes = legacySupportedEntryTypes.concat([
 ])
 
 /**
+ * Observer multiple metrics.
+ *
+ * @param {Array<EntryType | EntryOpts>} entriesOpts
+ * @param {EntriesCallback} callback
+ */
+
+export function observeEntries(entriesOpts, callback) {
+  entriesOpts.forEach(entryOpts => createPerformanceObserver(entryOpts, callback))
+}
+
+/**
  * Create performance observer.
  *
- * @param {EventType | EventOptions} eventType
- * @param {PerformanceEventCallback} callback
+ * @param {EntryType | EntryOpts} entryType
+ * @param {EntriesCallback} callback
  * @return {PerformanceObserver}
  */
 
-export function observeEvents(eventType, callback) {
+export function createPerformanceObserver(entryType, callback) {
+  /** @type {EntryOpts & { type: StrictEntryType }} */
   const opts =
-    typeof eventType === 'string'
-      ? { type: normalizeEventType(eventType) }
-      : { type: normalizeEventType(eventType.type), ...(eventType.buffered && { buffered: eventType.buffered }) }
-  if (typeof callback !== 'function') throw new Error('Invalid callback')
+    typeof entryType === 'string'
+      ? { type: normalizeEntryType(entryType) }
+      : { ...entryType, type: normalizeEntryType(entryType.type) }
   if (!PO) return createFakeObserver()
   try {
     /** @type {PerformanceObserver} */
     const po = new PO(list => {
-      const events = list.getEntries()
-      debug('got %s %s event(s)', events.length, opts.type)
-      callback(events, po)
+      const allEntries = list.getEntries()
+      const entries = allEntries
+        .filter(e => ((opts.filter ? opts.filter(e) : true)))
+        .map(e => ((opts.map ? opts.map(e) : e)))
+      // debug('got %s/%s %s entries', entries.length, allEntries.length, opts.type)
+      if (entries.length) callback(entries, po)
     })
     if ((PO.supportedEntryTypes || legacySupportedEntryTypes).indexOf(opts.type) === -1) return createFakeObserver()
     const finalOpts = legacySupportedEntryTypes.indexOf(opts.type) === -1 ? opts : { entryTypes: [opts.type] }
@@ -50,21 +65,21 @@ export function observeEvents(eventType, callback) {
 }
 
 /**
- * Get buffered events by `type`.
+ * Get buffered entries by `type`.
  *
- * @param {EventType} eventType
+ * @param {EntryType} entryType
  * @return {Promise<PerformanceEntry[]>}
  */
 
-export function getEventsByType(eventType) {
-  const type = normalizeEventType(eventType)
+export function getEntriesByType(entryType) {
+  const type = normalizeEntryType(entryType)
   return new Promise(resolve => {
     if (perf && legacySupportedEntryTypes.indexOf(type) >= 0) {
       debug('use sync API')
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks
-    const observer = observeEvents({ type, buffered: true }, events => {
+    const observer = createPerformanceObserver({ type, buffered: true }, events => {
       observer.disconnect()
       clearTimeout(timeout)
       resolve(events)
@@ -100,12 +115,12 @@ function createFakeObserver() {
  * - long-task (two words should be separated with dash)
  * - first-contentful-paint (that's what user would expect, "paint" is too generic)
  *
- * @param {EventType} eventType
- * @return {StrictEventType}
+ * @param {EntryType} entryType
+ * @return {StrictEntryType}
  */
 
-function normalizeEventType(eventType) {
-  const type = eventType.toLowerCase()
+function normalizeEntryType(entryType) {
+  const type = entryType.toLowerCase()
   const normalizedType =
     type === 'element-timing'
       ? 'element'
@@ -114,7 +129,7 @@ function normalizeEventType(eventType) {
       : type === 'first-contentful-paint'
       ? 'paint'
       : type
-  if (supportedEventTypes.indexOf(normalizedType) === -1) throw new Error(`Invalid event: ${eventType}`)
+  if (supportedEntryTypes.indexOf(normalizedType) === -1) throw new Error(`Invalid event: ${entryType}`)
   // @ts-ignore
   return normalizedType
 }

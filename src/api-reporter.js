@@ -1,4 +1,4 @@
-import { onVisibilityChange, warn } from './utils'
+import { onVisibilityChange, warn, debug } from './utils'
 /** @typedef {(metrics: object) => void} ApiReporter */
 
 /**
@@ -38,15 +38,15 @@ export function createApiReporter(url, opts = {}) {
     metrics = {}
   }
 
-  // send metrics on the tab close
-  onVisibilityChange(sendMetrics)
+  // send metrics on the tab close, last
+  onVisibilityChange(sendMetrics, 1)
 
   // warn on metric replacement
   // and assign new values and append array values.
   return function apiReporter(newMetrics) {
     Object.keys(newMetrics).forEach(key => {
       const value = newMetrics[key]
-      if (typeof metrics[key] !== 'undefined' && Array.isArray(metrics[key])) {
+      if (typeof metrics[key] !== 'undefined' && Array.isArray(value) && !Array.isArray(metrics[key])) {
         warn('double metric occurence, replace %s=%s with %s', key, metrics[key], value)
       }
       if (Array.isArray(value)) {
@@ -72,6 +72,7 @@ export function createApiReporter(url, opts = {}) {
 
 function sendBeacon(url, metrics) {
   if (typeof navigator === 'undefined') return
+  debug('POST %s %o', url, metrics)
   if (navigator.sendBeacon) return navigator.sendBeacon(url, JSON.stringify(metrics))
   const client = new XMLHttpRequest()
   client.open('POST', url, false) // third parameter indicates sync xhr

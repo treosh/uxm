@@ -18,21 +18,23 @@ export const warn = (...args) => console.warn(...args)
 export const perf = typeof performance === 'undefined' ? null : performance
 export const raf = typeof requestAnimationFrame === 'undefined' ? setTimeout : requestAnimationFrame
 
-/** @type {function[]} */
+/** @type {[Function, number][]} */
 let visiblityChangeCallbacks = []
 let isVisibilitChangeEnabled = false
 
-/** @param {function} callback */
-export function onVisibilityChange(callback) {
-  visiblityChangeCallbacks.push(callback)
+/** @param {function} callback @param {number} order */
+export function onVisibilityChange(callback, order = 0) {
+  visiblityChangeCallbacks.push([callback, order])
   if (isVisibilitChangeEnabled) return
+  isVisibilitChangeEnabled = true
   document.addEventListener(
     'visibilitychange',
     function visibilityChangeListener() {
       if (document.visibilityState === 'hidden') {
-        visiblityChangeCallbacks.forEach(cb => cb())
+        visiblityChangeCallbacks.sort((a, b) => a[1] - b[1]).forEach(([cb]) => cb())
         visiblityChangeCallbacks = []
         document.removeEventListener('visibilitychange', visibilityChangeListener, true)
+        callback()
       }
     },
     true

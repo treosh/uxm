@@ -55,6 +55,17 @@ export function measure(measureName, startMarkName, endMarkName) {
 }
 
 /**
+ * Get the time elapsed since the session start.
+ *
+ * https://developer.mozilla.org/en-US/docs/Web/API/Performance/now
+ */
+
+export function now() {
+  return perf ? perf.now() : Date.now() - startTime
+}
+const startTime = Date.now()
+
+/**
  * Start time measurement.
  * It's similar to console.time(label).
  *
