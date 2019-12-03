@@ -39,8 +39,9 @@ export function observeEntries(opts, callback) {
     observer.observe(observerOpts)
     if (opts.buffered && isLegacyType) {
       raf(() => {
+        if (!perf) return
         debug('emit buffered')
-        if (perf) callback(perf.getEntriesByType(type), observer)
+        callback(perf.getEntriesByType(type), observer)
       })
     }
     return observer

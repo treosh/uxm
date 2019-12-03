@@ -1,6 +1,6 @@
 import { debug } from './utils'
-export * from './performance-observer'
 export * from './user-timing'
-export * from './navigation-timing'
+export * from './performance-observer'
 export * from './metrics'
+export * from './device-info'
 export { debug }

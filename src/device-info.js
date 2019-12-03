@@ -1,5 +1,4 @@
 /** @typedef {'slow-2g' | '2g' | '3g' | '4g'} EffectiveConnectionType */
-/** @typedef {'phone' | 'tablet' | 'desktop'} DeviceType */
 /** @typedef {{effectiveType: EffectiveConnectionType}} NetworkInformation */
 /** @type {{ connection?: NetworkInformation, mozConnection?: NetworkInformation, webkitConnection?: NetworkInformation, deviceMemory?: number, hardwareConcurrency?:number, userAgent: string } | null} */
 const nav = typeof navigator === 'undefined' ? null : navigator
@@ -10,14 +9,13 @@ const loc = typeof location === 'undefined' ? null : location
  * - Effective connection type: https://developer.mozilla.org/en-US/docs/Web/API/NetworkInformation
  * - Device memory in GB rounded to 2: https://developer.mozilla.org/en-US/docs/Web/API/Navigator/deviceMemory
  *
- * @return {{ url?: string, userAgent?: string, deviceType?: DeviceType, deviceMemory?: number, effectiveConnectionType?: EffectiveConnectionType, hardwareConcurrency?: number }}
+ * @return {{ url?: string, userAgent?: string, deviceMemory?: number, effectiveConnectionType?: EffectiveConnectionType, hardwareConcurrency?: number }}
  */
 
 export function getDeviceInfo() {
   return {
     url: getUrl(),
     userAgent: getUserAgent(),
-    deviceType: getDeviceType(),
     deviceMemory: getDeviceMemory(),
     effectiveConnectionType: getEffectiveConnectionType(),
     hardwareConcurrency: getHardwareConcurrency()
@@ -74,37 +72,4 @@ function getUrl() {
 
 function getUserAgent() {
   return nav ? nav.userAgent : undefined
-}
-
-/**
- * Get device type.
- * based on https://github.com/matthewhudson/current-device/blob/master/src/index.js
- *
- * @return {DeviceType | undefined}
- */
-
-function getDeviceType() {
-  const ua = (getUserAgent() || '').toLowerCase()
-  if (!ua) return undefined
-  const find = /** @param {string} str */ str => ua.indexOf(str) !== -1
-
-  // windows
-  const isWindows = find('windows')
-  const isWindowsPhone = isWindows && find('phone')
-  const isWindowsTablet = isWindows && find('touch') && !isWindowsPhone
-
-  // ios
-  const isIphone = !isWindows && find('iphone')
-  const isIpod = find('ipod')
-  const isIpad = find('ipad')
-
-  // android
-  const isAndroid = !isWindows && find('android')
-  const isAndroidPhone = isAndroid && find('mobile')
-  const isAndroidTablet = isAndroid && !find('mobile')
-
-  // detect device
-  const isPhone = isAndroidPhone || isIphone || isIpod || isWindowsPhone
-  const isTablet = isIpad || isAndroidTablet || isWindowsTablet
-  return isPhone ? 'phone' : isTablet ? 'tablet' : 'desktop'
 }
