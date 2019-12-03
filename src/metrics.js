@@ -1,27 +1,15 @@
-import { createPerformanceObserver, getEntriesByType } from './performance-observer'
+import { observeEntries, getEntriesByType } from './performance-observer'
 import { round, debug, onVisibilityChange } from './utils'
 import { now } from './user-timing'
 
-/** @typedef {'first-contentful-paint' | 'first-input-delay' | 'largest-contentful-paint' | 'cumulative-layout-shift'} StrictMetricType */
-/** @typedef {StrictMetricType | 'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
+/** @typedef {'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
 /** @typedef {{ type: MetricType, maxTimeout?: number, map?: function }} MetricOpts */
 /** @typedef {(metric: object) => any} MetricObserverCallback */
 
-const FCP = 'first-contentful-paint'
-const FID = 'first-input-delay'
-const LCP = 'largest-contentful-paint'
-const CLS = 'cumulative-layout-shift'
-
-/**
- * Observer multiple metrics.
- *
- * @param {Array<MetricOpts | MetricType>} metricsOpts
- * @param {MetricObserverCallback} callback
- */
-
-export function observeMetrics(metricsOpts, callback) {
-  metricsOpts.forEach(metricOpts => createMetricObserver(metricOpts, callback))
-}
+const FCP = 'fcp'
+const FID = 'fid'
+const LCP = 'lcp'
+const CLS = 'cls'
 
 /**
  * Compute metric by type using buffered values.
@@ -32,7 +20,7 @@ export function observeMetrics(metricsOpts, callback) {
 
 export function getMetricByType(metricType) {
   const metric = normalizeMetricType(metricType)
-  const entryType = metric === FID ? 'first-input' : metric === CLS ? 'layout-shift' : metric
+  const entryType = getEntryTypeByMetricType(metric)
   const map = metric === FCP ? mapFcp : metric === FID ? mapFid : metric === LCP ? mapLcp : mapCls
   return getEntriesByType(entryType).then(entries => map(entries))
 }
@@ -44,12 +32,14 @@ export function getMetricByType(metricType) {
  * @param {MetricObserverCallback} callback
  */
 
-export function createMetricObserver(metricOpts, callback) {
+export function collectMetrics(metricOpts, callback) {
   /** @type {MetricOpts} */
   const opts = typeof metricOpts === 'string' ? { type: metricOpts } : metricOpts
-  switch (normalizeMetricType(opts.type)) {
+  const metricType = normalizeMetricType(opts.type)
+  const entryType = getEntryTypeByMetricType(metricType)
+  switch (metricType) {
     case FCP:
-      createPerformanceObserver({ type: FCP, buffered: true }, (paintEntries, fcpObserver) => {
+      observeEntries({ type: entryType, buffered: true }, (paintEntries, fcpObserver) => {
         if (paintEntries.some(paintEntry => paintEntry.name === FCP)) {
           debug(FCP)
           fcpObserver.disconnect()
@@ -58,7 +48,7 @@ export function createMetricObserver(metricOpts, callback) {
       })
       break
     case FID:
-      createPerformanceObserver({ type: 'first-input', buffered: true }, (fidEntries, fidObserver) => {
+      observeEntries({ type: entryType, buffered: true }, (fidEntries, fidObserver) => {
         if (fidEntries.length) {
           debug(FID)
           fidObserver.disconnect()
@@ -80,7 +70,7 @@ export function createMetricObserver(metricOpts, callback) {
       /** @type {PerformanceEntry[]} */
       let allLcpEntries = []
       /** @type {PerformanceObserver | null} */
-      let lcpObserver = createPerformanceObserver({ type: LCP, buffered: true }, lcpEntries => {
+      let lcpObserver = observeEntries({ type: entryType, buffered: true }, lcpEntries => {
         allLcpEntries.push(...lcpEntries)
         if (timeout) clearTimeout(timeout)
         timeout = setTimeout(emitLcp, maxTimeout)
@@ -105,7 +95,7 @@ export function createMetricObserver(metricOpts, callback) {
       /** @type {PerformanceEntry[]} */
       let allLsEntries = []
       /** @type {PerformanceObserver | null} */
-      let clsObserver = createPerformanceObserver({ type: 'layout-shift', buffered: true }, lsEntries => {
+      let clsObserver = observeEntries({ type: entryType, buffered: true }, lsEntries => {
         allLsEntries.push(...lsEntries)
       })
       const emitCls = () => {
@@ -125,26 +115,42 @@ export function createMetricObserver(metricOpts, callback) {
  * Normalize `metricType` to strict names.
  *
  * @param {MetricType} metricType
- * @return {StrictMetricType}
+ * @return {MetricType}
  */
 
 function normalizeMetricType(metricType) {
   const m = metricType.toLowerCase()
-  const metric = m === 'fcp' ? FCP : m === 'fid' ? FID : m === 'lcp' ? LCP : m === 'cls' ? CLS : m
-  if ([FCP, FID, LCP, CLS].indexOf(metric) === -1) throw new Error(`Invalid metric: ${metricType}`)
+  if ([FCP, FID, LCP, CLS].indexOf(m) === -1) throw new Error(`Invalid metric: ${metricType}`)
   // @ts-ignore
-  return metric
+  return m
+}
+
+/**
+ * Normalize `metricType` to strict names.
+ *
+ * @param {MetricType} metricType
+ * @return {import('./performance-observer').EntryType}
+ */
+
+function getEntryTypeByMetricType(metricType) {
+  return metricType === FCP
+    ? 'paint'
+    : metricType === FID
+    ? 'first-input'
+    : metricType === LCP
+    ? 'largest-contentful-paint'
+    : 'layout-shift'
 }
 
 /**
  * Map FCP entry.
  *
  * @param {PerformanceEntry[]} paintEntries
- * @return {{ metricType: "first-contentful-paint", value: number } | null}}
+ * @return {{ metricType: "fcp", value: number } | null}}
  */
 
 function mapFcp(paintEntries) {
-  const paintEntry = paintEntries.length ? paintEntries.filter(e => e.name === FCP)[0] : null
+  const paintEntry = paintEntries.length ? paintEntries.filter(e => e.name === 'first-contentful-paint')[0] : null
   return paintEntry ? { metricType: FCP, value: round(paintEntry.startTime) } : null
 }
 
@@ -152,7 +158,7 @@ function mapFcp(paintEntries) {
  * Map FID entry.
  *
  * @param {PerformanceEntry[]} fidEntries
- * @return {{ metricType: "first-input-delay", value: number, startTime: number, name: string } | null}}
+ * @return {{ metricType: "fid", value: number, startTime: number, name: string } | null}}
  */
 
 function mapFid([fidEntry]) {
@@ -170,7 +176,7 @@ function mapFid([fidEntry]) {
  * Map LCP entry.
  *
  * @param {PerformanceEntry[]} lcpEntries
- * @return {{ metricType: "largest-contentful-paint", value: number, size: number, elementSelector: string | null } | null}}
+ * @return {{ metricType: "lcp", value: number, size: number, elementSelector: string | null } | null}}
  */
 
 function mapLcp(lcpEntries) {
@@ -191,7 +197,7 @@ function mapLcp(lcpEntries) {
  * Map CLS entries.
  *
  * @param {PerformanceEntry[]} lsEntries
- * @return {{ metricType: "cumulative-layout-shift", value: number, totalEntries: number, sessionDuration: number }}}
+ * @return {{ metricType: "cls", value: number, totalEntries: number, sessionDuration: number }}}
  */
 
 function mapCls(lsEntries) {

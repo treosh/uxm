@@ -2,8 +2,7 @@ import { debug, warn, perf, raf } from './utils'
 
 /** @typedef {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} EntriesCallback */
 /** @typedef {(entry: PerformanceEntry) => any} EntryCallback */
-/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEntryType */
-/** @typedef {StrictEntryType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EntryType */
+/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} EntryType */
 /** @typedef {{ type: EntryType, buffered?: boolean }} EntryOpts */
 
 const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
@@ -97,19 +96,15 @@ function createFakeObserver() {
 }
 
 /**
- * Resolve event type to supported event strings:
- * - element-timing (because, it's the name of the spec)
- * - long-task (two words should be separated with dash)
- * - first-contentful-paint (that's what user would expect, "paint" is too generic)
+ * Resolve event type to supported event strings.
  *
  * @param {EntryType} entryType
- * @return {StrictEntryType}
+ * @return {EntryType}
  */
 
 function normalizeEntryType(entryType) {
   const type = entryType.toLowerCase()
-  const normalizedType = type === 'element-timing' ? 'element' : type === 'long-task' ? 'longtask' : type
-  if (supportedEntryTypes.indexOf(normalizedType) === -1) throw new Error(`Invalid event: ${entryType}`)
+  if (supportedEntryTypes.indexOf(type) === -1) throw new Error(`Invalid event: ${entryType}`)
   // @ts-ignore
-  return normalizedType
+  return type
 }
