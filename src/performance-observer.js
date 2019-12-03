@@ -1,10 +1,10 @@
-import { debug, warn, perf } from './utils'
+import { debug, warn, perf, raf } from './utils'
 
 /** @typedef {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} EntriesCallback */
 /** @typedef {(entry: PerformanceEntry) => any} EntryCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} StrictEntryType */
 /** @typedef {StrictEntryType | 'eliment-timing' | 'long-task' | 'first-contentful-paint'} EntryType */
-/** @typedef {{ type: EntryType, buffered?: boolean, filter?: EntryCallback, map?: EntryCallback }} EntryOpts */
+/** @typedef {{ type: EntryType, buffered?: boolean }} EntryOpts */
 
 const PO = typeof PerformanceObserver === 'undefined' ? null : PerformanceObserver
 const legacySupportedEntryTypes = ['mark', 'measure', 'resource', 'navigation']
@@ -18,46 +18,33 @@ const supportedEntryTypes = legacySupportedEntryTypes.concat([
 ])
 
 /**
- * Observer multiple metrics.
- *
- * @param {Array<EntryType | EntryOpts>} entriesOpts
- * @param {EntriesCallback} callback
- */
-
-export function observeEntries(entriesOpts, callback) {
-  entriesOpts.forEach(entryOpts => createPerformanceObserver(entryOpts, callback))
-}
-
-/**
  * Create performance observer.
  *
- * @param {EntryType | EntryOpts} entryType
+ * @param {EntryOpts} opts
  * @param {EntriesCallback} callback
  * @return {PerformanceObserver}
  */
 
-export function createPerformanceObserver(entryType, callback) {
-  /** @type {EntryOpts & { type: StrictEntryType }} */
-  const opts =
-    typeof entryType === 'string'
-      ? { type: normalizeEntryType(entryType) }
-      : { ...entryType, type: normalizeEntryType(entryType.type) }
+export function observeEntries(opts, callback) {
+  const type = normalizeEntryType(opts.type)
   if (!PO) return createFakeObserver()
   try {
+    const isLegacyType = legacySupportedEntryTypes.indexOf(type) !== -1
+    const supportedTypes = PO.supportedEntryTypes || legacySupportedEntryTypes
+    if (!isLegacyType && supportedTypes.indexOf(type) === -1) return createFakeObserver()
+
     /** @type {PerformanceObserver} */
-    const po = new PO(list => {
-      const allEntries = list.getEntries()
-      const entries = allEntries
-        .filter(e => ((opts.filter ? opts.filter(e) : true)))
-        .map(e => ((opts.map ? opts.map(e) : e)))
-      // debug('got %s/%s %s entries', entries.length, allEntries.length, opts.type)
-      if (entries.length) callback(entries, po)
-    })
-    if ((PO.supportedEntryTypes || legacySupportedEntryTypes).indexOf(opts.type) === -1) return createFakeObserver()
-    const finalOpts = legacySupportedEntryTypes.indexOf(opts.type) === -1 ? opts : { entryTypes: [opts.type] }
-    po.observe(finalOpts)
-    debug('new PO(%o)', finalOpts)
-    return po
+    const observer = new PO(list => callback(list.getEntries(), observer))
+    const observerOpts = isLegacyType ? { entryTypes: [type] } : opts
+    debug('new PO(%o)', observerOpts)
+    observer.observe(observerOpts)
+    if (opts.buffered && isLegacyType) {
+      raf(() => {
+        debug('emit buffered')
+        if (perf) callback(perf.getEntriesByType(type), observer)
+      })
+    }
+    return observer
   } catch (err) {
     warn(err)
     return createFakeObserver()
@@ -79,7 +66,7 @@ export function getEntriesByType(entryType) {
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks
-    const observer = createPerformanceObserver({ type, buffered: true }, events => {
+    const observer = observeEntries({ type, buffered: true }, events => {
       observer.disconnect()
       clearTimeout(timeout)
       resolve(events)
