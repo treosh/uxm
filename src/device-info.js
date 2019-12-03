@@ -31,7 +31,7 @@ export function getDeviceInfo() {
  * @return {EffectiveConnectionType | undefined}
  */
 
-export function getEffectiveConnectionType() {
+function getEffectiveConnectionType() {
   return nav && nav.connection ? nav.connection.effectiveType : undefined
 }
 
@@ -42,7 +42,7 @@ export function getEffectiveConnectionType() {
  * @return {number | undefined}
  */
 
-export function getDeviceMemory() {
+function getDeviceMemory() {
   return nav ? nav.deviceMemory : undefined
 }
 
@@ -52,7 +52,7 @@ export function getDeviceMemory() {
  * @return {number | undefined}
  */
 
-export function getHardwareConcurrency() {
+function getHardwareConcurrency() {
   return nav ? nav.hardwareConcurrency : undefined
 }
 
@@ -62,7 +62,7 @@ export function getHardwareConcurrency() {
  * @return {string | undefined}
  */
 
-export function getUrl() {
+function getUrl() {
   return loc ? loc.href : undefined
 }
 
@@ -72,7 +72,7 @@ export function getUrl() {
  * @return {string | undefined}
  */
 
-export function getUserAgent() {
+function getUserAgent() {
   return nav ? nav.userAgent : undefined
 }
 
@@ -83,7 +83,7 @@ export function getUserAgent() {
  * @return {DeviceType | undefined}
  */
 
-export function getDeviceType() {
+function getDeviceType() {
   const ua = (getUserAgent() || '').toLowerCase()
   if (!ua) return undefined
   const find = /** @param {string} str */ str => ua.indexOf(str) !== -1

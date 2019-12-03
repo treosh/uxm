@@ -121,14 +121,7 @@ function createFakeObserver() {
 
 function normalizeEntryType(entryType) {
   const type = entryType.toLowerCase()
-  const normalizedType =
-    type === 'element-timing'
-      ? 'element'
-      : type === 'long-task'
-      ? 'longtask'
-      : type === 'first-contentful-paint'
-      ? 'paint'
-      : type
+  const normalizedType = type === 'element-timing' ? 'element' : type === 'long-task' ? 'longtask' : type
   if (supportedEntryTypes.indexOf(normalizedType) === -1) throw new Error(`Invalid event: ${entryType}`)
   // @ts-ignore
   return normalizedType

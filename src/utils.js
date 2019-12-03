@@ -9,6 +9,7 @@ export function round(val, precision = 0) {
 export function debug(str, ...args) {
   if (debug.enable) console.log(`%cuxm: ${str}`, 'color: #3398DB', ...args)
 }
+/** @type {boolean} */
 debug.enable = false // disable debug by default
 
 /** @param {any} args */
