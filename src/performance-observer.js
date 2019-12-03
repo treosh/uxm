@@ -1,6 +1,6 @@
 import { debug, warn, perf, raf } from './utils'
 
-/** @typedef {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} EntriesCallback */
+/** @typedef {(entries: Object[], observer: PerformanceObserver) => any} EntriesCallback */
 /** @typedef {(entry: PerformanceEntry) => any} EntryCallback */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource'} EntryType */
 /** @typedef {{ type: EntryType, buffered?: boolean }} EntryOpts */
@@ -55,7 +55,7 @@ export function observeEntries(opts, callback) {
  * Get buffered entries by `type`.
  *
  * @param {EntryType} entryType
- * @return {Promise<PerformanceEntry[]>}
+ * @return {Promise<Object[]>}
  */
 
 export function getEntriesByType(entryType) {

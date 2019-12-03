@@ -2,9 +2,13 @@ import { observeEntries, getEntriesByType } from './performance-observer'
 import { round, debug, onVisibilityChange, perf, raf } from './utils'
 import { now } from './user-timing'
 
-/** @typedef {'fcp' | 'lcp' | 'fid' | 'cls' | 'ttfb' | 'dcl' | 'load'} type */
-/** @typedef {{ type: type, maxTimeout?: number, get?: function }} MetricOpts */
+/** @typedef {'fcp' | 'lcp' | 'fid' | 'cls' | 'ttfb' | 'dcl' | 'load'} MetricType */
+/** @typedef {{ type: MetricType, maxTimeout?: number, get?: function }} MetricOpts */
 /** @typedef {(metric: object) => any} MetricObserverCallback */
+/** @typedef {PerformanceEntry & { processingStart: DOMHighResTimeStamp, processingEnd: DOMHighResTimeStamp, cancelable: boolean }} PerformanceEventTiming */
+/** @typedef {PerformanceEntry & { renderTime: DOMHighResTimeStamp, loadTime: DOMHighResTimeStamp, size: number, element?: Element }} LargestContentfulPaint */
+/** @typedef {PerformanceEntry & { value: number, hadRecentInput: boolean, lastInputTime: DOMHighResTimeStamp }} LayoutShift */
+/** @typedef {PerformanceNavigationTiming & { serverTiming?: object[] }} PerformanceNavTiming */
 
 const FCP = 'fcp'
 const FID = 'fid'
@@ -17,7 +21,7 @@ const OL = 'load'
 /**
  * get metric by type using buffered values.
  *
- * @param {type} type
+ * @param {MetricType} type
  * @return {Promise<Object | null>}
  */
 
@@ -43,7 +47,7 @@ export function getMetricByType(type) {
 /**
  * Observe `type`, if the value is already observed, return it.
  *
- * @param {Array<MetricOpts | type>} metricsOpts
+ * @param {Array<MetricOpts | MetricType>} metricsOpts
  * @param {MetricObserverCallback} callback
  */
 
@@ -101,7 +105,7 @@ export function collectMetrics(metricsOpts, callback) {
       case CLS: {
         /** @type {NodeJS.Timeout | null} */
         let timeout = null
-        /** @type {PerformanceEntry[]} */
+        /** @type {LayoutShift[]} */
         let allLsEntries = []
         /** @type {PerformanceObserver | null} */
         let clsObserver = observeEntries({ type: 'layout-shift', buffered: true }, lsEntries => {
@@ -153,8 +157,8 @@ export function collectMetrics(metricsOpts, callback) {
 /**
  * Normalize `type` to strict names.
  *
- * @param {type} type
- * @return {type}
+ * @param {MetricType} type
+ * @return {MetricType}
  */
 
 function normalizetype(type) {
@@ -167,6 +171,7 @@ function normalizetype(type) {
 /**
  * Compute FCP metric.
  * https://web.dev/fcp/#measure-fcp-in-javascript
+ * https://w3c.github.io/paint-timing/
  *
  * @param {PerformanceEntry[]} paintEntries
  * @return {{ type: "fcp", value: number } | null}}
@@ -180,8 +185,9 @@ function getFcp(paintEntries) {
 /**
  * Compute FID metric.
  * https://web.dev/fid/#measure-fid-in-javascript
+ * https://wicg.github.io/event-timing/
  *
- * @param {PerformanceEntry[]} fidEntries
+ * @param {PerformanceEventTiming[]} fidEntries
  * @return {{ type: "fid", value: number, startTime: number, name: string } | null}}
  */
 
@@ -199,8 +205,9 @@ function getFid([fidEntry]) {
 /**
  * Compute LCP metric.
  * https://web.dev/lcp/#measure-lcp-in-javascript
+ * https://wicg.github.io/largest-contentful-paint/
  *
- * @param {PerformanceEntry[]} lcpEntries
+ * @param {LargestContentfulPaint[]} lcpEntries
  * @return {{ type: "lcp", value: number, size: number, elementSelector: string | null } | null}}
  */
 
@@ -221,8 +228,9 @@ function getLcp(lcpEntries) {
 /**
  * Compute CLS metric.
  * https://web.dev/cls/#measure-cls-in-javascript
+ * https://github.com/WICG/layout-instability
  *
- * @param {PerformanceEntry[]} lsEntries
+ * @param {LayoutShift[]} lsEntries
  * @return {{ type: "cls", value: number, totalEntries: number, sessionDuration: number }}}
  */
 
@@ -240,7 +248,7 @@ function getCls(lsEntries) {
  * Compute TTFB metric.
  * https://web.dev/custom-metrics/#navigation-timing-api
  *
- * @param {PerformanceEntry[]} navEntries
+ * @param {PerformanceNavTiming[]} navEntries
  * @return {{ type: "ttfb", value: number, serverTiming?: object[] } | null}}
  */
 
@@ -255,7 +263,7 @@ function getTtfb([nav]) {
  * Compute "DOMContentLoaded" event.
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
  *
- * @param {PerformanceEntry[]} navEntries
+ * @param {PerformanceNavTiming[]} navEntries
  * @return {{ type: "dcl", value: number } | null}}
  */
 
@@ -270,7 +278,7 @@ function getDcl([nav]) {
  * Compute "load" event.
  * https://developer.mozilla.org/en-US/docs/Web/API/Window/load_event
  *
- * @param {PerformanceEntry[]} navEntries
+ * @param {PerformanceNavTiming[]} navEntries
  * @return {{ type: "load", value: number } | null}}
  */
 
