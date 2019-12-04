@@ -33,16 +33,10 @@ test.serial('basic test', async t => {
   t.true(metrics.lcp.value > 100 && typeof metrics.lcp.value === 'number')
   t.true(metrics.fid.value >= 1 && typeof metrics.fid.value === 'number')
 
-  t.deepEqual(Object.keys(deviceInfo), [
-    'url',
-    'userAgent',
-    'deviceMemory',
-    'effectiveConnectionType',
-    'hardwareConcurrency'
-  ])
+  t.deepEqual(Object.keys(deviceInfo), ['url', 'userAgent', 'memory', 'connectionType', 'cpus'])
   t.is(deviceInfo.url, url)
-  t.true(deviceInfo.deviceMemory >= 1 && typeof deviceInfo.deviceMemory === 'number')
-  t.true(deviceInfo.effectiveConnectionType === '4g' || deviceInfo.effectiveConnectionType === '3g')
-  t.true(deviceInfo.hardwareConcurrency >= 1 && typeof deviceInfo.hardwareConcurrency === 'number')
+  t.true(deviceInfo.memory >= 1 && typeof deviceInfo.memory === 'number')
+  t.true(deviceInfo.connectionType === '4g' || deviceInfo.connectionType === '3g')
+  t.true(deviceInfo.cpus >= 1 && typeof deviceInfo.cpus === 'number')
   t.true(typeof deviceInfo.userAgent === 'string')
 })
