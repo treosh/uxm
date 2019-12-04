@@ -1,6 +1,6 @@
 {
   "name": "uxm",
-  "version": "1.2.0",
+  "version": "2.0.0-beta3",
   "description": "User experience metrics",
   "repository": "treosh/uxm",
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
@@ -31,22 +31,31 @@
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
+    "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** package.json README.md && tsc -p . && yarn build && ava test/*.js"
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build"
   },
   "ava": {
     "require": [
       "esm"
     ]
   },
+  "dependencies": {
+    "mitt": "^1.2.0"
+  },
   "devDependencies": {
     "@types/node": "10",
-    "@types/puppeteer": "^1.20.0",
+    "@types/puppeteer": "^1.20.2",
     "ava": "^2.4.0",
     "esm": "^3.2.25",
+    "lodash-es": "^4.17.15",
     "microbundle": "^0.11.0",
-    "prettier": "^1.18.2",
-    "puppeteer": "^1.20.0",
-    "typescript": "^3.7.0-beta"
+    "prettier": "^1.19.1",
+    "puppeteer": "^2.0.0",
+    "rollup": "^1.27.0",
+    "rollup-plugin-commonjs": "^10.1.0",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-terser": "^5.1.2",
+    "typescript": "^3.7.2"
   }
 }
