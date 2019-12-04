@@ -5,11 +5,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Use node 10
+      - name: Use node 12
         uses: actions/setup-node@v1
         with:
-          node-version: '10.x'
-      - name: Install deps and test
-        run: |
-          yarn install
-          yarn test
+          node-version: '12.x'
+      - name: Cache node_modules
+        id: cache-modules
+        uses: actions/cache@v1
+        with:
+          path: node_modules
+          key: ${{ runner.OS }}-build-${{ hashFiles('package.json') }}
+      - name: Install dependencies
+        if: steps.cache-modules.outputs.cache-hit != 'true'
+        run: yarn install
+      - name: Test
+        run: yarn test
