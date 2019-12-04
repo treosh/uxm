@@ -10,13 +10,13 @@ jobs:
         with:
           node-version: '12.x'
       - name: Cache node_modules
-        id: cache-modules
+        id: cache
         uses: actions/cache@v1
         with:
           path: node_modules
-          key: cache-modules-${{ hashFiles('package.json') }}
+          key: yarn.lock-${{ hashFiles('yarn.lock') }}
       - name: Install dependencies
-        if: steps.cache-modules.outputs.cache-hit != 'true'
+        if: steps.cache.outputs.cache-hit != 'true'
         run: yarn install
       - name: Test
         run: yarn test

@@ -1,3 +1,4 @@
+import { without } from 'lodash-es'
 import test from 'ava'
 import puppeteer from 'puppeteer'
 import { readFileSync as readFile } from 'fs'
@@ -14,26 +15,24 @@ test.serial('basic test', async t => {
   await page.evaluateOnNewDocument(uxmBundle)
   await page.goto(url)
   await page.evaluate(() => {
-    window.deviceInfo = window.uxm.getDeviceInfo()
     window.metrics = {}
-    window.uxm.debug.enable = true
     window.uxm.collectMetrics(
-      ['fcp', 'fid', { type: 'lcp', maxTimeout: 1000 }, { type: 'cls', maxTimeout: 1000 }, 'ttfb', 'load', 'dcl'],
+      ['ttfb', 'load', 'dcl', 'fcp', 'fid', { type: 'lcp', maxTimeout: 1000 }, { type: 'cls', maxTimeout: 1000 }],
       metric => (window.metrics[metric.type] = metric)
     )
   })
-  await page.click('a[href="/signup"]')
-  await new Promise(resolve => setTimeout(resolve, 3000))
-  const [metrics, deviceInfo] = await page.evaluate(() => [window.metrics, window.deviceInfo])
+  await page.click('h1')
+  await new Promise(resolve => setTimeout(resolve, 2000))
+  const [metrics, deviceInfo] = await page.evaluate(() => [window.metrics, window.uxm.getDeviceInfo()])
   console.log({ metrics, deviceInfo })
   await browser.close()
 
-  t.deepEqual(Object.keys(metrics).sort(), ['ttfb', 'load', 'dcl', 'fcp', 'fid', 'cls', 'lcp'].sort())
+  t.deepEqual(without(Object.keys(metrics), 'cls'), ['ttfb', 'load', 'dcl', 'fcp', 'fid', 'lcp'])
   t.true(metrics.fcp.value > 100 && typeof metrics.fcp.value === 'number')
   t.true(metrics.lcp.value > 100 && typeof metrics.lcp.value === 'number')
   t.true(metrics.fid.value >= 1 && typeof metrics.fid.value === 'number')
 
-  t.deepEqual(Object.keys(deviceInfo).sort(), ['url', 'userAgent', 'memory', 'connectionType', 'cpus'].sort())
+  t.deepEqual(Object.keys(deviceInfo), ['url', 'userAgent', 'memory', 'connectionType', 'cpus'])
   t.is(deviceInfo.url, url)
   t.true(deviceInfo.memory >= 1 && typeof deviceInfo.memory === 'number')
   t.true(deviceInfo.connectionType === '4g' || deviceInfo.connectionType === '3g')

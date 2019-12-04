@@ -48,6 +48,7 @@
     "@types/puppeteer": "^1.20.2",
     "ava": "^2.4.0",
     "esm": "^3.2.25",
+    "lodash-es": "^4.17.15",
     "microbundle": "^0.11.0",
     "prettier": "^1.19.1",
     "puppeteer": "^2.0.0",

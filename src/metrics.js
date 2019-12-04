@@ -90,16 +90,18 @@ export function collectMetrics(metricsOpts, callback) {
           if (timeout) clearTimeout(timeout)
           timeout = setTimeout(emitLcp, maxTimeout)
         })
-        const emitLcp = () => {
+        onVisibilityChange(emitLcp)
+        break
+
+        function emitLcp() {
           if (!lcpObserver) return
           debug(LCP)
           lcpObserver.takeRecords() // force pending values
           lcpObserver.disconnect()
           lcpObserver = null
+          if (timeout) clearTimeout(timeout)
           if (lcpMetric) callback(lcpMetric)
         }
-        onVisibilityChange(emitLcp)
-        break
       }
 
       case CLS: {
@@ -113,16 +115,18 @@ export function collectMetrics(metricsOpts, callback) {
           if (timeout) clearTimeout(timeout)
           if (opts.maxTimeout) timeout = setTimeout(emitCls, opts.maxTimeout)
         })
-        const emitCls = () => {
+        onVisibilityChange(emitCls)
+        break
+
+        function emitCls() {
           if (!clsObserver) return
           debug(CLS)
           clsObserver.takeRecords()
           clsObserver.disconnect()
           clsObserver = null
-          if (allLsEntries.length) callback((opts.get || getCls)(allLsEntries))
+          if (timeout) clearTimeout(timeout)
+          callback((opts.get || getCls)(allLsEntries))
         }
-        onVisibilityChange(emitCls)
-        break
       }
 
       case TTFB:
@@ -219,10 +223,15 @@ function getLcp(lcpEntries) {
         value: round(lcpEntry.renderTime || lcpEntry.loadTime),
         size: lcpEntry.size,
         elementSelector: lcpEntry.element
-          ? `${lcpEntry.element.tagName.toLowerCase()}.${lcpEntry.element.className.replace(/ /g, '.')}`
+          ? `${getSelector(lcpEntry.element.parentElement)} > ${getSelector(lcpEntry.element)}`
           : null
       }
     : null
+
+  /** @param {Element | null} el */
+  function getSelector(el) {
+    return el ? `${el.tagName.toLowerCase()}${el.className ? '.' : ''}${el.className.replace(/ /g, '.')}` : null
+  }
 }
 
 /**
