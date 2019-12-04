@@ -30,7 +30,7 @@ test.serial('basic test', async t => {
   t.deepEqual(without(Object.keys(metrics), 'cls'), ['ttfb', 'load', 'dcl', 'fcp', 'fid', 'lcp'])
   t.true(metrics.fcp.value > 100 && typeof metrics.fcp.value === 'number')
   t.true(metrics.lcp.value > 100 && typeof metrics.lcp.value === 'number')
-  t.true(metrics.fid.value >= 1 && typeof metrics.fid.value === 'number')
+  t.true(metrics.fid.value >= 0 && typeof metrics.fid.value === 'number')
 
   t.deepEqual(Object.keys(deviceInfo), ['url', 'userAgent', 'memory', 'connectionType', 'cpus'])
   t.is(deviceInfo.url, url)
