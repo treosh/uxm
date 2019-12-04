@@ -3,8 +3,8 @@
 </p>
 
 <p align="center">
-  A tiny (2kb gzip) utility library for collecting<br />
-  user-centric performance metrics.
+  A modular library for collecting<br />
+  front-end performance metrics.
 </p>
 
 <p align="center">
@@ -27,111 +27,103 @@ Core design ideas:
 [![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
+Install:
+
 ```bash
-# install using npm
-npm install uxm
-
-# or with yarn
-yarn add uxm
+npm install uxm@next # 2.0.0-beta
 ```
 
-Measure navigation timing (all browsers):
+**Track [CrUX-like](https://developers.google.com/web/tools/chrome-user-experience-report) metrics**.
 
 ```js
-// Features:
-// - wait for onload, when necessary or return results immediately
-// - precompute useful attributes (cross-browser)
-// - return raw `navigation` event when available (Chrome / Firefox)
-import { getNavigationTiming } from 'uxm'
+import { collectMetrics, getDeviceInfo } from 'uxm'
+import { createApiReporter } from 'uxm/api-reporter'
 
-const { timeToFirstByte, domContentLoaded, onLoad } = await getNavigationTiming()
+const report = createApiReporter('/beacon-url', { initial: getDeviceInfo() })
+collectMetrics(['fcp', 'lcp', 'fid', 'cls', 'ttfb', 'load', 'dcl'], ({ type, value }) => report({ [type]: value }))
 ```
 
-Measure time:
+**Report [user-centric metrics](https://web.dev/metrics/) to Google Analytics**.
 
 ```js
-// Features:
-// - better primitives for measuring time & time of the last paint
-// - simple UI to observe & collect records
-import { time, timeEndPaint, createEventsObserver, geEventsByType } from 'uxm'
+import { collectMetrics } from 'uxm'
+import { report } from 'uxm/google-analytics-reporter'
 
-// measure actions
+collectMetrics(['fcp', 'lcp', 'fid', 'cls'], report)
+```
+
+**Measure duration of compute intensive tasks**.
+
+- better primitives for measuring time & time of the last paint
+- simple UI to observe & collect records
+
+```js
+import { time, timeEnd, observeEntries } from 'uxm'
+
+// measure time of the "my-task"
 time('my-task')
 computeIntensiveTask()
 timeEnd('my-task')
 
-// collect measures (async)
-createEventsObserver('measure', measures => {})
-
-// or get all at once
-const allMeasures = await geEventsByType('measure')
+// collect measures asyncronously
+observeEntries({ type: 'measure', buffered: true }, measures => {
+  /* filter, map, and report data to analytics. */
+})
 ```
 
-Integrate with React and track view rendering time (all browsers):
+Integrate with React and track time to render a view:
 
 ```js
 import { useEffect } from 'react'
-import { time, timeEndPaint } from 'uxm'
+import { time, timeEndPaint, observeEntries } from 'uxm'
 
 function App() {
-  useTime('renderApp')
+  useView('my-app')
   return <MoreComponents />
 }
 
 // collect measure after the component did mount and all paint events completed
-function useTime(label) {
+function useView(label) {
   time(label)
   useEffect(() => timeEndPaint(label), [])
 }
 
-// report "measure" to analytics
-createEventsObserver('measure', measures => reportToAnalytics(measures))
+// report "measure" event to analytics.
+observeEntries({ type: 'measure', buffered: true }, measures => {
+  /* filter, map, and report data to analytics. */
+})
 ```
 
-Collect user-centric metrics and send them to google analytics (only Chrome):
-
-```js
-// features:
-// - implement logic behind collecting and observing metrics
-// - fast metric compute
-import { createMetricObserver as onMetric } from 'uxm'
-import { reportMetric } from 'uxm/google-analytics-reporter'
-
-onMetric('fcp', fcp => reportMetric({ fcp }))
-onMetric('fid', fid => reportMetric({ fid }))
-
-// get metrics
-const lcp = await getMetricByType('lcp') // immediate compute (fast, without waiting for tab switch or interaction)
-const fid = await getMetricByType('fid') // possibly null if no interactions observed
-const cls = await getMetricByType('cls') // get cummulative shift up to this point
-```
-
-Get device information (only Chrome):
+Associate metrics with device information:
 
 ```js
 // features:
 // - access modern APIs when available
-import { getDeviceMemory, getConnectionType, getCpus, getUserAgent } from 'uxm/device'
-const device = {
-  memory: getDeviceMemory(),
-  cpus: getCpus(),
-  connectionType: getConnectionType(),
-  userAgent: getUserAgent()
-}
+import { getDeviceInfo, getMetricByType } from 'uxm/device'
+
+const deviceInfo = getDeviceInfo()
+
+reportToAnalytics({
+  ttfb: await getMetricByType('ttfb'),
+  fcp: await getMetricByType('fcp'),
+  memory: deviceInfo.memory, // 1, 2, 4, 8, 16 ... GB of memory rounding down to the nearest power of 2
+  cpus: deviceInfo.hardwareConcurrency, // 1, 2, 4, 8 ... CPU cores
+  connection: deviceInfo.effectiveConnectionType // 2g | 3g | 4g
+})
 ```
 
 Observe performance events and collect long tasks (only Chrome):
 
+- doesn't fail when PerformanceObserver is not available, or event is new
+- always return PO-like object with 2 methods: disconnect & takeRecords
+- normalize event names
+
 ```js
-// features:
-// - doesn't fail when PerformanceObserver is not available, or event is new
-// - always return PO-like object with 2 methods: disconnect & takeRecords
-// - normalize event names
-import { createEventsObserver } from 'uxm'
+import { createEntriesObserver } from 'uxm'
 
 // collect longTasks
 const longTasks = []
-const observer = createEventsObserver('long-task', events => {
+const observer = createEntriesObserver({ type: 'long-task' }, events => {
   longTasks.push(...events.map(e => e.duration))
 })
 
@@ -142,19 +134,19 @@ observer.takeRecords() // flush recent events
 
 Get buffered entries and track layout shift between view changes (only Chrome):
 
+- return [] when event is unknown or PerformanceObserver is unavailable
+- automatic timeout if no events triggered
+- normalized event names
+- use modern API and fallback to legacy for mark/measure/resource
+
 ```js
-// features:
-// - return [] when event is unknown or PerformanceObserver is unavailable
-// - automatic timeout if no events triggered
-// - normalized event names
-// - use modern API and fallback to legacy for mark/measure/resource
-import { geEventsByType } from 'uxm'
+import { geEntriesByType } from 'uxm'
 
 // track latest shift time
 let latestStartTime = 0
 
 // filter and compute layout shifts
-const layoutShifts = await geEventsByType('layout-shift')
+const layoutShifts = await geEntriesByType('layout-shift')
 const cummulativeLayoutShift = layoutShifts
   .filter(lsEvent => lsEvent.startTime > latestStartTime)
   .reduce((memo, lsEvent) => {
@@ -172,37 +164,26 @@ latestStartTime = layoutShifts[layoutShifts.length - 1].startTime
 
 ## API
 
-- Custom metrics (collect timing)
-  - `time(label)`, `timeEnd(label)` or `timeEndPaint(label, [callback])`
-  - `mark(markName)`, `measure(measureName, [startMarkName], [endMarkName])`
-- Performance observer (build your own metrics)
-  - `createEventsObserver(eventType, callback, [options])`
-  - `await getEventsByType(eventType)`
-- Navigation timing:
-  - `await getNavigationTiming()` - timeToFirstByte, domContentLoaded, onLoad (and more useful metrics and complete navigation event)
-- Metric observer (Chrome only)
-  - `createMetricObserver(metricName, callback)`
-  - `await getMetricByType(metricName)`
-- Device info (primary Chrome)
-  - `getUserAgent()`
-  - `getDeviceType()` - phone | tablet | desktop
-  - `getDeviceMemory()` - memory size as a scale of 2 (1,2,4,8,16) (Chrome only)
-  - `getCpus()` - number of cores (Chrome only)
-  - `getConnectionType()` - effective connection type (2g, 3g, 4g) (Chrome only)
-- Reporters:
-  - `reportToGoogleAnalytics(metrics)`
+API:
 
-Events & Metrics:
+- Metrics:
+  - `collectMetrics(MetricOpts[], (metric: Metric) => {})`
+  - `getMetricByType(type: string) => Promise<Metric>`
+- Performance observer (low-level entries)
+  - `observeEntries({ type: string, buffered?: boolean }, (entries: PerformanceEntry[], observer: PerformanceObserver) => {})`
+  - `getEntriesByType(type: string) => Promise<PerformanceEntry[]>`
+- Custom metrics:
+  - `time(label: string)` + `timeEnd(label: string)` or `timeEndPaint(label: string, callback: function)`
+  - `mark(markName: string)` + `measure(measureName: string, startMarkName?: string, endMarkName?: string)` + `now()`
+- Device:
+  - `getDeviceInfo()`
 
-- event types:
-  - `mark`, `measure`, `resource` (all browsers)
-  - `navigation` (Chrome + FF)
-  - `first-contentful-paint`, `largest-contentful-paint`, `first-input`, `layout-shift`, `long-task`, `element-timing` (Chrome only)
-- metric types:
-  - `fcp`, `lcp`, `cls`, `fid` (Chrome only)
+Extra modules:
+
+- API Reporter: `createApiReporter(opts)`
+- Google Analytics Reporter: `createGoogleAnalyticsReporter()`
+- SPA monitor: `createSpaMonitor(opts)`
 
 ## Credits
 
-[![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
-
-Made with ❤️ at [Treo.sh](https://treo.sh/).
+Carefully crafted at [Treo.sh - Page Speed Monitoring with Lighthouse](https://treo.sh/).
