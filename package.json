@@ -1,9 +1,9 @@
 {
   "name": "uxm",
   "version": "2.0.0-beta3",
-  "description": "User experience metrics",
+  "description": "A modular library for collecting front-end performance metrics",
   "repository": "treosh/uxm",
-  "author": "Aleksey Kulikov <alekseykulikov@me.com>",
+  "author": "Aleksey Kulikov <aleksey@treo.sh>",
   "license": "MIT",
   "source": "src/index.js",
   "types": "./dist/uxm.d.ts",
@@ -15,19 +15,24 @@
     "dist"
   ],
   "keywords": [
-    "Web Performance",
-    "Perceived Web Performance",
-    "User Experience",
-    "First Paint",
-    "First Contentful Paint",
-    "Largest Contentful Paint",
-    "First Input Delay",
-    "Paint Timing API",
-    "Network Information API",
-    "Chrome User Experience Report",
-    "Connection Type",
-    "PerformancePaintTiming",
-    "deviceMemory"
+    "user experience metrics",
+    "user-centric metrics",
+    "web performance",
+    "first contentful paint",
+    "largest contentful paint",
+    "first input delay",
+    "cumulative layout shift",
+    "paint timing",
+    "long tasks",
+    "performance observer",
+    "element timing",
+    "layout shifts",
+    "user timing",
+    "chrome user experience report",
+    "crux",
+    "network information",
+    "connection type",
+    "device memory"
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
@@ -35,27 +40,25 @@
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
     "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build"
   },
-  "ava": {
-    "require": [
-      "esm"
-    ]
-  },
-  "dependencies": {
-    "mitt": "^1.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
-    "@types/node": "10",
-    "@types/puppeteer": "^1.20.2",
+    "@types/node": "12.12.16",
+    "@types/puppeteer": "^2.0.0",
     "ava": "^2.4.0",
     "esm": "^3.2.25",
     "lodash-es": "^4.17.15",
     "microbundle": "^0.11.0",
     "prettier": "^1.19.1",
     "puppeteer": "^2.0.0",
-    "rollup": "^1.27.0",
+    "rollup": "^1.27.9",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-terser": "^5.1.2",
-    "typescript": "^3.7.2"
+    "typescript": "^3.7.3"
+  },
+  "ava": {
+    "require": [
+      "esm"
+    ]
   }
 }
