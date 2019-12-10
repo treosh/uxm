@@ -38,10 +38,11 @@
     "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
     "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build"
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build && size-limit"
   },
   "dependencies": {},
   "devDependencies": {
+    "@size-limit/preset-small-lib": "^2.2.2",
     "@types/node": "12.12.16",
     "@types/puppeteer": "^2.0.0",
     "ava": "^2.4.0",
@@ -60,5 +61,19 @@
     "require": [
       "esm"
     ]
-  }
+  },
+  "size-limit": [
+    {
+      "path": "./dist/uxm.js",
+      "limit": "2.2KB"
+    },
+    {
+      "path": "./dist/uxm.es.js",
+      "limit": "2.2KB"
+    },
+    {
+      "path": "./dist/uxm.umd.js",
+      "limit": "2.2KB"
+    }
+  ]
 }
