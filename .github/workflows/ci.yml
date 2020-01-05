@@ -5,18 +5,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - name: Use node 12
+      - name: Use node 10
         uses: actions/setup-node@v1
         with:
-          node-version: '12.x'
-      - name: Cache node_modules
-        id: cache
-        uses: actions/cache@v1
-        with:
-          path: node_modules
-          key: yarn.lock-${{ hashFiles('yarn.lock') }}
-      - name: Install dependencies
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: yarn install
-      - name: Test
-        run: yarn test
+          node-version: '10.x'
+      - name: Install deps and test
+        run: |
+          yarn install
+          yarn test

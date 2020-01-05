@@ -1,9 +1,9 @@
 {
   "name": "uxm",
-  "version": "2.0.0-beta3",
-  "description": "A modular library for collecting front-end performance metrics",
+  "version": "1.2.0",
+  "description": "User experience metrics",
   "repository": "treosh/uxm",
-  "author": "Aleksey Kulikov <aleksey@treo.sh>",
+  "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
   "types": "./dist/uxm.d.ts",
@@ -15,65 +15,38 @@
     "dist"
   ],
   "keywords": [
-    "user experience metrics",
-    "user-centric metrics",
-    "web performance",
-    "first contentful paint",
-    "largest contentful paint",
-    "first input delay",
-    "cumulative layout shift",
-    "paint timing",
-    "long tasks",
-    "performance observer",
-    "element timing",
-    "layout shifts",
-    "user timing",
-    "chrome user experience report",
-    "crux",
-    "network information",
-    "connection type",
-    "device memory"
+    "Web Performance",
+    "Perceived Web Performance",
+    "User Experience",
+    "First Paint",
+    "First Contentful Paint",
+    "Largest Contentful Paint",
+    "First Input Delay",
+    "Paint Timing API",
+    "Network Information API",
+    "Chrome User Experience Report",
+    "Connection Type",
+    "PerformancePaintTiming",
+    "deviceMemory"
   ],
   "scripts": {
     "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
-    "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build && size-limit"
-  },
-  "dependencies": {},
-  "devDependencies": {
-    "@size-limit/preset-small-lib": "^2.2.2",
-    "@types/node": "12.12.16",
-    "@types/puppeteer": "^2.0.0",
-    "ava": "^2.4.0",
-    "esm": "^3.2.25",
-    "lodash-es": "^4.17.15",
-    "microbundle": "^0.11.0",
-    "prettier": "^1.19.1",
-    "puppeteer": "^2.0.0",
-    "rollup": "^1.27.9",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.1.2",
-    "typescript": "^3.7.3"
+    "test": "prettier -c src/** package.json README.md && tsc -p . && yarn build && ava test/*.js"
   },
   "ava": {
     "require": [
       "esm"
     ]
   },
-  "size-limit": [
-    {
-      "path": "./dist/uxm.js",
-      "limit": "2.2KB"
-    },
-    {
-      "path": "./dist/uxm.es.js",
-      "limit": "2.2KB"
-    },
-    {
-      "path": "./dist/uxm.umd.js",
-      "limit": "2.2KB"
-    }
-  ]
+  "devDependencies": {
+    "@types/node": "10",
+    "@types/puppeteer": "^1.20.0",
+    "ava": "^2.4.0",
+    "esm": "^3.2.25",
+    "microbundle": "^0.11.0",
+    "prettier": "^1.18.2",
+    "puppeteer": "^1.20.0",
+    "typescript": "^3.7.0-beta"
+  }
 }
