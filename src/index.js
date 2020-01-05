@@ -188,7 +188,7 @@ export function getDeviceType(ua = getUserAgent()) {
   // windows
   const isWindows = find('windows')
   const isWindowsPhone = isWindows && find('phone')
-  const isWindowsTablet = isWindows && (find('touch') && !isWindowsPhone)
+  const isWindowsTablet = isWindows && find('touch') && !isWindowsPhone
 
   // ios
   const isIphone = !isWindows && find('iphone')

@@ -60,7 +60,10 @@ test.serial('booking.com - extra settings', async t => {
   console.log(JSON.stringify(result2, null, '  '))
 
   t.is(result.deviceType, 'phone')
-  t.deepEqual(result.userTiming.map(u => u.name), ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts'])
+  t.deepEqual(
+    result.userTiming.map(u => u.name),
+    ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts']
+  )
 
   t.deepEqual(Object.keys(result2), [
     'deviceType',
