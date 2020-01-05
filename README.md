@@ -1,10 +1,10 @@
 <p align="center">
-  <img width="1045" alt="UXM - User Experience Metrics" src="https://user-images.githubusercontent.com/158189/69014933-46249f80-098f-11ea-98d4-095d112afd56.png">
+  <img src="./docs/logo.png" />
 </p>
 
 <p align="center">
-  A modular library for collecting<br />
-  front-end performance metrics.
+  A tiny (1kb gzip) utility library for collecting web performance metrics<br />
+  that affect user experience.
 </p>
 
 <p align="center">
@@ -14,176 +14,309 @@
 <br/>
 <br/>
 
-Core design ideas:
+Modern web platform provides a lot of APIs to analyze page speed information.
+But it's hard to follow them and even harder to deal with the lack of implementation in different browsers.
 
-1. Build the core, that equally works in 3 major browsers: Chrome/FF/Safari and extend it with a spec development
-2. Provide low-level building blocks for R&D of the new metrics
-3. Provide simple API to observe modern metrics: FCP/FID/LCP/CLS (Chrome only)
-4. Focus on device difference (memory, cpu, network), not a browser difference (Chrome only)
-5. Be able to monitor SPA
+UXM is a modular library that allows to combine various functions and collect the data you need. Think about it, as [Lodash](https://lodash.com/) for user experience APIs.
+
+**Use cases**:
+
+- Collect RUM data.
+- Build private version of [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/).
+- Audit the page performance using Puppeteer ([example](./test/index.js)).
+- Dynamically evaluate the performance of the user's device and adapt the UI.
+
+**Features**:
+
+- Modular design based on ES modules.
+- Small size (1kb gzip). It's usually smaller if you use [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
+- Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
+- Fully featured [User Timing API](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
+- Lightweight device type parser.
+- Experimental [Long Tasks](https://www.w3.org/TR/longtasks/) support for interactivity metrics.
 
 ## Usage
 
 [![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-Install:
-
 ```bash
-npm install uxm@next # 2.0.0-beta
+npm install uxm
 ```
 
-**Track [CrUX-like](https://developers.google.com/web/tools/chrome-user-experience-report) metrics**.
+Collect loading performance metrics:
 
 ```js
-import { collectMetrics, getDeviceInfo } from 'uxm'
-import { createApiReporter } from 'uxm/api-reporter'
+import { getUrl, getTimeToFirstByte, getFirstContentfulPaint, getDomContentLoaded } from 'uxm'
 
-const report = createApiReporter('/beacon-url', { initial: getDeviceInfo() })
-collectMetrics(['fcp', 'lcp', 'fid', 'cls', 'ttfb', 'load', 'dcl'], ({ type, value }) => report({ [type]: value }))
-```
-
-**Report [user-centric metrics](https://web.dev/metrics/) to Google Analytics**.
-
-```js
-import { collectMetrics } from 'uxm'
-import { report } from 'uxm/google-analytics-reporter'
-
-collectMetrics(['fcp', 'lcp', 'fid', 'cls'], report)
-```
-
-**Measure duration of compute intensive tasks**.
-
-- better primitives for measuring time & time of the last paint
-- simple UI to observe & collect records
-
-```js
-import { time, timeEnd, observeEntries } from 'uxm'
-
-// measure time of the "my-task"
-time('my-task')
-computeIntensiveTask()
-timeEnd('my-task')
-
-// collect measures asyncronously
-observeEntries({ type: 'measure', buffered: true }, measures => {
-  /* filter, map, and report data to analytics. */
-})
-```
-
-Integrate with React and track time to render a view:
-
-```js
-import { useEffect } from 'react'
-import { time, timeEndPaint, observeEntries } from 'uxm'
-
-function App() {
-  useView('my-app')
-  return <MoreComponents />
+const metrics = {
+  url: getUrl(),
+  ttfb: getTimeToFirstByte(),
+  fcp: getFirstContentfulPaint(),
+  dcl: getDomContentLoaded()
 }
+```
 
-// collect measure after the component did mount and all paint events completed
-function useView(label) {
-  time(label)
-  useEffect(() => timeEndPaint(label), [])
+Analyze current device and connection:
+
+```js
+import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
+
+const device = {
+  type: getDeviceType(),
+  memory: getDeviceMemory(),
+  connection: getEffectiveConnectionType()
 }
-
-// report "measure" event to analytics.
-observeEntries({ type: 'measure', buffered: true }, measures => {
-  /* filter, map, and report data to analytics. */
-})
 ```
 
-Associate metrics with device information:
+Collect [CrUX-like data](https://developers.google.com/web/tools/chrome-user-experience-report/):
 
 ```js
-// features:
-// - access modern APIs when available
-import { getDeviceInfo, getMetricByType } from 'uxm/device'
+import { uxm } from 'uxm'
 
-const deviceInfo = getDeviceInfo()
-
-reportToAnalytics({
-  ttfb: await getMetricByType('ttfb'),
-  fcp: await getMetricByType('fcp'),
-  memory: deviceInfo.memory, // 1, 2, 4, 8, 16 ... GB of memory rounding down to the nearest power of 2
-  cpus: deviceInfo.hardwareConcurrency, // 1, 2, 4, 8 ... CPU cores
-  connection: deviceInfo.effectiveConnectionType // 2g | 3g | 4g
+uxm().then(metrics => {
+  console.log(metrics) // ->
+  {
+    "deviceType": "desktop",
+    "effectiveConnectionType": "4g",
+    "firstPaint": 1646,
+    "firstContentfulPaint": 1646,
+    "domContentLoaded": 1698,
+    "onLoad": 2508
+  }
 })
-```
-
-Observe performance events and collect long tasks (only Chrome):
-
-- doesn't fail when PerformanceObserver is not available, or event is new
-- always return PO-like object with 2 methods: disconnect & takeRecords
-- normalize event names
-
-```js
-import { createEntriesObserver } from 'uxm'
-
-// collect longTasks
-const longTasks = []
-const observer = createEntriesObserver({ type: 'long-task' }, events => {
-  longTasks.push(...events.map(e => e.duration))
-})
-
-// extra methods
-observer.disconnect() // cancel observation
-observer.takeRecords() // flush recent events
-```
-
-Get buffered entries and track layout shift between view changes (only Chrome):
-
-- return [] when event is unknown or PerformanceObserver is unavailable
-- automatic timeout if no events triggered
-- normalized event names
-- use modern API and fallback to legacy for mark/measure/resource
-
-```js
-import { geEntriesByType } from 'uxm'
-
-// track latest shift time
-let latestStartTime = 0
-
-// filter and compute layout shifts
-const layoutShifts = await geEntriesByType('layout-shift')
-const cummulativeLayoutShift = layoutShifts
-  .filter(lsEvent => lsEvent.startTime > latestStartTime)
-  .reduce((memo, lsEvent) => {
-    // Only count layout shifts without recent user input.
-    // and collect percentage value
-    if (!lsEvent.hadRecentInput) {
-      memo += 100 * lsEvent.value
-    }
-    return memo
-  }, 0)
-
-// store latest time to filter next events
-latestStartTime = layoutShifts[layoutShifts.length - 1].startTime
 ```
 
 ## API
 
-API:
+An API is a set of pure functions with one exception to `uxm`,
+which is a meta-function to collect multiple metrics at once.
 
-- Metrics:
-  - `collectMetrics(MetricOpts[], (metric: Metric) => {})`
-  - `getMetricByType(type: string) => Promise<Metric>`
-- Performance observer (low-level entries)
-  - `observeEntries({ type: string, buffered?: boolean }, (entries: PerformanceEntry[], observer: PerformanceObserver) => {})`
-  - `getEntriesByType(type: string) => Promise<PerformanceEntry[]>`
-- Custom metrics:
-  - `time(label: string)` + `timeEnd(label: string)` or `timeEndPaint(label: string, callback: function)`
-  - `mark(markName: string)` + `measure(measureName: string, startMarkName?: string, endMarkName?: string)` + `now()`
-- Device:
-  - `getDeviceInfo()`
+### mark(markName)
 
-Extra modules:
+Create [User Timing mark](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to mark important loading event. A convenient shortcut for `window.performance.mark`.
 
-- API Reporter: `createApiReporter(opts)`
-- Google Analytics Reporter: `createGoogleAnalyticsReporter()`
-- SPA monitor: `createSpaMonitor(opts)`
+```js
+import { mark } from 'uxm'
+
+mark('page load started')
+// ...
+mark('hero image displayed')
+// ...
+mark('page fully loaded')
+```
+
+### measure(measureName, [startMarkName])
+
+Create [User Timing measure](https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark) to evaluate timing between 2 marks.
+A convenient shortcut for `window.performance.measure`.
+
+```js
+import { mark, measure } from 'uxm'
+
+mark('start load fonts')
+// ...
+measure('fonts loaded', 'start load fonts')
+```
+
+### getUserTiming()
+
+Return an array with collected performance marks/measures. Each item contains:
+
+- `type` - "mark" or "measure"
+- `name` - unique name
+- `startTime` - start time since page load
+- `duration` - measure duration
+
+Example:
+
+```json
+[
+  {
+    "type": "mark",
+    "name": "boot",
+    "startTime": 1958
+  },
+  {
+    "type": "measure",
+    "name": "page did mount",
+    "startTime": 1958,
+    "duration": 197
+  }
+]
+```
+
+### getTimeToFirstByte()
+
+Return server response time, that is useful for backend monitoring.
+
+### getFirstContentfulPaint()
+
+Return the time when first paint which includes text, image (including background images), non-white canvas, or SVG happened.
+[W3C draft for Paint Timing 1](https://w3c.github.io/paint-timing).
+
+### getFirstPaint()
+
+It's similar to `getFirstContentfulPaint` but may contain a different value when First Paint is just background change without content.
+
+### getDomContentLoaded()
+
+Return the time when [`DOMContentLoaded` event](https://developer.mozilla.org/en-US/docs/Web/Events/DOMContentLoaded) was fired.
+
+### getOnLoad()
+
+Return the time when [`load` event](https://developer.mozilla.org/en-US/docs/Web/Events/load) was fired.
+
+### getEffectiveConnectionType()
+
+Return the effective connection type (“slow-2g”, “2g”, “3g”, or “4g”) string as determined by round-trip and bandwidth values.
+[W3C draft for Network Information API](http://wicg.github.io/netinfo/).
+
+### getDeviceType()
+
+Return the device type ("phone", "tablet", or "desktop") string using the lightweight [heavy-tested]('./test/device.js') user-agent parser.
+
+### getDeviceMemory()
+
+Return the device memory ("full" or "lite") string, depends if available memory is bigger than 1 GB.
+Learn more about [Device Memory](https://developers.google.com/web/updates/2017/12/device-memory).
+
+### getUrl()
+
+Return a current page URL. A convenient shortcut for `window.location.href`.
+
+### getUserAgent()
+
+Return a User-Agent string. A convenient shortcut for `window.navigator.userAgent`.
+
+### getResources()
+
+Return an array of performance information for each resource on the page. Each item contains:
+
+- `url` - resource URL
+- `type` - one of resource types ("navigation", "link", "img", "script", "xmlhttprequest", or "font")
+- `size` - transferred size in bytes
+- `startTime` - when load started
+- `duration` - loading time in milliseconds
+
+Example:
+
+```json
+[
+  {
+    "url": "https://booking.com/",
+    "type": "navigation",
+    "size": 79263,
+    "startTime": 0,
+    "duration": 1821
+  },
+  {
+    "url": "https://q-fa.bstatic.com/mobile/css/core_not_critical_fastly.iq_ltr/8051b1d9fafb2e6339aea397447edfded9320dbb.css",
+    "type": "link",
+    "size": 54112,
+    "startTime": 515,
+    "duration": 183
+  },
+  {
+    "url": "https://r-fa.bstatic.com/mobile/images/hotelMarkerImgLoader/211f81a092a43bf96fc2a7b1dff37e5bc08fbbbf.gif",
+    "type": "img",
+    "size": 2295,
+    "startTime": 657,
+    "duration": 181
+  },
+  {
+    "url": "https://r-fa.bstatic.com/static/js/error_catcher_bec_fastly/ba8921972cc55fbf270bafe168450dd34597d5a1.js",
+    "type": "script",
+    "size": 2495,
+    "startTime": 821,
+    "duration": 43
+  },
+  ...
+]
+```
+
+### getLongTasks()
+
+Return an array of `{ startTime, duration }` pairs.
+Until `buffered` flag supported, you need to add extra script to the `<head />` to collect all Long Tasks:
+
+```html
+<script>
+  !(function() {
+    if ('PerformanceLongTaskTiming' in window) {
+      var g = (window.__lt = { e: [] })
+      g.o = new PerformanceObserver(function(l) {
+        g.e = g.e.concat(l.getEntries())
+      })
+      g.o.observe({ entryTypes: ['longtask'] })
+    }
+  })()
+</script>
+```
+
+And then get collected long-tasks using:
+
+```js
+import { getLongTasks } from 'uxm'
+getLongTasks() // [{"startTime": 672, "duration": 84}, {"startTime": 931, "duration": 84}, {"startTime": 1137, "duration": 135}]
+```
+
+Learn more about [Long Tasks](https://calendar.perfplanet.com/2017/tracking-cpu-with-long-tasks-api/).
+
+### uxm(opts = {})
+
+Returns a Promise that resolves after `load` event fired.
+A default set of metrics is defined by [Chrome User Experience Report](https://developers.google.com/web/tools/chrome-user-experience-report/), but you can customize them using options (`url`, `userAgent`, `deviceMemory`, `userTiming`, `longTasks`, `resources`).
+
+Or pass `all` to get the full report:
+
+```js
+import { uxm } from 'uxm'
+
+uxm({ all: true }).then(metrics => {
+  console.log(metrics) // ->
+  {
+    "deviceType": "phone",
+    "effectiveConnectionType": "4g",
+    "firstPaint": 531,
+    "firstContentfulPaint": 531,
+    "domContentLoaded": 768,
+    "onLoad": 1317,
+    "url": "https://www.booking.com/",
+    "userAgent": "Mozilla/5.0 (iPhone; CPU iPhone OS 9_1 like Mac OS X) AppleWebKit/601.1.46 (KHTML, like Gecko) Version/9.0 Mobile/13B143 Safari/601.1",
+    "deviceMemory": "full",
+    "userTiming": [
+      {
+        "type": "measure",
+        "name": "b-stylesheets",
+        "startTime": 0,
+        "duration": 436
+      },
+      ...
+    ],
+    "longTasks": [
+      {
+        "startTime": 587,
+        "duration": 79
+      },
+      ...
+    ],
+    "resources": [
+      {
+        "url": "https://booking.com/",
+        "type": "navigation",
+        "size": 77953,
+        "startTime": 0,
+        "duration": 1568
+      },
+      ...
+    ]
+  }
+})
+```
 
 ## Credits
 
-Carefully crafted at [Treo.sh - Page Speed Monitoring with Lighthouse](https://treo.sh/).
+[![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
+
+Made with ❤️ by [Treo.sh](https://treo.sh/).

@@ -30,24 +30,26 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:declaration",
+    "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:bundle && yarn build:declaration",
     "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build:bundle && ava test/index.js && yarn build && yarn size",
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && yarn size",
     "size": "size-limit"
   },
   "ava": {
     "require": [
       "esm"
+    ],
+    "files": [
+      "test/*.js",
+      "!test/rollup.js"
     ]
   },
-  "dependencies": {
-    "mitt": "^1.2.0"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@size-limit/preset-small-lib": "^2.2.2",
-    "@types/node": "10",
-    "@types/puppeteer": "^1.20.2",
+    "@types/node": "12",
+    "@types/puppeteer": "^2.0.0",
     "ava": "^2.4.0",
     "esm": "^3.2.25",
     "lodash-es": "^4.17.15",

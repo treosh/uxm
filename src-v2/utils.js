@@ -7,10 +7,12 @@ export function round(val, precision = 0) {
 
 /** @param {string} str @param {any} args */
 export function debug(str, ...args) {
-  if (debug.enable) console.log(`%cuxm: ${str}`, 'color: #3398DB', ...args)
+  if (debug.all) console.log(`%cuxm: ${str}`, 'color: #3398DB', ...args)
 }
 /** @type {boolean} */
-debug.enable = false // disable debug by default
+debug.all = false // disable debug by default
+/** @type {boolean} */
+debug.time = true // custom flag for time debugging
 
 /** @param {any} args */
 export const warn = (...args) => console.warn(...args)
