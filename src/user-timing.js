@@ -1,27 +1,31 @@
 import { perf, raf, round, warn } from './utils'
+import { debug } from '.'
 
-/** @typedef {{ entryType: "mark", name: string, startTime: number }} UserTimingMark */
-/** @typedef {{ entryType: "measure", name: string, startTime: number, duration: number }} UserTimingMeasure */
-/** @typedef {(measure: UserTimingMeasure | null) => any} UserTimingTimeEndPaintCallback */
+/** @typedef {{ entryType: string, name: string, startTime: number, detail?: ?object }} UserTimingMark */
+/** @typedef {{ entryType: string, name: string, startTime: number, duration: number, detail?: ?object }} UserTimingMeasure */
+/** @typedef {(measure: ?UserTimingMeasure) => any} UserTimingTimeEndPaintCallback */
 
 /**
  * Create a custom performance mark with `markName` name.
  * https://developer.mozilla.org/en-US/docs/Web/API/Performance/mark
  *
  * @param {string} markName
- * @return {UserTimingMark | null}
+ * @param {object} [markOptions]
+ * @return {?UserTimingMark}
  */
 
-export function mark(markName) {
+export function mark(markName, markOptions) {
   if (!perf || !perf.mark) return null
   try {
-    /** @type {PerformanceMark | void} */
-    let m = perf.mark(markName)
+    /** @type {UserTimingMark | void} */
+    // @ts-ignore
+    let m = perf.mark(markName, { detail: markOptions })
     if (typeof m === 'undefined') {
       const entries = perf.getEntriesByName(markName)
-      m = entries[entries.length - 1]
+      m = /** @type {UserTimingMark} */ (entries[entries.length - 1])
     }
-    return m ? { entryType: 'mark', name: m.name, startTime: round(m.startTime) } : null
+    if (isOptions(markOptions) && !m.detail) m.detail = markOptions
+    return m ? { entryType: 'mark', name: m.name, startTime: round(m.startTime), detail: m.detail || null } : null
   } catch (err) {
     warn(err)
     return null
@@ -33,21 +37,30 @@ export function mark(markName) {
  * https://developer.mozilla.org/en-US/docs/Web/API/Performance/measure
  *
  * @param {string} measureName
- * @param {string} [startMarkName]
- * @param {string} [endMarkName]
- * @return {UserTimingMeasure | null}
+ * @param {string} [startOrMeasureOptions]
+ * @param {string} [endMark]
+ * @return {?UserTimingMeasure}
  */
 
-export function measure(measureName, startMarkName, endMarkName) {
+export function measure(measureName, startOrMeasureOptions, endMark) {
   if (!perf || !perf.measure) return null
   try {
-    /** @type {PerformanceMeasure | void} */
-    let m = perf.measure(measureName, startMarkName, endMarkName)
+    /** @type {UserTimingMeasure | void} */
+    let m = perf.measure(measureName, startOrMeasureOptions, endMark)
     if (typeof m === 'undefined') {
       const entries = perf.getEntriesByName(measureName)
-      m = entries[entries.length - 1]
+      m = /** @type {UserTimingMeasure} */ entries[entries.length - 1]
     }
-    return m ? { entryType: 'measure', name: m.name, startTime: round(m.startTime), duration: round(m.duration) } : null
+    if (isOptions(startOrMeasureOptions) && !m.detail) m.detail = startOrMeasureOptions
+    return m
+      ? {
+          entryType: 'measure',
+          name: m.name,
+          startTime: round(m.startTime),
+          duration: round(m.duration),
+          detail: m.detail || null
+        }
+      : null
   } catch (err) {
     warn(err)
     return null
@@ -70,11 +83,17 @@ const startTime = Date.now()
  * It's similar to console.time(label).
  *
  * @param {string} label
- * @return {UserTimingMark | null}
+ * @return {?UserTimingMark}
  */
 
 export function time(label) {
-  return mark(`start:${label}`)
+  if (!perf) return null
+  const [m] = perf.getEntriesByName(getStartLabel(label))
+  if (m) {
+    warn('Timer "%s" already exists', label)
+    perf.clearMarks(getStartLabel(label))
+  }
+  return mark(getStartLabel(label))
 }
 
 /**
@@ -82,11 +101,16 @@ export function time(label) {
  * It's similar to console.timeEnd(label).
  *
  * @param {string} label
- * @return {UserTimingMeasure | null}
+ * @return {?UserTimingMeasure}
  */
 
 export function timeEnd(label) {
-  return measure(label, `start:${label}`)
+  if (!perf) return null
+  perf.clearMarks(getStartLabel(label))
+  const m = measure(label, `start:${label}`)
+  if (!m) return null
+  debug('%s: %sms', m.name, m.duration)
+  return m
 }
 
 /**
@@ -103,3 +127,9 @@ export function timeEndPaint(label, callback) {
     if (callback) callback(m)
   })
 }
+
+/** @param {object} obj @return {boolean} */
+const isOptions = obj => Object.keys(obj).length !== 0 && obj.constructor === Object
+
+/** @param {string} label @return {string} */
+const getStartLabel = label => `uxm:start:${label}`

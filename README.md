@@ -164,6 +164,32 @@ latestStartTime = layoutShifts[layoutShifts.length - 1].startTime
 
 ## API
 
+### User Timing
+
+UXM implements cross-browser support for [User Timing Level 3](https://w3c.github.io/user-timing/) with extra helpers to measure time.
+
+Use time functions, instead of `console.time` to display results in performance timeline and collect measures.
+
+```js
+import { time, timeEnd } from 'uxm'
+
+time('task')
+performTask()
+timeEnd('task') // create "task" measure
+```
+
+The same logic using low-level primitives:
+
+```js
+import { mark, measure } from 'uxm'
+
+mark('task:start')
+performTask()
+measure('task', 'task:start') // create "task" measure between now and "startTask"
+```
+
+### Misc
+
 API:
 
 - Metrics:
