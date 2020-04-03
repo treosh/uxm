@@ -3,6 +3,19 @@ interface PerformanceEntry {
   detail?: object
 }
 
+type EntryType =
+  | 'element'
+  | 'first-input'
+  | 'largest-contentful-paint'
+  | 'layout-shift'
+  | 'longtask'
+  | 'mark'
+  | 'measure'
+  | 'navigation'
+  | 'paint'
+  | 'resource'
+  | 'event'
+
 type NetworkInformation = {
   effectiveType: 'slow-2g' | '2g' | '3g' | '4g'
   rtt: number

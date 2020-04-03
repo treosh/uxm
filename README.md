@@ -14,6 +14,31 @@
 <br/>
 <br/>
 
+```js
+// metrics
+// type MetricType = 'fcp' || 'lcp' || 'fid' || 'cls'
+observeMetrics([metricType || { type: MetricType, ...options }], ({ metric, value, detail }) => {})
+
+// perf observer
+// type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
+//                  'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'
+createPerformanceObserver(entryType || { type: EntryType, buffered?: boolean }, (entries, observer) => {})
+getEntriesByType(entryType) => Promise<PerformanceEntry[]>
+
+// device info
+getDeviceInfo() => { url?: string, referrer?: string, userAgent?: string, memory?: number, cpus?: number,
+                     connection?: { effectiveType: string, rtt: number, downlink: number } }
+
+// user timing
+mark(markName, [markOptions])
+measure(measureName, startOrMeasureOptions, endMark)
+now()
+time(label, [startLabel])
+timeEnd(label, [startLabel]) || timeEndPaint(label, [startLabel])
+```
+
+---
+
 Modern web platform provides a lot of APIs to analyze page speed information.
 But it's hard to follow them and even harder to deal with the lack of implementation in different browsers.
 

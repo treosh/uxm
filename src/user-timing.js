@@ -1,13 +1,8 @@
-import { perf, raf, round } from './utils'
-
-/** @typedef {{ entryType: string, name: string, startTime: number, detail?: ?object }} UserTimingMark */
-/** @typedef {{ entryType: string, name: string, startTime: number, duration: number, detail?: ?object }} UserTimingMeasure */
-/** @typedef {(measure: ?UserTimingMeasure) => any} UserTimingTimeEndPaintCallback */
+import { perf, raf, round, isObject } from './utils'
 
 export let debugTime = true
 const startTime = Date.now()
 const timers = Object.create(null)
-const isOptions = /** @param {object} obj */ obj => obj && Object.keys(obj).length !== 0 && obj.constructor === Object
 const getStartLabel = /** @param {string} label */ label => `uxm:start:${label}`
 
 /**
@@ -16,7 +11,6 @@ const getStartLabel = /** @param {string} label */ label => `uxm:start:${label}`
  *
  * @param {string} markName
  * @param {object} [markOptions]
- * @return {?UserTimingMark}
  */
 
 export function mark(markName, markOptions) {
@@ -27,7 +21,7 @@ export function mark(markName, markOptions) {
       const entries = perf.getEntriesByName(markName)
       m = entries[entries.length - 1]
     }
-    if (isOptions(markOptions) && m && !m.detail) m.detail = markOptions
+    if (isObject(markOptions) && m && !m.detail) m.detail = markOptions
     return m ? { entryType: 'mark', name: m.name, startTime: round(m.startTime), detail: m.detail || null } : null
   } catch (err) {
     console.warn(err)
@@ -42,7 +36,6 @@ export function mark(markName, markOptions) {
  * @param {string} measureName
  * @param {string | object} [startOrMeasureOptions]
  * @param {string} [endMark]
- * @return {?UserTimingMeasure}
  */
 
 export function measure(measureName, startOrMeasureOptions, endMark) {
@@ -53,7 +46,7 @@ export function measure(measureName, startOrMeasureOptions, endMark) {
       const entries = perf.getEntriesByName(measureName)
       m = entries[entries.length - 1]
     }
-    if (isOptions(startOrMeasureOptions) && m && !m.detail) m.detail = startOrMeasureOptions
+    if (isObject(startOrMeasureOptions) && m && !m.detail) m.detail = startOrMeasureOptions
     return m
       ? {
           entryType: 'measure',
@@ -85,7 +78,6 @@ export function now() {
  *
  * @param {string} label
  * @param {string} [startLabel]
- * @return {?UserTimingMark}
  */
 
 export function time(label, startLabel = getStartLabel(label)) {
@@ -104,7 +96,6 @@ export function time(label, startLabel = getStartLabel(label)) {
  *
  * @param {string} label
  * @param {string} [startLabel]
- * @return {?UserTimingMeasure}
  */
 
 export function timeEnd(label, startLabel = getStartLabel(label)) {
