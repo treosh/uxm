@@ -6,10 +6,9 @@
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
-  "types": "./dist/uxm.d.ts",
   "main": "dist/uxm.js",
+  "umd:main": "dist/uxm.umd.js",
   "module": "dist/uxm.es.js",
-  "unpkg": "dist/uxm.umd.js",
   "sideEffects": false,
   "files": [
     "dist"
@@ -30,11 +29,10 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle --no-sourcemap && yarn build:bundle && yarn build:declaration",
+    "build": "rm -rf dist && microbundle build --no-sourcemap && yarn build:bundle && yarn build:declaration",
     "build:bundle": "rollup -c test/rollup.js",
     "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && yarn size",
-    "size": "size-limit"
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && size-limit"
   },
   "ava": {
     "require": [
@@ -45,41 +43,30 @@
       "!test/rollup.js"
     ]
   },
-  "dependencies": {},
   "devDependencies": {
-    "@size-limit/preset-small-lib": "^2.2.2",
+    "@size-limit/preset-small-lib": "^4.4.5",
     "@types/node": "12",
-    "@types/puppeteer": "^2.0.0",
-    "ava": "^2.4.0",
+    "@types/puppeteer": "^2.0.1",
+    "ava": "^3.5.2",
     "esm": "^3.2.25",
-    "lodash-es": "^4.17.15",
     "microbundle": "^0.11.0",
-    "prettier": "^1.19.1",
-    "puppeteer": "^2.0.0",
-    "rollup": "^1.27.0",
+    "prettier": "^2.0.2",
+    "puppeteer": "^2.1.1",
+    "rollup": "^2.3.2",
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.1.2",
-    "typescript": "^3.7.2"
+    "rollup-plugin-terser": "^5.3.0",
+    "size-limit": "^4.4.5",
+    "typescript": "^3.8.3"
   },
   "size-limit": [
     {
       "path": "./dist/uxm.js",
-      "limit": "2.1KB",
-      "webpack": "false",
-      "gzip": "false"
+      "limit": "2KB"
     },
     {
       "path": "./dist/uxm.es.js",
-      "limit": "2.2KB",
-      "webpack": "false",
-      "gzip": "false"
-    },
-    {
-      "path": "./dist/uxm.umd.js",
-      "limit": "2.2KB",
-      "webpack": "false",
-      "gzip": "false"
+      "limit": "2KB"
     }
   ]
 }

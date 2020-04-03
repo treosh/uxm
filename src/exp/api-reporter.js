@@ -1,5 +1,4 @@
-import { onVisibilityChange, warn, debug } from './utils'
-/** @typedef {(metrics: object) => void} ApiReporter */
+import { onVisibilityChange } from '../utils/visibility-change'
 
 /**
  * Create API reporter function, that accepts object and sends it to `url`
@@ -12,7 +11,7 @@ import { onVisibilityChange, warn, debug } from './utils'
  *
  * @param {string} url
  * @param {{ wait?: number, maxWait?: number, sessionId?: string, onSend?: function }} [opts]
- * @return {ApiReporter}
+ * @return {(metrics: object) => void}
  */
 
 export function createApiReporter(url, opts = {}) {
@@ -47,7 +46,7 @@ export function createApiReporter(url, opts = {}) {
     Object.keys(newMetrics).forEach(key => {
       const value = newMetrics[key]
       if (typeof metrics[key] !== 'undefined' && Array.isArray(value) && !Array.isArray(metrics[key])) {
-        warn('double metric occurence, replace %s=%s with %s', key, metrics[key], value)
+        console.warn('double metric occurence, replace %s=%s with %s', key, metrics[key], value)
       }
       if (Array.isArray(value)) {
         if (!Array.isArray(metrics[key])) metrics[key] = []
@@ -72,7 +71,6 @@ export function createApiReporter(url, opts = {}) {
 
 function sendBeacon(url, metrics) {
   if (typeof navigator === 'undefined') return
-  debug('POST %s %o', url, metrics)
   if (navigator.sendBeacon) return navigator.sendBeacon(url, JSON.stringify(metrics))
   const client = new XMLHttpRequest()
   client.open('POST', url, false) // third parameter indicates sync xhr
