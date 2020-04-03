@@ -17,12 +17,15 @@
 ```js
 // metrics
 // type MetricType = 'fcp' || 'lcp' || 'fid' || 'cls'
-observeMetrics([metricType || { type: MetricType, ...options }], ({ metric, value, detail }) => {})
+collectMetrics([metricType || { type: MetricType, ...options }], ({ metric, value, detail }) => {})
+
+// navigation metrics
+getNavigation() => Promise<{ timeToFirstByte: number, domContentLoaded: number, onLoad: number }>
 
 // perf observer
 // type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
 //                  'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'
-createPerformanceObserver(entryType || { type: EntryType, buffered?: boolean }, (entries, observer) => {})
+observeEntries(entryType || { type: EntryType, buffered?: boolean }, (entries, observer) => {})
 getEntriesByType(entryType) => Promise<PerformanceEntry[]>
 
 // device info

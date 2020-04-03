@@ -8,7 +8,7 @@ const legacyEntryTypes = ['mark', 'measure', 'resource', 'navigation']
  * @param {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} callback
  */
 
-export function createPerformanceObserver(rawOpts, callback) {
+export function observeEntries(rawOpts, callback) {
   const opts = /** @type {{type: EntryType, buffered: boolean}} */ (isObject(rawOpts)
     ? rawOpts
     : { type: rawOpts, buffered: true })
@@ -50,7 +50,7 @@ export function getEntriesByType(entryType) {
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks, fixed in Chrome 81
-    const observer = createPerformanceObserver({ type, buffered: true }, events => {
+    const observer = observeEntries({ type, buffered: true }, events => {
       observer.disconnect()
       clearTimeout(timeout)
       resolve(events)
