@@ -1,7 +1,4 @@
-interface PerformanceEntry {
-  // user timing
-  detail?: object
-}
+type MetricType = 'fcp' | 'lcp' | 'fid' | 'cls'
 
 type EntryType =
   | 'element'
@@ -15,6 +12,13 @@ type EntryType =
   | 'paint'
   | 'resource'
   | 'event'
+
+interface PerformanceEntry {
+  // user timing
+  detail?: object
+  // first-input
+  processingStart: number
+}
 
 type NetworkInformation = {
   effectiveType: 'slow-2g' | '2g' | '3g' | '4g'

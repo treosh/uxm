@@ -3,6 +3,10 @@ import { round, raf, perf } from './utils'
 /**
  * Get navigation timing.
  *
+ * https://web.dev/custom-metrics/#navigation-timing-api
+ * https://developer.mozilla.org/en-US/docs/Web/API/Window/DOMContentLoaded_event
+ * https://developer.mozilla.org/en-US/docs/Web/API/Window/load_event
+ *
  * @return {Promise<{timeToFirstByte: number, domContentLoaded: number, onLoad: number} | null>}
  */
 

@@ -1,5 +1,5 @@
 interface PerformanceEntry {
-  // first-inpur
+  // first-input
   processingStart: number
   // user timing
   detail?: object

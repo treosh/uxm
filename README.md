@@ -16,8 +16,8 @@
 
 ```js
 // metrics
-// type MetricType = 'fcp' || 'lcp' || 'fid' || 'cls'
-collectMetrics([metricType || { type: MetricType, ...options }], ({ metric, value, detail }) => {})
+// type MetricType = 'fcp' | 'lcp' | 'fid' | 'cls'
+collectMetrics([metricType | { type: MetricType, ...options }], ({ metric, value, detail }) => {})
 
 // navigation metrics
 getNavigation() => Promise<{ timeToFirstByte: number, domContentLoaded: number, onLoad: number }>
@@ -25,7 +25,7 @@ getNavigation() => Promise<{ timeToFirstByte: number, domContentLoaded: number, 
 // perf observer
 // type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
 //                  'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'
-observeEntries(entryType || { type: EntryType, buffered?: boolean }, (entries, observer) => {})
+observeEntries(entryType | { type: EntryType, buffered?: boolean }, (entries, observer) => {})
 getEntriesByType(entryType) => Promise<PerformanceEntry[]>
 
 // device info
@@ -37,7 +37,7 @@ mark(markName, [markOptions])
 measure(measureName, startOrMeasureOptions, endMark)
 now()
 time(label, [startLabel])
-timeEnd(label, [startLabel]) || timeEndPaint(label, [startLabel])
+timeEnd(label, [startLabel]) | timeEndPaint(label, [startLabel])
 ```
 
 ---
