@@ -18,6 +18,14 @@ interface PerformanceEntry {
   detail?: object
   // first-input
   processingStart: number
+  // largest-contentful-paint
+  element: HTMLElement
+  size: number
+  renderTime: number
+  loadTime: number
+  // layout-shift
+  value: number
+  hadRecentInput: boolean
 }
 
 type NetworkInformation = {
