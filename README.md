@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/logo.png" />
+  <img src="./.github/logo.png" />
 </p>
 
 <p align="center">
@@ -367,5 +367,8 @@ uxm({ all: true }).then(metrics => {
 ## Credits
 
 [![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
+
+[![](https://github.com/treosh/uxm/workflows/CI/badge.svg)](https://github.com/treosh/uxm/actions?query=workflow%3ACI)
+[![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Made with ❤️ by [Treo.sh](https://treo.sh/).
