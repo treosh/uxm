@@ -9,39 +9,42 @@
   "source": "src/index.js",
   "sideEffects": false,
   "main": "dist/uxm.js",
-  "module": "dist/uxm.module.js",
   "umd:main": "dist/uxm.umd.js",
-  "types": "dist/src/index.d.ts",
+  "module": "src/index.js",
+  "types": "types/index.d.ts",
   "exports": {
     ".": {
-      "browser": "./dist/uxm.module.js",
+      "browser": "./src/index.js",
+      "import": "./src/index.js",
       "umd": "./dist/uxm.umd.js",
-      "import": "./dist/uxm.module.js",
       "require": "./dist/uxm.js"
     }
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "types"
   ],
   "keywords": [
-    "Web Performance",
-    "Perceived Web Performance",
-    "User Experience",
-    "First Paint",
-    "First Contentful Paint",
-    "Largest Contentful Paint",
-    "First Input Delay",
-    "Paint Timing API",
-    "Network Information API",
-    "Chrome User Experience Report",
-    "Connection Type",
-    "PerformancePaintTiming",
-    "deviceMemory"
+    "web performance",
+    "user experience",
+    "user-centric metrics",
+    "first paint",
+    "first contentful paint",
+    "largest contentful paint",
+    "first input delay",
+    "cumulative layout shift",
+    "paint timing api",
+    "user timing api",
+    "network information api",
+    "chrome user experience report",
+    "crux",
+    "network connection",
+    "device memory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle build --raw --no-sourcemap && yarn build:declarations",
-    "build:declarations": "tsc --declaration --noEmit false --outDir dist -p . && rm -rf dist/test && rm -r dist/src/*.js dist/src/**/*.js",
+    "build": "rm -rf dist && microbundle build --no-sourcemap --format=cjs,umd && yarn build:declarations",
+    "build:declarations": "rm -rf types && tsc --declaration --noEmit false --outDir dist -p . && rm -rf dist/test && rm -r dist/src/*.js dist/src/**/*.js && mv dist/src types",
     "test": "prettier -c src/** test/** && tsc -p . && rollup -c test/rollup.js && ava && yarn build && size-limit"
   },
   "ava": {
@@ -59,7 +62,7 @@
     "@types/puppeteer": "^2.0.1",
     "ava": "^3.6.0",
     "esm": "^3.2.25",
-    "microbundle": "^0.11.0",
+    "microbundle": "^0.12.0-next.8",
     "prettier": "^2.0.4",
     "puppeteer": "^2.1.1",
     "rollup": "^2.4.0",
@@ -72,11 +75,6 @@
   "size-limit": [
     {
       "path": "./dist/uxm.js",
-      "webpack": false,
-      "limit": "2.5KB"
-    },
-    {
-      "path": "./dist/uxm.module.js",
       "webpack": false,
       "limit": "2.5KB"
     }
