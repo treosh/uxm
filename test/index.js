@@ -1,83 +1,79 @@
 import test from 'ava'
 import puppeteer from 'puppeteer'
-import devices from 'puppeteer/DeviceDescriptors'
-import { readFileSync as readFile } from 'fs'
+import fs from 'fs'
 import { join } from 'path'
 
-// read compiled src and wrap to browser compatible version
+const url = 'https://treo.sh/'
+const uxmBundle = fs.readFileSync(join(__dirname, '../dist/uxm.bundle.js'), 'utf8')
 
-const src = readFile(join(__dirname, '../dist/uxm.js'), 'utf8')
-const setupUxm = `
-  window.uxm=(function(exports){
-    ${src};
-    return exports
-  })({})
-`
+test.serial('booking.com - default settings', async (t) => {
+  // launch a url
 
-const url = 'https://booking.com'
-const setupLongTasks = [
-  "!function(){if('PerformanceLongTaskTiming' in window){var g=window.__lt={e:[]};",
-  'g.o=new PerformanceObserver(function(l){g.e=g.e.concat(l.getEntries())});',
-  "g.o.observe({entryTypes:['longtask']})}}();"
-].join('')
-
-test.serial('booking.com - default settings', async t => {
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.evaluateOnNewDocument(setupUxm)
+  await page.evaluateOnNewDocument(uxmBundle)
   await page.goto(url)
 
-  const result = await page.evaluate(() => window.uxm.uxm())
+  // collect metrics
+
+  const result = await page.evaluate(() => {
+    // @ts-ignore
+    const { getDeviceInfo, collectMetrics, collectLoad } = window.uxm
+    const metrics = {}
+    let load = null
+    collectMetrics(
+      ['fcp', 'fid', { type: 'cls', maxTimeout: 1000 }, { type: 'lcp', maxTimeout: 1000 }],
+      (metric) => (metrics[metric.metricType] = metric)
+    )
+    collectLoad((l) => (load = l))
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve({
+          deviceInfo: getDeviceInfo(),
+          metrics,
+          load,
+        })
+      }, 2000)
+    })
+  })
+
   await browser.close()
   console.log(JSON.stringify(result, null, '  '))
+  const { deviceInfo, metrics, load } = result
 
-  t.deepEqual(Object.keys(result), [
-    'deviceType',
-    'effectiveConnectionType',
-    'timeToFirstByte',
-    'firstPaint',
-    'firstContentfulPaint',
-    'domContentLoaded',
-    'onLoad'
-  ])
-  t.is(result.deviceType, 'desktop')
-  t.true(result.effectiveConnectionType === '4g' || result.effectiveConnectionType === '3g')
-})
+  // test device info
 
-test.serial('booking.com - extra settings', async t => {
-  const browser = await puppeteer.launch()
-  const page = await browser.newPage()
-  await page.emulate(devices['iPhone 6'])
-  await page.evaluateOnNewDocument(setupLongTasks)
-  await page.evaluateOnNewDocument(setupUxm)
-  await page.goto(url, { waitUntil: 'domcontentloaded' })
+  t.deepEqual(Object.keys(deviceInfo).sort(), ['connection', 'cpus', 'memory', 'referrer', 'url', 'userAgent'])
+  t.deepEqual(Object.keys(deviceInfo.connection).sort(), ['downlink', 'effectiveType', 'rtt'])
+  t.is(typeof deviceInfo.cpus, 'number')
+  t.is(typeof deviceInfo.memory, 'number')
+  t.is(typeof deviceInfo.userAgent, 'string')
+  t.is(deviceInfo.referrer, '')
+  t.is(deviceInfo.url, url)
 
-  const result = await page.evaluate(() =>
-    window.uxm.uxm({ deviceMemory: true, userTiming: true, longTasks: true, resources: true })
-  )
-  const result2 = await page.evaluate(() => window.uxm.uxm({ all: true }))
-  await browser.close()
-  console.log(JSON.stringify(result2, null, '  '))
+  // assert metrics
 
-  t.is(result.deviceType, 'phone')
-  t.deepEqual(
-    result.userTiming.map(u => u.name),
-    ['b-stylesheets', 'b-fold', 'b-pre-scripts', 'b-post-scripts']
-  )
+  t.deepEqual(Object.keys(metrics.fcp).sort(), ['metricType', 'value'])
+  t.is(metrics.fcp.metricType, 'fcp')
+  t.is(typeof metrics.fcp.value, 'number')
 
-  t.deepEqual(Object.keys(result2), [
-    'deviceType',
-    'effectiveConnectionType',
-    'timeToFirstByte',
-    'firstPaint',
-    'firstContentfulPaint',
-    'domContentLoaded',
-    'onLoad',
-    'url',
-    'userAgent',
-    'deviceMemory',
-    'userTiming',
-    'longTasks',
-    'resources'
-  ])
+  t.deepEqual(Object.keys(metrics.lcp).sort(), ['detail', 'metricType', 'value'])
+  t.deepEqual(Object.keys(metrics.lcp.detail).sort(), ['elementSelector', 'size'])
+  t.is(metrics.lcp.metricType, 'lcp')
+  t.is(typeof metrics.lcp.value, 'number')
+  t.is(typeof metrics.lcp.detail.size, 'number')
+  t.is(typeof metrics.lcp.detail.elementSelector, 'string')
+
+  t.deepEqual(Object.keys(metrics.cls).sort(), ['detail', 'metricType', 'value'])
+  t.is(metrics.cls.metricType, 'cls')
+  t.true(metrics.cls.value < 1)
+
+  // assert load
+
+  t.deepEqual(Object.keys(load).sort(), ['detail', 'metricType', 'value'])
+  t.deepEqual(Object.keys(load.detail).sort(), ['domContentLoaded', 'timeToFirstByte'])
+  t.is(load.metricType, 'load')
+  t.is(typeof load.value, 'number')
+  t.is(typeof load.detail.timeToFirstByte, 'number')
+  t.is(typeof load.detail.domContentLoaded, 'number')
 })

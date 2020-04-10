@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./docs/logo.png" />
+  <img src="./.github/logo.png" />
 </p>
 
 <p align="center">
@@ -13,6 +13,55 @@
 
 <br/>
 <br/>
+
+```js
+// metrics
+// type MetricType = 'fcp' | 'lcp' | 'fid' | 'cls'
+collectMetrics([metricType | { type: MetricType, ...options }], ({ metricType, value, detail }) => {})
+
+// each metric separately
+collectFcp(cb)
+collectLcp(cb)
+collectFid(cb)
+collectLcp(cb)
+
+// get loading metrics
+collectLoad((load) => {})
+
+// perf observer
+// type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
+//                  'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'
+observeEntries(entryType | { type: EntryType, buffered?: boolean }, (entries, observer) => {})
+getEntriesByType(entryType) => Promise<PerformanceEntry[]>
+
+// device info
+getDeviceInfo() => { url?: string, referrer?: string, userAgent?: string, memory?: number, cpus?: number,
+                     connection?: { effectiveType: string, rtt: number, downlink: number } }
+
+// user timing
+mark(markName, [markOptions])
+measure(measureName, startOrMeasureOptions, endMark)
+now()
+time(label, [startLabel])
+timeEnd(label, [startLabel]) | timeEndPaint(label, [startLabel])
+
+// api reporter
+const report = createReporter(url, { initial, onSend, beforeSend })
+report.getValues() // get collected values
+report.send() // force send
+
+// experimental
+collectCid() // cummulative input delay
+recordTrace() // record all performance observer entries in one array
+calcSpeedScore({ fcp, lcp, fid, cls }) // value from 0 ... 100 (based on LH score algorithm)
+
+// notes:
+// - collectLoad is 4 letters, because it's not a good metric
+// - each metric is a function, because perf & bundle size matters
+// - no Promise, because API could lead to confusion, some metrics takes the whole section to produce
+```
+
+---
 
 Modern web platform provides a lot of APIs to analyze page speed information.
 But it's hard to follow them and even harder to deal with the lack of implementation in different browsers.
@@ -53,7 +102,7 @@ const metrics = {
   url: getUrl(),
   ttfb: getTimeToFirstByte(),
   fcp: getFirstContentfulPaint(),
-  dcl: getDomContentLoaded()
+  dcl: getDomContentLoaded(),
 }
 ```
 
@@ -65,7 +114,7 @@ import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
 const device = {
   type: getDeviceType(),
   memory: getDeviceMemory(),
-  connection: getEffectiveConnectionType()
+  connection: getEffectiveConnectionType(),
 }
 ```
 
@@ -242,10 +291,10 @@ Until `buffered` flag supported, you need to add extra script to the `<head />` 
 
 ```html
 <script>
-  !(function() {
+  !(function () {
     if ('PerformanceLongTaskTiming' in window) {
       var g = (window.__lt = { e: [] })
-      g.o = new PerformanceObserver(function(l) {
+      g.o = new PerformanceObserver(function (l) {
         g.e = g.e.concat(l.getEntries())
       })
       g.o.observe({ entryTypes: ['longtask'] })
@@ -318,5 +367,8 @@ uxm({ all: true }).then(metrics => {
 ## Credits
 
 [![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
+
+[![](https://github.com/treosh/uxm/workflows/CI/badge.svg)](https://github.com/treosh/uxm/actions?query=workflow%3ACI)
+[![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 Made with ❤️ by [Treo.sh](https://treo.sh/).
