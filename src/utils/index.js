@@ -10,6 +10,11 @@ export function isObject(obj) {
   return obj && Object.keys(obj).length !== 0 && obj.constructor === Object
 }
 
+/** @param {Element | null} el */
+export function getSelector(el) {
+  return el ? `${el.tagName.toLowerCase()}${el.className ? '.' : ''}${el.className.replace(/ /g, '.')}` : null
+}
+
 // constants
 export const perf = typeof performance === 'undefined' ? null : performance
 export const raf = typeof requestAnimationFrame === 'undefined' ? setTimeout : requestAnimationFrame

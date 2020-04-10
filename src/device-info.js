@@ -14,6 +14,6 @@ export function getDeviceInfo() {
     userAgent: nav ? nav.userAgent : undefined,
     memory: nav ? nav.deviceMemory : undefined,
     cpus: nav ? nav.hardwareConcurrency : undefined,
-    connection: conn ? { effectiveType: conn.effectiveType, rtt: conn.rtt, downlink: conn.downlink } : undefined
+    connection: conn ? { effectiveType: conn.effectiveType, rtt: conn.rtt, downlink: conn.downlink } : undefined,
   }
 }

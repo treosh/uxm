@@ -18,7 +18,7 @@ export function observeEntries(rawOpts, callback) {
     const isLegacyType = legacyEntryTypes.indexOf(type) !== -1
     const supportedTypes = PO.supportedEntryTypes || legacyEntryTypes
     if (!isLegacyType && supportedTypes.indexOf(type) === -1) return createFakeObserver()
-    const observer = new PO(list => {
+    const observer = new PO((list) => {
       callback(list.getEntries(), observer)
     })
     const observerOpts = isLegacyType ? { entryTypes: [type] } : { ...opts, type }
@@ -45,12 +45,12 @@ export function observeEntries(rawOpts, callback) {
 
 export function getEntriesByType(entryType) {
   const type = normalizeEntryType(entryType)
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     if (perf && legacyEntryTypes.indexOf(type) >= 0) {
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks, fixed in Chrome 81
-    const observer = observeEntries({ type, buffered: true }, events => {
+    const observer = observeEntries({ type, buffered: true }, (events) => {
       observer.disconnect()
       clearTimeout(timeout)
       resolve(events)
@@ -73,7 +73,7 @@ function createFakeObserver() {
     disconnect() {},
     takeRecords() {
       return []
-    }
+    },
   })
 }
 

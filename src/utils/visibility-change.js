@@ -14,7 +14,6 @@ export function onVisibilityChange(callback, order = 0) {
         visiblityChangeCallbacks.sort((a, b) => a[1] - b[1]).forEach(([cb]) => cb())
         visiblityChangeCallbacks = []
         document.removeEventListener('visibilitychange', visibilityChangeListener, true)
-        callback()
       }
     },
     true

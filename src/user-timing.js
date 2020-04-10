@@ -3,7 +3,7 @@ import { perf, raf, round, isObject } from './utils'
 export let debugTime = true
 const startTime = Date.now()
 const timers = Object.create(null)
-const getStartLabel = /** @param {string} label */ label => `uxm:start:${label}`
+const getStartLabel = /** @param {string} label */ (label) => `uxm:start:${label}`
 
 /**
  * Create a custom performance mark with `markName` name.
@@ -53,7 +53,7 @@ export function measure(measureName, startOrMeasureOptions, endMark) {
           name: m.name,
           startTime: round(m.startTime),
           duration: round(m.duration),
-          detail: m.detail || null
+          detail: m.detail || null,
         }
       : null
   } catch (err) {
@@ -82,11 +82,11 @@ export function now() {
 
 export function time(label, startLabel = getStartLabel(label)) {
   if (!perf) return null
-  if (timers[label]) {
-    console.warn('Timer "%s" already exists, ignore', label)
+  if (timers[startLabel]) {
+    console.warn('Timer "%s" already exists, ignore', startLabel)
     return null
   }
-  timers[label] = true
+  timers[startLabel] = true
   return mark(startLabel)
 }
 
