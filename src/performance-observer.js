@@ -1,11 +1,17 @@
 import { PO, perf, raf, isObject } from './utils'
+
+/** @typedef {import('./utils').Entry} Entry */
+/** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'} EntryType */
+/** @typedef {EntryType | {type: EntryType, buffered?: boolean}} ObserverOpts */
+/** @typedef {(entries: Entry[], observer: PerformanceObserver) => any} ObserverCallback */
+
 const legacyEntryTypes = ['mark', 'measure', 'resource', 'navigation']
 
 /**
  * Create performance observer.
  *
- * @param {EntryType | {type: EntryType, buffered?: boolean}} rawOpts
- * @param {(entries: PerformanceEntry[], observer: PerformanceObserver) => any} callback
+ * @param {ObserverOpts} rawOpts
+ * @param {ObserverCallback} callback
  */
 
 export function observeEntries(rawOpts, callback) {
@@ -19,13 +25,13 @@ export function observeEntries(rawOpts, callback) {
     const supportedTypes = PO.supportedEntryTypes || legacyEntryTypes
     if (!isLegacyType && supportedTypes.indexOf(type) === -1) return createFakeObserver()
     const observer = new PO((list) => {
-      callback(list.getEntries(), observer)
+      callback(/** @type {Entry[]} */ (list.getEntries()), observer)
     })
     const observerOpts = isLegacyType ? { entryTypes: [type] } : { ...opts, type }
     observer.observe(observerOpts)
     if (opts.buffered && isLegacyType) {
       raf(() => {
-        if (!perf) return
+        if (!perf || !perf.getEntriesByType) return
         callback(perf.getEntriesByType(type), observer)
       })
     }
@@ -40,13 +46,13 @@ export function observeEntries(rawOpts, callback) {
  * Get buffered entries by `type`.
  *
  * @param {EntryType} entryType
- * @return {Promise<PerformanceEntry[]>}
+ * @return {Promise<Entry[]>}
  */
 
 export function getEntriesByType(entryType) {
   const type = normalizeEntryType(entryType)
   return new Promise((resolve) => {
-    if (perf && legacyEntryTypes.indexOf(type) >= 0) {
+    if (perf && perf.getEntriesByType && legacyEntryTypes.indexOf(type) >= 0) {
       return resolve(perf.getEntriesByType(type))
     }
     if (type === 'longtask' || !PO) return resolve([]) // no buffering for longTasks, fixed in Chrome 81

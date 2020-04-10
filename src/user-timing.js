@@ -69,7 +69,7 @@ export function measure(measureName, startOrMeasureOptions, endMark) {
  */
 
 export function now() {
-  return perf ? round(perf.now()) : Date.now() - startTime
+  return perf && perf.now ? round(perf.now()) : Date.now() - startTime
 }
 
 /**

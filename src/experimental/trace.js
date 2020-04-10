@@ -4,8 +4,12 @@ import { onVisibilityChange } from '../utils/visibility-change'
 import { onLoad } from '../utils/load'
 import { filterInputDelays } from './cumulative-input-delay'
 
+/** @typedef {import('../performance-observer').Entry} Entry */
+/** @typedef {import('../performance-observer').ObserverOpts} ObserverOpts */
+/** @typedef {import('../performance-observer').ObserverCallback} ObserverCallback */
+
 /**
- * Record all performance observer events in a trace
+ * Record all performance observer events in one trace.
  *
  * @param {function} cb
  * @param {{ noResource?: boolean, filterMeasure?: function, filterMarks?: function }} [opts]
@@ -14,8 +18,9 @@ import { filterInputDelays } from './cumulative-input-delay'
 export function recordTrace(cb, opts = {}) {
   const result = []
   const observers = []
-  const push = (values) => values.length && result.push(...values)
-  const observe = (opts, cb) => observers.push(observeEntries(opts, cb))
+  const push = /** @param {object[]} values */ (values) => values.length && result.push(...values)
+  const observe = /** @param {ObserverOpts} opts @param {ObserverCallback} cb */ (opts, cb) =>
+    observers.push(observeEntries(opts, cb))
 
   onVisibilityChange(() => {
     observers.forEach((o) => o.takeRecords && o.takeRecords())
@@ -113,6 +118,7 @@ export function recordTrace(cb, opts = {}) {
   })
 }
 
+/** @param {Entry} e */
 function formatResource(e) {
   return {
     entryType: e.entryType,
@@ -126,6 +132,7 @@ function formatResource(e) {
   }
 }
 
+/** @param {Entry} e */
 function formatInputDelay(e) {
   return {
     entryType: e.entryType,
@@ -141,7 +148,6 @@ function formatInputDelay(e) {
  * Get size from DOM rect.
  *
  * @param {DOMRectReadOnly | null} rect
- * @return {number | null}
  */
 
 function getSize(rect) {

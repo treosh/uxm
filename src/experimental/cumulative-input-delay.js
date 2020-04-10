@@ -3,6 +3,9 @@ import { round } from '../utils/index'
 import { observeEntries } from '../performance-observer'
 import { now } from '../user-timing'
 
+/** @typedef {{ metricType: 'cid', value: number, detail: { totalEntries: number, sessionDuration: number } }} CidMetric */
+
+/** @param {(metric: CidMetric) => any} cb */
 export function collectCid(cb, opts = {}) {
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
@@ -29,7 +32,7 @@ export function collectCid(cb, opts = {}) {
     cidObserver = null
     if (timeout) clearTimeout(timeout)
     if (totalEntries > 0) {
-      cb({ metricType: 'cid', value: round(cummulativeValue, 2), details: { totalEntries, sesionDuration: now() } })
+      cb({ metricType: 'cid', value: round(cummulativeValue, 2), detail: { totalEntries, sessionDuration: now() } })
     }
   }
 }

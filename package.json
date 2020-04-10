@@ -1,17 +1,28 @@
 {
   "name": "uxm",
-  "version": "2.0.0-beta3",
+  "version": "2.0.0-beta4",
   "description": "User experience metrics",
   "repository": "treosh/uxm",
+  "bugs": "https://github.com/treosh/uxm/issues",
   "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
-  "main": "dist/uxm.js",
-  "umd:main": "dist/uxm.umd.js",
-  "module": "dist/uxm.es.js",
   "sideEffects": false,
+  "main": "dist/uxm.js",
+  "module": "dist/uxm.module.js",
+  "umd:main": "dist/uxm.umd.js",
+  "types": "dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": "./dist/uxm.module.js",
+      "umd": "./dist/uxm.umd.js",
+      "import": "./dist/uxm.module.js",
+      "require": "./dist/uxm.js"
+    }
+  },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "keywords": [
     "Web Performance",
@@ -29,10 +40,9 @@
     "deviceMemory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle build --no-sourcemap && yarn build:bundle && yarn build:declaration",
-    "build:bundle": "rollup -c test/rollup.js",
-    "build:declaration": "tsc --declaration --noEmit false --outDir dist -p . && rm dist/index.js && mv dist/index.d.ts dist/uxm.d.ts",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && size-limit"
+    "build": "rm -rf dist && microbundle build --raw --no-sourcemap && yarn build:declarations",
+    "build:declarations": "tsc --declaration --noEmit false --outDir dist -p . && rm -rf dist/test && rm -r dist/src/*.js dist/src/**/*.js",
+    "test": "prettier -c src/** test/** && tsc -p . && rollup -c test/rollup.js && ava && yarn build && size-limit"
   },
   "ava": {
     "require": [
@@ -62,11 +72,13 @@
   "size-limit": [
     {
       "path": "./dist/uxm.js",
-      "limit": "2KB"
+      "webpack": false,
+      "limit": "2.5KB"
     },
     {
-      "path": "./dist/uxm.es.js",
-      "limit": "2KB"
+      "path": "./dist/uxm.module.js",
+      "webpack": false,
+      "limit": "2.5KB"
     }
   ]
 }

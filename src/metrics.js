@@ -1,10 +1,15 @@
-import { isObject, round, getSelector, perf, raf } from './utils'
+import { isObject, round, getSelector, perf } from './utils'
 import { observeEntries } from './performance-observer'
 import { now } from './user-timing'
 import { onVisibilityChange } from './utils/visibility-change'
 import { onLoad } from './utils/load'
 
-/** @typedef {Object} Metric */
+/** @typedef {{ metricType: 'fcp', value: number }} FcpMetric */
+/** @typedef {{ metricType: 'fid', value: number, detail: { startTime: number, duration: number, processingStart: number, processingEnd: number, name: string } }} FidMetric */
+/** @typedef {{ metricType: 'lcp', value: number, detail: { size: number, elementSelector: ?string } }} LcpMetric */
+/** @typedef {{ metricType: 'cls', value: number, detail: { totalEntries: number, sessionDuration: number } }} ClsMetric */
+/** @typedef {{ metricType: 'load', value: number, detail: { timeToFirstByte: number, domContentLoaded: number } }} LoadMetric */
+/** @typedef {'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
 /** @typedef {{ type: MetricType, maxTimeout?: number }} CollectMetricOpts */
 
 const FCP = 'fcp'
@@ -16,7 +21,7 @@ const CLS = 'cls'
  * Collect metrics.
  *
  * @param {(MetricType | CollectMetricOpts)[]} metricsOpts
- * @param {(metric: Metric) => any} cb
+ * @param {(metric: FcpMetric | LcpMetric | ClsMetric | FidMetric) => any} cb
  */
 
 export function collectMetrics(metricsOpts, cb) {
@@ -37,6 +42,7 @@ export function collectMetrics(metricsOpts, cb) {
   })
 }
 
+/** @param {(metric: FcpMetric) => any} cb */
 export function collectFcp(cb) {
   observeEntries('paint', (paintEntries, fcpObserver) => {
     if (paintEntries.some((paintEntry) => paintEntry.name === 'first-contentful-paint')) {
@@ -47,6 +53,7 @@ export function collectFcp(cb) {
   })
 }
 
+/** @param {(metric: FidMetric) => any} cb */
 export function collectFid(cb) {
   observeEntries('first-input', ([fidEntry], fidObserver) => {
     if (fidEntry) {
@@ -66,11 +73,12 @@ export function collectFid(cb) {
   })
 }
 
+/** @param {(metric: LcpMetric) => any} cb */
 export function collectLcp(cb, opts = {}) {
   const maxTimeout = opts.maxTimeout || 5000
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
-  /** @type {Metric | null} */
+  /** @type {LcpMetric | null} */
   let lcpMetric = null
   /** @type {PerformanceObserver | null} */
   let lcpObserver = observeEntries('largest-contentful-paint', (lcpEntries) => {
@@ -100,6 +108,7 @@ export function collectLcp(cb, opts = {}) {
   }
 }
 
+/** @param {(metric: ClsMetric) => any} cb */
 export function collectCls(cb, opts = {}) {
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
@@ -127,14 +136,15 @@ export function collectCls(cb, opts = {}) {
     clsObserver = null
     if (timeout) clearTimeout(timeout)
     if (totalEntries > 0) {
-      cb({ metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sesionDuration: now() } })
+      cb({ metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sessionDuration: now() } })
     }
   }
 }
 
+/** @param {(metric: LoadMetric) => any} cb */
 export function collectLoad(cb) {
   onLoad(() => {
-    if (!perf || !perf.timing) return raf(() => cb(null))
+    if (!perf || !perf.timing) return
     const t = perf.timing
     cb({
       metricType: 'load',
