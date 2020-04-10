@@ -18,6 +18,7 @@ interface PerformanceEntry {
   detail?: object
   // first-input
   processingStart: number
+  processingEnd: number
   // largest-contentful-paint
   element: HTMLElement
   size: number
@@ -25,7 +26,21 @@ interface PerformanceEntry {
   loadTime: number
   // layout-shift
   value: number
+  lastInputTime: number
   hadRecentInput: boolean
+  // resource
+  initiatorType: string
+  transferSize: number
+  encodedBodySize: number
+  decodedBodySize: number
+  // navigation
+  type: string
+  domContentLoadedEventEnd: number
+  responseStart: number
+  loadEventEnd: number
+  // element
+  identifier: string
+  intersectionRect: DOMRectReadOnly
 }
 
 type NetworkInformation = {

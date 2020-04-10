@@ -17,10 +17,16 @@
 ```js
 // metrics
 // type MetricType = 'fcp' | 'lcp' | 'fid' | 'cls'
-collectMetrics([metricType | { type: MetricType, ...options }], ({ metric, value, detail }) => {})
+collectMetrics([metricType | { type: MetricType, ...options }], ({ metricType, value, detail }) => {})
 
-// navigation metrics
-getNavigation() => Promise<{ timeToFirstByte: number, domContentLoaded: number, onLoad: number }>
+// each metric separately
+collectFcp(cb)
+collectLcp(cb)
+collectFid(cb)
+collectLcp(cb)
+
+// get loading metrics
+collectLoad((load) => {})
 
 // perf observer
 // type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
@@ -38,6 +44,21 @@ measure(measureName, startOrMeasureOptions, endMark)
 now()
 time(label, [startLabel])
 timeEnd(label, [startLabel]) | timeEndPaint(label, [startLabel])
+
+// api reporter
+const report = createReporter(url, { initial, onSend, beforeSend })
+report.getValues() // get collected values
+report.send() // force send
+
+// experimental
+collectCid() // cummulative input delay
+recordTrace() // record all performance observer entries in one array
+calcSpeedScore({ fcp, lcp, fid, cls }) // value from 0 ... 100 (based on LH score algorithm)
+
+// notes:
+// - collectLoad is 4 letters, because it's not a good metric
+// - each metric is a function, because perf & bundle size matters
+// - no Promise, because API could lead to confusion, some metrics takes the whole section to produce
 ```
 
 ---
@@ -81,7 +102,7 @@ const metrics = {
   url: getUrl(),
   ttfb: getTimeToFirstByte(),
   fcp: getFirstContentfulPaint(),
-  dcl: getDomContentLoaded()
+  dcl: getDomContentLoaded(),
 }
 ```
 
@@ -93,7 +114,7 @@ import { getDeviceType, getDeviceMemory, getEffectiveConnectionType } from 'uxm'
 const device = {
   type: getDeviceType(),
   memory: getDeviceMemory(),
-  connection: getEffectiveConnectionType()
+  connection: getEffectiveConnectionType(),
 }
 ```
 
@@ -270,10 +291,10 @@ Until `buffered` flag supported, you need to add extra script to the `<head />` 
 
 ```html
 <script>
-  !(function() {
+  !(function () {
     if ('PerformanceLongTaskTiming' in window) {
       var g = (window.__lt = { e: [] })
-      g.o = new PerformanceObserver(function(l) {
+      g.o = new PerformanceObserver(function (l) {
         g.e = g.e.concat(l.getEntries())
       })
       g.o.observe({ entryTypes: ['longtask'] })
