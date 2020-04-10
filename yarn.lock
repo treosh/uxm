@@ -856,16 +856,16 @@ autoprefixer@^9.0.0:
     postcss "^7.0.16"
     postcss-value-parser "^3.3.1"
 
-ava@^3.5.2:
-  version "3.5.2"
-  resolved "https://registry.yarnpkg.com/ava/-/ava-3.5.2.tgz#9a37305c03840c4b63eb53edae29741d8414633e"
-  integrity sha512-4MYpx0D7VQwzvqCOQsbnPK2Dmg7lipWe2k/n75i0cuFwuosq9MYIWc9MnmCZ1GIlPQ70qOP1DgQcD0ScH/W79Q==
+ava@^3.6.0:
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/ava/-/ava-3.6.0.tgz#1fa57f8601a81d11b4771ba701428d9972659dfd"
+  integrity sha512-cp+oK06JTFK9m4EhLq0APPSi6aTpwUOK0aKH5pCzIhU8AHFLXis0HNarfIr/EeBe9GzQKouuIsnlVedY7Lg0Cw==
   dependencies:
     "@concordance/react" "^2.0.0"
     ansi-styles "^4.2.1"
     arrgv "^1.0.2"
     arrify "^2.0.1"
-    chalk "^3.0.0"
+    chalk "^4.0.0"
     chokidar "^3.3.1"
     chunkd "^2.0.1"
     ci-info "^2.0.0"
@@ -881,9 +881,9 @@ ava@^3.5.2:
     currently-unhandled "^0.4.1"
     debug "^4.1.1"
     del "^5.1.0"
-    emittery "^0.5.1"
+    emittery "^0.6.0"
     equal-length "^1.0.0"
-    figures "^3.1.0"
+    figures "^3.2.0"
     globby "^11.0.0"
     ignore-by-default "^1.0.0"
     import-local "^3.0.2"
@@ -896,11 +896,11 @@ ava@^3.5.2:
     md5-hex "^3.0.1"
     ms "^2.1.2"
     ora "^4.0.3"
-    p-map "^3.0.0"
-    picomatch "^2.2.1"
+    p-map "^4.0.0"
+    picomatch "^2.2.2"
     pkg-conf "^3.1.0"
     plur "^4.0.0"
-    pretty-ms "^6.0.0"
+    pretty-ms "^6.0.1"
     read-pkg "^5.2.0"
     resolve-cwd "^3.0.0"
     slash "^3.0.0"
@@ -911,8 +911,8 @@ ava@^3.5.2:
     temp-dir "^2.0.0"
     trim-off-newlines "^1.0.1"
     update-notifier "^4.1.0"
-    write-file-atomic "^3.0.1"
-    yargs "^15.1.0"
+    write-file-atomic "^3.0.3"
+    yargs "^15.3.1"
 
 babel-plugin-transform-async-to-promises@^0.8.3:
   version "0.8.11"
@@ -2437,10 +2437,10 @@ elliptic@^6.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
-emittery@^0.5.1:
-  version "0.5.1"
-  resolved "https://registry.yarnpkg.com/emittery/-/emittery-0.5.1.tgz#9fbbf57e9aecc258d727d78858a598eb05ea5c96"
-  integrity sha512-sYZXNHH9PhTfs98ROEFVC3bLiR8KSqXQsEHIwZ9J6H0RaQObC3JYq4G8IvDd0b45/LxfGKYBpmaUN4LiKytaNw==
+emittery@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/emittery/-/emittery-0.6.0.tgz#e85312468d77c3ed9a6adf43bb57d34849e0c95a"
+  integrity sha512-6EMRGr9KzYWp8DzHFZsKVZBsMO6QhAeHMeHND8rhyBNCHKMLpgW9tZv40bwN3rAIKRS5CxcK8oLRKUJSB9h7yQ==
 
 emoji-regex@^7.0.1:
   version "7.0.3"
@@ -2826,7 +2826,7 @@ figures@^1.0.1:
     escape-string-regexp "^1.0.5"
     object-assign "^4.1.0"
 
-figures@^3.1.0:
+figures@^3.2.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/figures/-/figures-3.2.0.tgz#625c18bd293c604dc4a8ddb2febf0c88341746af"
   integrity sha512-yaduQFRKLXYOGgEn6AZau90j3ggSOyiqXU0F9JZfeXYhNa+Jk4X+s45A2zg5jns87GAFa34BBm2kXw4XpNcbdg==
@@ -4998,6 +4998,13 @@ p-map@^3.0.0:
   dependencies:
     aggregate-error "^3.0.0"
 
+p-map@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/p-map/-/p-map-4.0.0.tgz#bb2f95a5eda2ec168ec9274e06a747c3e2904d2b"
+  integrity sha512-/bjOqmgETBYB5BoEeGVea8dmvHb2m9GLy1E9W43yeyfP6QQCZGFNa+XRceJEuDB6zqr+gKpIAmlLebMpykw/MQ==
+  dependencies:
+    aggregate-error "^3.0.0"
+
 p-queue@^2.4.2:
   version "2.4.2"
   resolved "https://registry.yarnpkg.com/p-queue/-/p-queue-2.4.2.tgz#03609826682b743be9a22dba25051bd46724fc34"
@@ -5174,7 +5181,7 @@ picomatch@^2.0.4, picomatch@^2.0.5:
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.0.7.tgz#514169d8c7cd0bdbeecc8a2609e34a7163de69f6"
   integrity sha512-oLHIdio3tZ0qH76NybpeneBhYVj0QFTfXEFTc/B3zKQspYfYYkWYgFsmzo+4kvId/bQRcNkVeguI3y+CD22BtA==
 
-picomatch@^2.0.7, picomatch@^2.2.1:
+picomatch@^2.0.7, picomatch@^2.2.1, picomatch@^2.2.2:
   version "2.2.2"
   resolved "https://registry.yarnpkg.com/picomatch/-/picomatch-2.2.2.tgz#21f333e9b6b8eaff02468f5146ea406d345f4dad"
   integrity sha512-q0M/9eZHzmr0AulXyPwNfZjtwZ/RBZlbN3K3CErVrk50T2ASYI7Bye0EvekFY3IP1Nt2DHu0re+V2ZHIpMkuWg==
@@ -5933,10 +5940,10 @@ prettier@^1.11.1:
   resolved "https://registry.yarnpkg.com/prettier/-/prettier-1.11.1.tgz#61e43fc4cd44e68f2b0dfc2c38cd4bb0fccdcc75"
   integrity sha512-T/KD65Ot0PB97xTrG8afQ46x3oiVhnfGjGESSI9NWYcG92+OUPZKkwHqGWXH2t9jK1crnQjubECW0FuOth+hxw==
 
-prettier@^2.0.2:
-  version "2.0.2"
-  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.0.2.tgz#1ba8f3eb92231e769b7fcd7cb73ae1b6b74ade08"
-  integrity sha512-5xJQIPT8BraI7ZnaDwSbu5zLrB6vvi8hVV58yHQ+QK64qrY40dULy0HSRlQ2/2IdzeBpjhDkqdcFBnFeDEMVdg==
+prettier@^2.0.4:
+  version "2.0.4"
+  resolved "https://registry.yarnpkg.com/prettier/-/prettier-2.0.4.tgz#2d1bae173e355996ee355ec9830a7a1ee05457ef"
+  integrity sha512-SVJIQ51spzFDvh4fIbCLvciiDMCrRhlN3mbZvv/+ycjvmF5E73bKdGfU8QDLNmjYJf+lsGnDBC4UUnvTe5OO0w==
 
 pretty-bytes@^3.0.0:
   version "3.0.1"
@@ -5950,7 +5957,7 @@ pretty-bytes@^5.1.0:
   resolved "https://registry.yarnpkg.com/pretty-bytes/-/pretty-bytes-5.1.0.tgz#6237ecfbdc6525beaef4de722cc60a58ae0e6c6d"
   integrity sha512-wa5+qGVg9Yt7PB6rYm3kXlKzgzgivYTLRandezh43jjRqgyDyP+9YxfJpJiLs9yKD1WeU8/OvtToWpW7255FtA==
 
-pretty-ms@^6.0.0:
+pretty-ms@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/pretty-ms/-/pretty-ms-6.0.1.tgz#03ec6cfee20329f142645e63efad96bb775d3da4"
   integrity sha512-ke4njoVmlotekHlHyCZ3wI/c5AMT8peuHs8rKJqekj/oR5G8lND2dVpicFlUz5cbZgE290vvkMuDwfj/OcW1kw==
@@ -6732,10 +6739,10 @@ rollup@^0.67.3:
     "@types/estree" "0.0.39"
     "@types/node" "*"
 
-rollup@^2.3.2:
-  version "2.3.2"
-  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.3.2.tgz#afa68e4f3325bcef4e150d082056bef450bcac60"
-  integrity sha512-p66+fbfaUUOGE84sHXAOgfeaYQMslgAazoQMp//nlR519R61213EPFgrMZa48j31jNacJwexSAR1Q8V/BwGKBA==
+rollup@^2.4.0:
+  version "2.4.0"
+  resolved "https://registry.yarnpkg.com/rollup/-/rollup-2.4.0.tgz#b136a4d701d24dd79ec9551ee0330e7f632ee9d2"
+  integrity sha512-dYE2ZKl9+kxuFKDaaSuauZjIPa8hcKDqI7WrOq1pTXYG4GJw+6ypLifGIvCKw5yJpSmuFohuimYpg0wfRXTCLw==
   optionalDependencies:
     fsevents "~2.1.2"
 
@@ -7991,7 +7998,7 @@ write-file-atomic@^3.0.0:
     signal-exit "^3.0.2"
     typedarray-to-buffer "^3.1.5"
 
-write-file-atomic@^3.0.1:
+write-file-atomic@^3.0.3:
   version "3.0.3"
   resolved "https://registry.yarnpkg.com/write-file-atomic/-/write-file-atomic-3.0.3.tgz#56bd5c5a5c70481cd19c571bd39ab965a5de56e8"
   integrity sha512-AvHcyZ5JnSfq3ioSyjrBkH9yW4m7Ayk8/9My/DD9onKeu/94fwrMocemO2QAJFAlnnDN+ZDS+ZjAR5ua1/PV/Q==
@@ -8053,7 +8060,7 @@ yargs-parser@^18.1.1:
     camelcase "^5.0.0"
     decamelize "^1.2.0"
 
-yargs@^15.1.0:
+yargs@^15.3.1:
   version "15.3.1"
   resolved "https://registry.yarnpkg.com/yargs/-/yargs-15.3.1.tgz#9505b472763963e54afe60148ad27a330818e98b"
   integrity sha512-92O1HWEjw27sBfgmXiixJWT5hRBp2eobqXicLtPBIDBhYB+1HpwZlXmbW2luivBJHBzki+7VyCLRtAkScbTBQA==

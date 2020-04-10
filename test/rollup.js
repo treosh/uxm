@@ -10,7 +10,7 @@ export default {
   output: {
     file: join(__dirname, '../dist/uxm.bundle.js'),
     format: 'iife',
-    name: 'uxm'
+    name: 'uxm',
   },
-  plugins: [resolve(), commonjs(), terser()]
+  plugins: [resolve(), commonjs(), terser()],
 }
