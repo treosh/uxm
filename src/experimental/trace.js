@@ -29,7 +29,7 @@ export function recordTrace(cb, opts = {}) {
     cb(result)
   })
   observeHistory((e) => {
-    push([{ entryType: '_history', startTime: e.startTime, type: e.type, name: e.url }])
+    push([{ entryType: '_history', startTime: e.startTime, type: e.type, name: e.url, prevUrl: e.prevUrl }])
   })
   observe('paint', (es) => {
     push(es.map((e) => ({ entryType: e.entryType, name: e.name, startTime: round(e.startTime) })))

@@ -49,7 +49,7 @@
     "build:declarations": "tsc --declaration --noEmit false --outDir dist/ --allowJs src/index.js src/experimental/index.js && rm -r dist/*.js dist/**/*.js",
     "build:core": "microbundle build --no-sourcemap --format=cjs",
     "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
-    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && size-limit"
+    "test": "prettier -c src/** test/** examples/** && tsc -p . && yarn build && ava && size-limit"
   },
   "ava": {
     "require": [
@@ -74,7 +74,31 @@
   "size-limit": [
     {
       "limit": "2.5KB",
-      "path": "./dist/uxm.js"
+      "path": "./src/index.js"
+    },
+    {
+      "limit": "2.5KB",
+      "path": "./src/experimental/index.js"
+    },
+    {
+      "limit": "1.55KB",
+      "path": "./examples/user-centric-metrics.js"
+    },
+    {
+      "limit": "1.55KB",
+      "path": "./examples/crux-like-metrics.js"
+    },
+    {
+      "limit": "0.65KB",
+      "path": "./examples/react-view-render-hook.js"
+    },
+    {
+      "limit": "0.8KB",
+      "path": "./examples/layout-shift-per-view.js"
+    },
+    {
+      "limit": "1KB",
+      "path": "./examples/google-analytics-reporter.js"
     }
   ]
 }
