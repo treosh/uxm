@@ -4,26 +4,28 @@
   "description": "User experience metrics",
   "repository": "treosh/uxm",
   "bugs": "https://github.com/treosh/uxm/issues",
-  "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
   "sideEffects": false,
+  "types": "dist/index.d.js",
   "main": "dist/uxm.js",
-  "umd:main": "dist/uxm.umd.js",
-  "module": "src/index.js",
-  "types": "types/index.d.ts",
+  "module": "dist/uxm.module.js",
   "exports": {
     ".": {
-      "browser": "./src/index.js",
-      "import": "./src/index.js",
-      "umd": "./dist/uxm.umd.js",
+      "browser": "./dist/uxm.module.js",
+      "import": "./dist/uxm.module.js",
       "require": "./dist/uxm.js"
+    },
+    "./experimental": {
+      "browser": "./experimental/dist/experimental.module.js",
+      "import": "./experimental/dist/experimental.module.js",
+      "require": "./experimental/dist/experimental.js"
     }
   },
   "files": [
     "dist",
     "src",
-    "types"
+    "experimental"
   ],
   "keywords": [
     "web performance",
@@ -43,17 +45,17 @@
     "device memory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle build --no-sourcemap --format=cjs,umd && yarn build:declarations",
-    "build:declarations": "rm -rf types && tsc --declaration --noEmit false --outDir dist -p . && rm -rf dist/test && rm -r dist/src/*.js dist/src/**/*.js && mv dist/src types",
-    "test": "prettier -c src/** test/** && tsc -p . && rollup -c test/rollup.js && ava && yarn build && size-limit"
+    "build": "rm -rf dist && yarn build:core && yarn build:experimental",
+    "build:core": "tsc --declaration --noEmit false --outDir dist --allowJs src/index.js && rm -r dist/*.js dist/utils/*.js && microbundle build --no-sourcemap --format=cjs,es",
+    "build:experimental": "tsc --declaration --noEmit false --outDir experimental/dist --allowJs experimental/src/index.js && rm -r experimental/dist/**/*.js && microbundle build --cwd experimental --no-sourcemap --format=cjs,es",
+    "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && size-limit"
   },
   "ava": {
     "require": [
       "esm"
     ],
     "files": [
-      "test/*.js",
-      "!test/rollup.js"
+      "test/*.js"
     ]
   },
   "devDependencies": {
@@ -65,18 +67,13 @@
     "microbundle": "^0.12.0-next.8",
     "prettier": "^2.0.4",
     "puppeteer": "^2.1.1",
-    "rollup": "^2.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.3.0",
     "size-limit": "^4.4.5",
     "typescript": "^3.8.3"
   },
   "size-limit": [
     {
-      "path": "./dist/uxm.js",
-      "webpack": false,
-      "limit": "2.5KB"
+      "limit": "2.5KB",
+      "path": "./dist/uxm.js"
     }
   ]
 }

@@ -10,7 +10,7 @@ import { onVisibilityChange } from './utils/visibility-change'
  * Use `onSend` argument to implement a custom logic.
  *
  * @param {string} url
- * @param {{ initial?: object, beforeSend?: function, onSend?: function }} [opts]
+ * @param {{ initial?: object, beforeSend?: function, onSend?: (url: string, values: object) => any }} [opts]
  * @return {(metrics: object) => void}
  */
 

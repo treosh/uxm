@@ -4,14 +4,20 @@ import fs from 'fs'
 import { join } from 'path'
 
 const url = 'https://treo.sh/'
-const uxmBundle = fs.readFileSync(join(__dirname, '../dist/uxm.bundle.js'), 'utf8')
+const uxmSrc = fs.readFileSync(join(__dirname, '../dist/uxm.js'), 'utf8')
+const setupUxm = `
+  window.uxm=(function(exports){
+    ${uxmSrc};
+    return exports
+  })({})
+`
 
 test.serial('booking.com - default settings', async (t) => {
   // launch a url
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.evaluateOnNewDocument(uxmBundle)
+  await page.evaluateOnNewDocument(setupUxm)
   await page.goto(url)
 
   // collect metrics

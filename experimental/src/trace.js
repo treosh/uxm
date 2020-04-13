@@ -1,18 +1,18 @@
-import { observeEntries } from '../performance-observer'
-import { round, getSelector } from '../utils'
-import { onVisibilityChange } from '../utils/visibility-change'
-import { onLoad } from '../utils/load'
+import { observeEntries } from '../..'
+import { round, getSelector } from '../../src/utils/index'
+import { onVisibilityChange } from '../../src/utils/visibility-change'
+import { onLoad } from '../../src/utils/load'
 import { filterInputDelays } from './cumulative-input-delay'
 
-/** @typedef {import('../performance-observer').Entry} Entry */
-/** @typedef {import('../performance-observer').ObserverOpts} ObserverOpts */
-/** @typedef {import('../performance-observer').ObserverCallback} ObserverCallback */
+/** @typedef {import('../../src/performance-observer').Entry} Entry */
+/** @typedef {import('../../src/performance-observer').ObserverOpts} ObserverOpts */
+/** @typedef {import('../../src/performance-observer').ObserverCallback} ObserverCallback */
 
 /**
  * Record all performance observer events in one trace.
  *
- * @param {function} cb
- * @param {{ noResource?: boolean, filterMeasure?: function, filterMarks?: function }} [opts]
+ * @param {(entries: Entry[]) => any} cb
+ * @param {{ noResource?: boolean, filterMeasure?: (e: Entry) => boolean, filterMarks?: (e: Entry) => boolean }} [opts]
  */
 
 export function recordTrace(cb, opts = {}) {
