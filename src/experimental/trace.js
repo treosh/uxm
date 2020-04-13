@@ -3,6 +3,7 @@ import { round, getSelector } from '../../src/utils/index'
 import { onVisibilityChange } from '../../src/utils/visibility-change'
 import { onLoad } from '../../src/utils/load'
 import { filterInputDelays } from './cumulative-input-delay'
+import { observeHistory } from './history'
 
 /** @typedef {import('../../src/performance-observer').Entry} Entry */
 /** @typedef {import('../../src/performance-observer').ObserverOpts} ObserverOpts */
@@ -27,7 +28,9 @@ export function recordTrace(cb, opts = {}) {
     observers.forEach((o) => o.disconnect && o.disconnect())
     cb(result)
   })
-
+  observeHistory((e) => {
+    push([{ entryType: '_history', startTime: e.startTime, type: e.type, url: e.url, detail: e.detail }])
+  })
   observe('paint', (es) => {
     push(es.map((e) => ({ entryType: e.entryType, name: e.name, startTime: round(e.startTime) })))
   })

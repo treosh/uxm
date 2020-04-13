@@ -9,17 +9,17 @@
   "sideEffects": false,
   "types": "dist/index.d.js",
   "main": "dist/uxm.js",
-  "module": "dist/uxm.module.js",
+  "module": "src/index.js",
   "exports": {
     ".": {
-      "browser": "./dist/uxm.module.js",
-      "import": "./dist/uxm.module.js",
+      "browser": "./src/index.js",
+      "import": "./src/index.js",
       "require": "./dist/uxm.js"
     },
     "./experimental": {
-      "browser": "./experimental/dist/experimental.module.js",
-      "import": "./experimental/dist/experimental.module.js",
-      "require": "./experimental/dist/experimental.js"
+      "browser": "./src/experimental/index.js",
+      "import": "./src/experimental/index.js",
+      "require": "./dist/experimental.js"
     }
   },
   "files": [
@@ -45,9 +45,10 @@
     "device memory"
   ],
   "scripts": {
-    "build": "rm -rf dist && yarn build:core && yarn build:experimental",
-    "build:core": "tsc --declaration --noEmit false --outDir dist --allowJs src/index.js && rm -r dist/*.js dist/utils/*.js && microbundle build --no-sourcemap --format=cjs,es",
-    "build:experimental": "tsc --declaration --noEmit false --outDir experimental/dist --allowJs experimental/src/index.js && rm -r experimental/dist/**/*.js && microbundle build --cwd experimental --no-sourcemap --format=cjs,es",
+    "build": "rm -rf dist && yarn build:declarations && yarn build:core && yarn build:experimental",
+    "build:declarations": "tsc --declaration --noEmit false --outDir dist/ --allowJs src/index.js src/experimental/index.js && rm -r dist/*.js dist/**/*.js",
+    "build:core": "microbundle build --no-sourcemap --format=cjs",
+    "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
     "test": "prettier -c src/** test/** && tsc -p . && yarn build && ava && size-limit"
   },
   "ava": {
