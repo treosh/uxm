@@ -1,15 +1,15 @@
 {
   "name": "uxm",
-  "version": "2.0.0-beta4",
+  "version": "2.0.0-beta5",
   "description": "User experience metrics",
   "repository": "treosh/uxm",
   "bugs": "https://github.com/treosh/uxm/issues",
   "license": "MIT",
   "source": "src/index.js",
+  "module": "src/index.js",
   "sideEffects": false,
   "types": "dist/index.d.js",
   "main": "dist/uxm.js",
-  "module": "src/index.js",
   "exports": {
     ".": {
       "browser": "./src/index.js",
