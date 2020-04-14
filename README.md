@@ -13,6 +13,13 @@
 <br/>
 <br/>
 
+**Features**:
+
+- Modular design based on ES modules.
+- Small size (2.5kb gzip). It's usually smaller when you use a few features and [Tree Shaking](https://webpack.js.org/guides/tree-shaking/).
+- Graceful support of latest browser APIs like [Performance Paint Timing](https://developer.mozilla.org/en-US/docs/Web/API/PerformancePaintTiming), [Network Information](https://wicg.github.io/netinfo/), or [Device Memory](https://w3c.github.io/device-memory/).
+- Fully featured [User Timing API v3](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) support.
+
 ## Usage
 
 [![](https://img.shields.io/npm/v/uxm.svg)](https://npmjs.org/package/uxm)
@@ -34,22 +41,22 @@ collectMetrics(['fcp', 'lcp', 'fid', 'cls'], ({ metricType, value }) => {
 })
 ```
 
-At the end of the session (on `visibilitychange` event), your API receives a POST request (using `sendBeacon`) with data for core UX metrics and anonymous device information. It looks like this:
+At the end of the session (on `visibilitychange` event), your API receives a POST request (using `sendBeacon`) with data for core UX metrics and a device information, like:
 
-```json5
+```json
 {
-  fcp: 1409,
-  fid: 64,
-  lcp: 2690,
-  cls: 0.025,
-  url: 'https://example.com/',
-  memory: 8,
-  cpus: 2,
-  connection: { effectiveType: '4g', rtt: 150, downlink: 4.25 },
+  "fcp": 1409,
+  "fid": 64,
+  "lcp": 2690,
+  "cls": 0.025,
+  "url": "https://example.com/",
+  "memory": 8,
+  "cpus": 2,
+  "connection": { "effectiveType": "4g", "rtt": 150, "downlink": 4.25 }
 }
 ```
 
-Explore examples for building a robust real-user monitoring (RUM) logic:
+Explore examples for building a robust real-user monitoring (RUM) logic. Size of each example is controlled using [size-limit](./package.json#L74).
 
 <details>
   <summary>Report FCP and FID to Google Analytics (0.7 KB)</summary>
@@ -77,7 +84,7 @@ function reportToGoogleAnalytics(metric) {
 </details>
 
 <details>
-  <summary>Measure React view render performance (0.65 KB).</summary>
+  <summary>Measure React view render performance (0.65 KB)</summary>
 
 A react-hook example that measures rendering performance and creates a custom [user-timing](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) measure.
 
@@ -100,7 +107,7 @@ function useTime(label) {
 </details>
 
 <details>
-  <summary>Build a custom layout-shift metric for SPA (0.8 KB).</summary>
+  <summary>Build a custom layout-shift metric for SPA (0.8 KB)</summary>
 
 [Layout Instability](https://wicg.github.io/layout-instability/) is a flexible API that allows building custom metrics on top — like, measuring cumulative layout shift per view, not the whole session.
 
@@ -186,8 +193,6 @@ onVisibilityChange(() => {
 
 </details>
 
-Size of each example is controlled using [size-limit](./package.json#L74).
-
 ## API
 
 - [Metrics](#metrics)
@@ -234,6 +239,10 @@ Each metric follows the structure:
 with an exception for `collectLoad` (it does not have a 3-letters acronym, and considered a legacy.)
 Use a per-metric function for more granular control of the callback behavior and saving a bundle size.
 
+This metrics are only available in Chromium-based browsers (Chrome, Edge, Opera).
+
+The best way to understand a metric is to read web.dev/metrics and check [the source](./src/metrics.js).
+
 #### collectMetrics(metrics, callback)
 
 - `metrics` <[array]<[string]|[object]>>
@@ -259,27 +268,46 @@ collectMetrics([{ type: 'lcp', maxTimeout: 1000 }], (metric) => {
 
 #### collectFcp(callback)
 
-- `callback` <[function](FcpMetric)>
+- `callback` <[function]> a callback with FcpMetric:
+  - `metricType` <`"fcp"`>
+  - `value` <[number]> a time when the user can see anything on the screen – a fast FCP helps reassure the user that something is **happening**.
+
+Collect [First Contentful Paint (FCP)](https://web.dev/fcp/) using [`paint`](https://www.w3.org/TR/paint-timing/) entries.
 
 #### collectFid(callback)
 
-- `callback` <[function](FidMetric)>
+- `callback` <[function]> a callback with `FidMetric`:
+  - `metricType` <`"fid"`>
+  - `value` <[number]>
+  - `detail` <[object]>
+    - `name` <[string]>
+    - `duration` <[number]>
+    - `startTime` <[number]>
+    - `processingStart` <[number]>
+    - `processingEnd` <[number]>
+
+```js
+import { collectFid } from 'uxm'
+
+collectFid((metric) => {
+  console.log(metric)
+  // { metricType: "fid", value: 1, detail: { duration: 8, startTime: 2568.1, processingStart: 2568.99, processingEnd: 2569.02, name: "mousedown" }
+})
+```
 
 #### collectLcp(callback, [options])
 
-- `callback` <[function]> ...:
+- `callback` <[function]> a callback with `LcpMetric`:
   - `metricType` <`"lcp"`>
-  - `value` <[number]>
+  - `value` <[number]> a time when the page's main content has likely loaded – a fast LCP helps reassure the user that the page is **useful**.
   - `detail` <[object]>
-    - `size` <[number]>
-    - `elementSelector` <[string]>
-- `options` <[object]> (Optional).
+    - `elementSelector` <[string]> CSS selector of an element, that is triggered the most significant paint
+    - `size` <[number]> size (`height` x `width`) of the largest element
+- `options` <[object]> (Optional)
   - `maxTimeout` <[number]> The longest delay between `largest-contentful-paint` entries to consider the LCP. Defaults to `10000` ms.
 
-Collect [Largest Contentful Paint (LCP)](https://web.dev/lcp/).
-
-> **LCP** is a user-centric metric thst marks the time when the page's main content has likely loaded.
-> A fast LCP helps reassure the user that the page is useful.
+Collect [Largest Contentful Paint (LCP)](https://web.dev/lcp/) using [`largest-contentful-paint`](https://wicg.github.io/largest-contentful-paint/) entries.
+A callback triggers when a user interacts with a page, or after `maxTimeout` between entries, or on `"visibilitychange"` event.
 
 ```js
 import { collectLcp } from 'uxm'
@@ -291,7 +319,40 @@ collectLcp((metric) => {
 
 #### collectCls(callback, [options])
 
+- `callback` <[function]> a callback with `ClsMetric`:
+  - `metricType` <`"cls"`>
+  - `value` <[number]>
+  - `detail` <[object]>
+    - `totalEntries` <[number]>
+    - `sessionDuration` <[number]>
+
+```js
+import { collectCls } from 'uxm'
+
+collectCls(
+  (metric) => {
+    console.log(metric) // { metricType: "cls", value: 0.0893, detail: { totalEntries: 2, sessionDuration: 2417 } }
+  },
+  { maxTimeout: 1000 }
+)
+```
+
 #### collectLoad(callback)
+
+- `callback` <[function]> a callback with `ClsMetric`:
+  - `metricType` <`"load"`>
+  - `value` <[number]>
+  - `detail` <[object]>
+    - `timeToFirstByte` <[number]>
+    - `domContentLoaded` <[number]>
+
+```js
+import { collectLoad } from 'uxm'
+
+collectLoad(({ value: load, detail: { domContentLoaded, timeToFirstByte } }) => {
+  console.log({ timeToFirstByte, domContentLoaded, load })
+})
+```
 
 ### Performance Observer
 
@@ -335,7 +396,7 @@ collectLcp((metric) => {
 
 ### Credits
 
-Made with ❤️ to the open web by [Treo](https://treo.sh/).
+Made with ❤️ by [Treo](https://treo.sh/).
 
 [array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array 'Array'
 [function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function 'Function'
