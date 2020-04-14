@@ -19,7 +19,7 @@
 [![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
 ```bash
-npm install uxm
+npm install uxm@next
 ```
 
 Collect [user-centric metrics](https://web.dev/metrics/) and send data to your API (1.5Kb):
@@ -132,54 +132,93 @@ console.log(metrics)
 //  }
 ```
 
+Size of each example controlled using [size-limit](./package.json#L74).
+
 ## API
 
-```js
-// metrics
-// type MetricType = 'fcp' | 'lcp' | 'fid' | 'cls'
-collectMetrics([metricType | { type: MetricType, ...options }], ({ metricType, value, detail }) => {})
+- [Metrics](#metrics)
+  - [collectMetrics(metrics, callback)](#)
+  - [collectFcp(callback)](#)
+  - [collectLcp(callback)](#)
+  - [collectFid(callback, [options])](#)
+  - [collectCls(callback, [options])](#)
+  - [collectLoad(callback)](#)
+- [Reporter](#reporter)
+  - [createApiReporter(url, [options])](#)
+- [Performance Observer](#performance-observer)
+  - [observeEntries(options, callback)](#)
+  - [getEntriesByType(entryType)](#)
+- [User-timing](#user-timing)
+  - [mark(markName, [markOptions])](#)
+  - [measure(markName, [startOrMeasureOptions], [endMarkName])](#)
+  - [time(label, [startLabel])](#)
+  - [timeEnd(label, [startLabel])](#)
+  - [timeEndPaint(label, [startLabel])](#)
+  - [now()](#)
+- [Device Info](#device-info)
+  - [getDeviceInfo()](#)
+- [Experimental (`preview`)](#experimental-preview)
+  - [collectCid(callback)](#)
+  - [observeHistory(callback)](#)
+  - [recordTrace(callback, [options])](#)
+  - [calcSpeedScore(values, [ranks])](#)
 
-// each metric separately
-collectFcp(cb)
-collectLcp(cb)
-collectFid(cb)
-collectLcp(cb)
+### Metrics
 
-// get loading metrics
-collectLoad((load) => {})
+#### collectMetrics(metrics, callback)
 
-// perf observer
-// type EntryType = 'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' |
-//                  'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'
-observeEntries(entryType | { type: EntryType, buffered?: boolean }, (entries, observer) => {})
-getEntriesByType(entryType) => Promise<PerformanceEntry[]>
+- `metrics` <Array<string|MetricOptions>>
+- `callback` <function(Metric)>
 
-// device info
-getDeviceInfo() => { url?: string, referrer?: string, userAgent?: string, memory?: number, cpus?: number,
-                     connection?: { effectiveType: string, rtt: number, downlink: number } }
+#### collectFcp(callback)
 
-// user timing
-mark(markName, [markOptions])
-measure(measureName, startOrMeasureOptions, endMark)
-now()
-time(label, [startLabel])
-timeEnd(label, [startLabel]) | timeEndPaint(label, [startLabel])
+#### collectLcp(callback)
 
-// api reporter
-const report = createReporter(url, { initial, onSend, beforeSend })
-report.getValues() // get collected values
-report.send() // force send
+#### collectFid(callback, [options])
 
-// experimental
-collectCid() // cummulative input delay
-recordTrace() // record all performance observer entries in one array
-calcSpeedScore({ fcp, lcp, fid, cls }) // value from 0 ... 1 (based on LH score algorithm)
+#### collectCls(callback, [options])
 
-// notes:
-// - collectLoad is 4 letters, because it's not a good metric
-// - each metric is a function, because perf & bundle size matters
-// - no Promise, because API could lead to confusion, some metrics takes the whole section to produce
-```
+#### collectLoad(callback)
+
+### Reporter
+
+#### createApiReporter(url, [options])
+
+### Performance Observer
+
+#### observeEntries(options, callback)
+
+#### getEntriesByType(entryType)
+
+### User-timing
+
+#### mark(markName, [markOptions])
+
+#### measure(markName, [startOrMeasureOptions], [endMarkName])
+
+#### time(label, [startLabel])
+
+#### timeEnd(label, [startLabel])
+
+#### timeEndPaint(label, [startLabel])
+
+#### now()
+
+### Device Info
+
+#### getDeviceInfo()
+
+### Experimental (`preview`)
+
+#### collectCid(callback)
+
+#### observeHistory(callback)
+
+#### recordTrace(callback, [options])
+
+#### calcSpeedScore(values, [ranks])
+
+---
 
 ## Credits
 

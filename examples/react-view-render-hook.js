@@ -8,6 +8,5 @@ export function App() {
 function useView(viewName) {
   const label = `render:${viewName}`
   time(label)
-  // @ts-ignore
   useEffect(() => timeEndPaint(label), [])
 }

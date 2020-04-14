@@ -11,5 +11,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true
   },
-  "include": ["examples", "src", "test"]
+  "include": ["src", "test"]
 }
