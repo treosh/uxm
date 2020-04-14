@@ -1,7 +1,7 @@
-import { collectFcp, collectLcp } from '..'
+import { collectFcp, collectFid } from '..'
 
 collectFcp(reportToGoogleAnalytics)
-collectLcp(reportToGoogleAnalytics)
+collectFid(reportToGoogleAnalytics)
 
 function reportToGoogleAnalytics(metric) {
   ga('send', 'event', {

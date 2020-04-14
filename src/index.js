@@ -1,6 +1,7 @@
 export * from './metrics'
-export * from './reporter'
 export * from './performance-observer'
 export * from './user-timing'
+export * from './api-reporter'
+export * from './device-info'
 export { onVisibilityChange } from './utils/visibility-change'
 export { onLoad } from './utils/load'

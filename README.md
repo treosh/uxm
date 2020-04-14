@@ -34,36 +34,77 @@ collectMetrics(['fcp', 'lcp', 'fid', 'cls'], ({ metricType, value }) => {
 })
 ```
 
-At the end of the session (on "visibilitychange" event),
-your API will receive a POST request (`sendBeacon`) with data with main UX metrics, and an anonymous device information: {
-fcp: 1409, fid: 64, lcp: 2690, cls: 0.025, url: 'https://example.com/',
-memory: 8, cpus: 8, connection: { effectiveType: '4g', rtt: 150, downlink: 4.25 }
+At the end of the session (on `visibilitychange` event), your API receives a POST request (using `sendBeacon`) with data for core UX metrics and anonymous device information. It looks like this:
+
+```json5
+{
+  fcp: 1409,
+  fid: 64,
+  lcp: 2690,
+  cls: 0.025,
+  url: 'https://example.com/',
+  memory: 8,
+  cpus: 2,
+  connection: { effectiveType: '4g', rtt: 150, downlink: 4.25 },
 }
+```
 
 Explore examples for building a robust real-user monitoring (RUM) logic:
 
 <details>
- <summary>Measure React view render performance (0.65 KB, [example](./examples/react-view-render-hook.js)).</summary><br>
+  <summary>Report FCP and FID to Google Analytics (0.7 KB)</summary>
+
+Use Google Analytics as a free RUM service, and report user-centric performance metrics.
+Learn more about [using Google Analytics for site speed monitoring](https://philipwalton.com/articles/the-google-analytics-setup-i-use-on-every-site-i-build/#performance-tracking).
+
+[`google-analytics-reporter.js`](./examples/google-analytics-reporter.js):
 
 ```js
-import { time, timeEndPaint } from 'uxm'
+import { collectFcp, collectFid } from 'uxm'
 
-export function App() {
-  useView('app')
-  return 'Hello from React'
-}
+collectFcp(reportToGoogleAnalytics)
+collectFid(reportToGoogleAnalytics)
 
-function useView(viewName) {
-  const label = `render:${viewName}`
-  time(label)
-  useEffect(() => timeEndPaint(label), [])
+function reportToGoogleAnalytics(metric) {
+  ga('send', 'event', {
+    eventCategory: 'Performance Metrics',
+    eventAction: 'track',
+    [metric.metricType]: metric.value,
+  })
 }
 ```
 
 </details>
 
 <details>
- <summary>Build custom layout-shifts metrics for each SPA view (0.8 KB, [example](./examples/layout-shift-per-view.js)).</summary><br>
+  <summary>Measure React view render performance (0.65 KB).</summary>
+
+A react-hook example that measures rendering performance and creates a custom [user-timing](https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API) measure.
+
+[`react-use-time-hook.js`](./examples/react-use-time-hook.js):
+
+```js
+import { time, timeEndPaint } from 'uxm'
+
+export function App() {
+  useTime('render:app')
+  return 'Hello from React'
+}
+
+function useTime(label) {
+  time(label) // render started
+  useEffect(() => timeEndPaint(label), []) // render ended, and the browser paint has been procceed.
+}
+```
+
+</details>
+
+<details>
+  <summary>Build a custom layout-shift metric for SPA (0.8 KB).</summary>
+
+[Layout Instability](https://wicg.github.io/layout-instability/) is a flexible API that allows building custom metrics on top — like, measuring cumulative layout shift per view, not the whole session.
+
+[`custom-layout-shift.js`](./examples/custom-layout-shift.js):
 
 ```js
 import { observeEntries } from 'uxm'
@@ -81,8 +122,8 @@ observeEntries('layout-shift', (layoutShiftEntries) => {
   })
 })
 
-// observe `history` changes
-// and reset `cls` when it changes
+// observe `history` changes,
+// and reset `cls` when a route changes
 
 observeHistory((e) => {
   views.push({ url: e.prevUrl, cls })
@@ -93,37 +134,22 @@ observeHistory((e) => {
 </details>
 
 <details>
- <summary>Collect rendering metrics (FCP/LCP) to google analytics (1 KB, [example](./examples/google-analytics-reporter.js)).</summary><br>
+  <summary>Collect CrUX-like metrics (1.55Kb)</summary>
 
-Learn more about [using google analytics for site speed monitoring](https://philipwalton.com/articles/the-google-analytics-setup-i-use-on-every-site-i-build/#performance-tracking)
+[Chrome UX Report (CrUX)](https://developers.google.com/web/tools/chrome-user-experience-report/) is a great way to see
+how real-world Chrome users experience the speed of your website. But for privacy reasons, CrUX aggregates data only per origin.
 
-```js
-import { collectFcp, collectLcp } from 'uxm'
+This script collects detailed crux-like analytics on the URL level.
 
-collectFcp(reportToGoogleAnalytics)
-collectLcp(reportToGoogleAnalytics)
-
-function reportToGoogleAnalytics(metric) {
-  ga('send', 'event', {
-    eventCategory: 'Performance Metrics',
-    eventAction: 'track',
-    [metric.metricType]: metric.value,
-  })
-}
-```
-
-</details>
-
-<details>
- <summary>Collect [CrUX-like metrics](https://developers.google.com/web/tools/chrome-user-experience-report/) (1.55Kb, [example](./examples/crux-like-metrics.js)).</summary><br>
+[`crux-metrics.js`](./examples/crux-metrics.js):
 
 ```js
-import { getDeviceInfo, collectLoad, collectFcp, collectLcp, collectFid, collectCls } from 'uxm'
+import { getDeviceInfo, collectLoad, collectFcp, collectLcp, collectFid, collectCls, onVisibilityChange } from 'uxm'
 
 // init `metrics` and get device information
 
-const { connection } = getDeviceInfo()
-const metrics = { effectiveConnectionType: connection.effectiveType }
+const { connection, url } = getDeviceInfo()
+const metrics = { url, effectiveConnectionType: connection.effectiveType }
 
 // collect loading metrics
 
@@ -142,17 +168,20 @@ collectCls(({ value }) => (metrics.cumulativeLayoutShift = value))
 
 // all metrics are collected on "visibilitychange" event
 
-console.log(metrics)
-//  {
-//    "effectiveConnectionType": "4g",
-//    "timeToFirstByte": 1204,
-//    "domContentLoaded": 1698,
-//    "load": 2508
-//    "firstContentfulPaint": 1646,
-//    "largestContentfulPaint": 3420,
-//    "firstInputDelay": 12,
-//    "cumulativeLayoutShift": 0.12,
-//  }
+onVisibilityChange(() => {
+  console.log(metrics)
+  //  {
+  //    "url": "https://example.com/",
+  //    "effectiveConnectionType": "4g",
+  //    "timeToFirstByte": 1204,
+  //    "domContentLoaded": 1698,
+  //    "load": 2508
+  //    "firstContentfulPaint": 1646,
+  //    "largestContentfulPaint": 3420,
+  //    "firstInputDelay": 12,
+  //    "cumulativeLayoutShift": 0.12,
+  //  }
+}, 1)
 ```
 
 </details>
@@ -168,14 +197,14 @@ Size of each example is controlled using [size-limit](./package.json#L74).
   - [collectLcp(callback, [options])](#collectlcpcallback-options)
   - [collectCls(callback, [options])](#collectclscallback-options)
   - [collectLoad(callback)](#collectloadcallback)
-- [Reporter](#reporter)
-  - [createApiReporter(url, [options])](#)
-  - [getDeviceInfo()](#)
-  - [onVisibilityChange(callback)](#)
-  - [onLoad(callback)](#)
 - [Performance Observer](#performance-observer)
   - [observeEntries(options, callback)](#)
   - [getEntriesByType(entryType)](#)
+  - [onVisibilityChange(callback)](#)
+  - [onLoad(callback)](#)
+- [Reporter](#reporter)
+  - [createApiReporter(url, [options])](#)
+  - [getDeviceInfo()](#)
 - [User-timing](#user-timing)
   - [mark(markName, [markOptions])](#)
   - [measure(markName, [startOrMeasureOptions], [endMarkName])](#)
@@ -183,7 +212,7 @@ Size of each example is controlled using [size-limit](./package.json#L74).
   - [timeEnd(label, [startLabel])](#)
   - [timeEndPaint(label, [startLabel])](#)
   - [now()](#)
-- [Experimental (`preview`)](#experimental-preview)
+- [Experimental (`alpha`)](#experimental-alpha)
   - [collectCid(callback)](#)
   - [observeHistory(callback)](#)
   - [recordTrace(callback, [options])](#)
@@ -292,7 +321,7 @@ collectLcp((metric) => {
 
 #### getDeviceInfo()
 
-### Experimental (`preview`)
+### Experimental (`alpha`)
 
 #### collectCid(callback)
 

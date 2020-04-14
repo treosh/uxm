@@ -86,18 +86,18 @@
     },
     {
       "limit": "1.55KB",
-      "path": "./examples/crux-like-metrics.js"
+      "path": "./examples/crux-metrics.js"
     },
     {
       "limit": "0.65KB",
-      "path": "./examples/react-view-render-hook.js"
+      "path": "./examples/react-use-time-hook.js"
     },
     {
       "limit": "0.8KB",
-      "path": "./examples/layout-shift-per-view.js"
+      "path": "./examples/custom-layout-shift.js"
     },
     {
-      "limit": "1KB",
+      "limit": "0.7KB",
       "path": "./examples/google-analytics-reporter.js"
     }
   ]
