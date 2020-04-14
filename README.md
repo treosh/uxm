@@ -25,13 +25,25 @@ npm install uxm@next
 Collect [user-centric metrics](https://web.dev/metrics/) and send data to your API (1.5Kb):
 
 ```js
-import { collectMetrics, createApiReporter } from 'uxm'
+import { collectMetrics, createApiReporter, getDeviceInfo } from 'uxm'
 
-const report = createApiReporter('/collect')
-collectMetrics(['fcp', 'lcp', 'fid', 'cls'], ({ metricType, value }) => report({ [metricType]: value }))
+const report = createApiReporter('/api/collect', { initial: getDeviceInfo() })
+
+collectMetrics(['fcp', 'lcp', 'fid', 'cls'], ({ metricType, value }) => {
+  report({ [metricType]: value })
+})
 ```
 
-Measure React view render performance (0.65 Kb):
+At the end of the session (on "visibilitychange" event),
+your API will receive a POST request (`sendBeacon`) with data with main UX metrics, and an anonymous device information: {
+fcp: 1409, fid: 64, lcp: 2690, cls: 0.025, url: 'https://example.com/',
+memory: 8, cpus: 8, connection: { effectiveType: '4g', rtt: 150, downlink: 4.25 }
+}
+
+Explore examples for building a robust real-user monitoring (RUM) logic:
+
+<details>
+ <summary>Measure React view render performance (0.65 KB, [example](./examples/react-view-render-hook.js)).</summary><br>
 
 ```js
 import { time, timeEndPaint } from 'uxm'
@@ -48,7 +60,10 @@ function useView(viewName) {
 }
 ```
 
-Build custom layout-shifts metrics for each SPA view (0.8KB):
+</details>
+
+<details>
+ <summary>Build custom layout-shifts metrics for each SPA view (0.8 KB, [example](./examples/layout-shift-per-view.js)).</summary><br>
 
 ```js
 import { observeEntries } from 'uxm'
@@ -75,7 +90,12 @@ observeHistory((e) => {
 })
 ```
 
-Collect rendering metrics (FCP/LCP) to google analytics (1 Kb), [learn more about using google analytics for site speed monitoring](https://philipwalton.com/articles/the-google-analytics-setup-i-use-on-every-site-i-build/#performance-tracking):
+</details>
+
+<details>
+ <summary>Collect rendering metrics (FCP/LCP) to google analytics (1 KB, [example](./examples/google-analytics-reporter.js)).</summary><br>
+
+Learn more about [using google analytics for site speed monitoring](https://philipwalton.com/articles/the-google-analytics-setup-i-use-on-every-site-i-build/#performance-tracking)
 
 ```js
 import { collectFcp, collectLcp } from 'uxm'
@@ -92,7 +112,10 @@ function reportToGoogleAnalytics(metric) {
 }
 ```
 
-Collect [CrUX-like metrics](https://developers.google.com/web/tools/chrome-user-experience-report/) (1.55Kb):
+</details>
+
+<details>
+ <summary>Collect [CrUX-like metrics](https://developers.google.com/web/tools/chrome-user-experience-report/) (1.55Kb, [example](./examples/crux-like-metrics.js)).</summary><br>
 
 ```js
 import { getDeviceInfo, collectLoad, collectFcp, collectLcp, collectFid, collectCls } from 'uxm'
@@ -104,10 +127,10 @@ const metrics = { effectiveConnectionType: connection.effectiveType }
 
 // collect loading metrics
 
-collectLoad(({ value: onLoad, detail: { domContentLoaded, timeToFirstByte } }) => {
+collectLoad(({ value: load, detail: { domContentLoaded, timeToFirstByte } }) => {
   metrics.timeToFirstByte = timeToFirstByte
   metrics.domContentLoaded = domContentLoaded
-  metrics.onLoad = onLoad
+  metrics.load = load
 })
 
 // collect user-centric metrics
@@ -124,7 +147,7 @@ console.log(metrics)
 //    "effectiveConnectionType": "4g",
 //    "timeToFirstByte": 1204,
 //    "domContentLoaded": 1698,
-//    "onLoad": 2508
+//    "load": 2508
 //    "firstContentfulPaint": 1646,
 //    "largestContentfulPaint": 3420,
 //    "firstInputDelay": 12,
@@ -132,19 +155,24 @@ console.log(metrics)
 //  }
 ```
 
-Size of each example controlled using [size-limit](./package.json#L74).
+</details>
+
+Size of each example is controlled using [size-limit](./package.json#L74).
 
 ## API
 
 - [Metrics](#metrics)
-  - [collectMetrics(metrics, callback)](#)
-  - [collectFcp(callback)](#)
-  - [collectLcp(callback)](#)
-  - [collectFid(callback, [options])](#)
-  - [collectCls(callback, [options])](#)
-  - [collectLoad(callback)](#)
+  - [collectMetrics(metrics, callback)](#collectmetricsmetrics-callback)
+  - [collectFcp(callback)](#collectfcpcallback)
+  - [collectFid(callback)](#collectfidcallback)
+  - [collectLcp(callback, [options])](#collectlcpcallback-options)
+  - [collectCls(callback, [options])](#collectclscallback-options)
+  - [collectLoad(callback)](#collectloadcallback)
 - [Reporter](#reporter)
   - [createApiReporter(url, [options])](#)
+  - [getDeviceInfo()](#)
+  - [onVisibilityChange(callback)](#)
+  - [onLoad(callback)](#)
 - [Performance Observer](#performance-observer)
   - [observeEntries(options, callback)](#)
   - [getEntriesByType(entryType)](#)
@@ -155,8 +183,6 @@ Size of each example controlled using [size-limit](./package.json#L74).
   - [timeEnd(label, [startLabel])](#)
   - [timeEndPaint(label, [startLabel])](#)
   - [now()](#)
-- [Device Info](#device-info)
-  - [getDeviceInfo()](#)
 - [Experimental (`preview`)](#experimental-preview)
   - [collectCid(callback)](#)
   - [observeHistory(callback)](#)
@@ -165,24 +191,78 @@ Size of each example controlled using [size-limit](./package.json#L74).
 
 ### Metrics
 
+Metrics are the core of `uxm` (`uxm` is a 3-letter acronym that stands for User eXperience Metrics).
+
+It focuses on metrics, that captures a user experience, instead of measuring technical details, that are easy to manipulate.
+This metrics are more representetive for a user, and the final purpose of a good frontend is to create a delightful user experience.
+
+Each metric follows the structure:
+
+- `metricType` <[string]> - a metric acronym, ex: `lcp`, `fid`, or `cls`.
+- `value` <[number]> - a numeric value of a metric, ex: `1804` for `lcp`, `4` for `fid`, or `0.129` for `cls`.
+- `detail` <[object]> - an extra detail specific for an each metric, like `elementSelector` for `lcp`, event `name` for `fid`, or `totalEntries` for `cls`.
+
+with an exception for `collectLoad` (it does not have a 3-letters acronym, and considered a legacy.)
+Use a per-metric function for more granular control of the callback behavior and saving a bundle size.
+
 #### collectMetrics(metrics, callback)
 
-- `metrics` <Array<string|MetricOptions>>
-- `callback` <function(Metric)>
+- `metrics` <[array]<[string]|[object]>>
+- `callback` <[function]>
+
+The method is a shortcut for calling [`collectFcp`](#collectfcpcallback), [`collectFid`](#collectfidcallback), [`collectLcp`](#collectlcpcallback-options), and [`collectCls`](#collectclscallback-options).
+
+```js
+import { collectMetrics } from 'uxm'
+
+const report = createApiReporter('/api/collect')
+
+// pass a metric 3-letter acronym
+collectMetrics(['fcp', 'fid'], (metric) => {
+  report({ [metric.metricType]: metric.value })
+})
+
+// or a metric options using an object and `type`
+collectMetrics([{ type: 'lcp', maxTimeout: 1000 }], (metric) => {
+  report({ lcp: metric.value })
+})
+```
 
 #### collectFcp(callback)
 
-#### collectLcp(callback)
+- `callback` <[function](FcpMetric)>
 
-#### collectFid(callback, [options])
+#### collectFid(callback)
+
+- `callback` <[function](FidMetric)>
+
+#### collectLcp(callback, [options])
+
+- `callback` <[function]> ...:
+  - `metricType` <`"lcp"`>
+  - `value` <[number]>
+  - `detail` <[object]>
+    - `size` <[number]>
+    - `elementSelector` <[string]>
+- `options` <[object]> (Optional).
+  - `maxTimeout` <[number]> The longest delay between `largest-contentful-paint` entries to consider the LCP. Defaults to `10000` ms.
+
+Collect [Largest Contentful Paint (LCP)](https://web.dev/lcp/).
+
+> **LCP** is a user-centric metric thst marks the time when the page's main content has likely loaded.
+> A fast LCP helps reassure the user that the page is useful.
+
+```js
+import { collectLcp } from 'uxm'
+
+collectLcp((metric) => {
+  console.log(metric) // { metricType: "lcp", value: 2450, detail: { size: 8620, elementSelector: "body > h1" } }
+})
+```
 
 #### collectCls(callback, [options])
 
 #### collectLoad(callback)
-
-### Reporter
-
-#### createApiReporter(url, [options])
 
 ### Performance Observer
 
@@ -190,7 +270,11 @@ Size of each example controlled using [size-limit](./package.json#L74).
 
 #### getEntriesByType(entryType)
 
-### User-timing
+### Reporter
+
+#### createApiReporter(url, [options])
+
+### User Timing
 
 #### mark(markName, [markOptions])
 
@@ -220,11 +304,11 @@ Size of each example controlled using [size-limit](./package.json#L74).
 
 ---
 
-## Credits
+### Credits
 
-[![Treo.sh - Page speed monitoring with Lighthouse](https://user-images.githubusercontent.com/158189/66038877-a06abd80-e513-11e9-837f-097f44544326.jpg)](https://treo.sh/)
+Made with ❤️ to the open web by [Treo](https://treo.sh/).
 
-[![](https://github.com/treosh/uxm/workflows/CI/badge.svg)](https://github.com/treosh/uxm/actions?query=workflow%3ACI)
-[![](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
-
-Made with ❤️ by [Treo.sh](https://treo.sh/).
+[array]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array 'Array'
+[function]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function 'Function'
+[number]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Data_structures#Number_type 'Number'
+[object]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object 'Object'
