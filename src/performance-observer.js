@@ -2,7 +2,7 @@ import { PO, perf, raf, isObject } from './utils'
 
 /** @typedef {import('./utils').Entry} Entry */
 /** @typedef {'element' | 'first-input' | 'largest-contentful-paint' | 'layout-shift' | 'longtask' | 'mark' | 'measure' | 'navigation' | 'paint' | 'resource' | 'event'} EntryType */
-/** @typedef {EntryType | {type: EntryType, buffered?: boolean}} ObserverOpts */
+/** @typedef {EntryType | {type: EntryType, buffered?: boolean}} ObserverOptions */
 /** @typedef {(entries: Entry[], observer: PerformanceObserver) => any} ObserverCallback */
 
 const legacyEntryTypes = ['mark', 'measure', 'resource', 'navigation']
@@ -10,14 +10,14 @@ const legacyEntryTypes = ['mark', 'measure', 'resource', 'navigation']
 /**
  * Create performance observer.
  *
- * @param {ObserverOpts} rawOpts
+ * @param {ObserverOptions} options
  * @param {ObserverCallback} callback
  */
 
-export function observeEntries(rawOpts, callback) {
-  const opts = /** @type {{type: EntryType, buffered: boolean}} */ (isObject(rawOpts)
-    ? rawOpts
-    : { type: rawOpts, buffered: true })
+export function observeEntries(options, callback) {
+  const opts = /** @type {{type: EntryType, buffered: boolean}} */ (isObject(options)
+    ? options
+    : { type: options, buffered: true })
   const type = normalizeEntryType(opts.type)
   if (!PO) return createFakeObserver()
   try {

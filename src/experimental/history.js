@@ -6,15 +6,15 @@ import { loc } from '../utils'
  * Observe history changes
  * Based on https://github.com/akamai/boomerang/blob/master/plugins/history.js (without go/back/forward instrumentation)
  *
- * @param {(e: { startTime: number, type: EventType, url: string, prevUrl: string }) => any} cb
+ * @param {(e: { startTime: number, type: EventType, url: string, prevUrl: string }) => any} callback
  */
 
-export function observeHistory(cb) {
+export function observeHistory(callback) {
   let prevUrl = getUrlWithOrigin()
   const submitEvent = /** @param {EventType} type */ (type, url = null) => {
     url = getUrlWithOrigin(url)
     if (prevUrl !== url) {
-      cb({ startTime: now(), type, url, prevUrl })
+      callback({ startTime: now(), type, url, prevUrl })
       prevUrl = url
     }
   }

@@ -5,8 +5,8 @@ import { round } from '../utils/index'
 
 /** @typedef {{ metricType: 'cid', value: number, detail: { totalEntries: number, sessionDuration: number } }} CidMetric */
 
-/** @param {(metric: CidMetric) => any} cb */
-export function collectCid(cb, opts = {}) {
+/** @param {(metric: CidMetric) => any} callback */
+export function collectCid(callback, opts = {}) {
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   let cummulativeValue = 0
@@ -32,7 +32,11 @@ export function collectCid(cb, opts = {}) {
     cidObserver = null
     if (timeout) clearTimeout(timeout)
     if (totalEntries > 0) {
-      cb({ metricType: 'cid', value: round(cummulativeValue, 2), detail: { totalEntries, sessionDuration: now() } })
+      callback({
+        metricType: 'cid',
+        value: round(cummulativeValue, 2),
+        detail: { totalEntries, sessionDuration: now() },
+      })
     }
   }
 }

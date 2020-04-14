@@ -10,7 +10,7 @@ import { onLoad } from './utils/load'
 /** @typedef {{ metricType: 'cls', value: number, detail: { totalEntries: number, sessionDuration: number } }} ClsMetric */
 /** @typedef {{ metricType: 'load', value: number, detail: { timeToFirstByte: number, domContentLoaded: number } }} LoadMetric */
 /** @typedef {'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
-/** @typedef {{ type: MetricType, maxTimeout?: number }} CollectMetricOpts */
+/** @typedef {{ type: MetricType, maxTimeout?: number }} CollectMetricOptions */
 
 const FCP = 'fcp'
 const FID = 'fid'
@@ -20,45 +20,57 @@ const CLS = 'cls'
 /**
  * Collect metrics.
  *
- * @param {(MetricType | CollectMetricOpts)[]} metricsOpts
- * @param {(metric: FcpMetric | LcpMetric | ClsMetric | FidMetric) => any} cb
+ * @param {(MetricType | CollectMetricOptions)[]} metricsOptions
+ * @param {(metric: FcpMetric | LcpMetric | ClsMetric | FidMetric) => any} callback
  */
 
-export function collectMetrics(metricsOpts, cb) {
-  metricsOpts.forEach((metricOpts) => {
-    const opts = /** @type {CollectMetricOpts} */ (isObject(metricOpts) ? metricOpts : { type: metricOpts })
-    const metricType = opts.type.toLowerCase()
+export function collectMetrics(metricsOptions, callback) {
+  metricsOptions.forEach((metricOpts) => {
+    const options = /** @type {CollectMetricOptions} */ (isObject(metricOpts) ? metricOpts : { type: metricOpts })
+    const metricType = options.type.toLowerCase()
     if (metricType === FCP) {
-      return collectFcp(cb)
+      return collectFcp(callback)
     } else if (metricType === FID) {
-      return collectFid(cb)
+      return collectFid(callback)
     } else if (metricType === LCP) {
-      return collectLcp(cb, opts)
+      return collectLcp(callback, options)
     } else if (metricType === CLS) {
-      return collectCls(cb, opts)
+      return collectCls(callback, options)
     } else {
-      throw new Error(`Invalid metric type: ${opts.type}`)
+      throw new Error(`Invalid metric type: ${options.type}`)
     }
   })
 }
 
-/** @param {(metric: FcpMetric) => any} cb */
-export function collectFcp(cb) {
+/**
+ * Collect First Contentful Paint (FCP)
+ * https://web.dev/fcp/
+ *
+ * @param {(metric: FcpMetric) => any} callback
+ */
+
+export function collectFcp(callback) {
   observeEntries('paint', (paintEntries, fcpObserver) => {
     if (paintEntries.some((paintEntry) => paintEntry.name === 'first-contentful-paint')) {
       fcpObserver.disconnect()
       const paintEntry = paintEntries.filter((e) => e.name === 'first-contentful-paint')[0]
-      cb({ metricType: FCP, value: round(paintEntry.startTime) })
+      callback({ metricType: FCP, value: round(paintEntry.startTime) })
     }
   })
 }
 
-/** @param {(metric: FidMetric) => any} cb */
-export function collectFid(cb) {
+/**
+ * Collect First Input Delay (FID)
+ * https://web.dev/fid/
+ *
+ * @param {(metric: FidMetric) => any} callback
+ */
+
+export function collectFid(callback) {
   observeEntries('first-input', ([fidEntry], fidObserver) => {
     if (fidEntry) {
       fidObserver.disconnect()
-      cb({
+      callback({
         metricType: FID,
         value: round(fidEntry.processingStart - fidEntry.startTime), // delay
         detail: {
@@ -73,9 +85,16 @@ export function collectFid(cb) {
   })
 }
 
-/** @param {(metric: LcpMetric) => any} cb */
-export function collectLcp(cb, opts = {}) {
-  const maxTimeout = opts.maxTimeout || 10000
+/**
+ * Collect Largest Contentful Paint (LCP)
+ * https://web.dev/lcp/
+ *
+ * @param {(metric: LcpMetric) => any} callback
+ * @param {{ maxTimeout?: number }} [options]
+ */
+
+export function collectLcp(callback, options = {}) {
+  const maxTimeout = options.maxTimeout || 10000
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   /** @type {LcpMetric | null} */
@@ -109,12 +128,19 @@ export function collectLcp(cb, opts = {}) {
     fidObserver.disconnect()
     fidObserver = null
     if (timeout) clearTimeout(timeout)
-    if (lcpMetric) cb(lcpMetric)
+    if (lcpMetric) callback(lcpMetric)
   }
 }
 
-/** @param {(metric: ClsMetric) => any} cb */
-export function collectCls(cb, opts = {}) {
+/**
+ * Collect Cumulative Layout Shift (CLS)
+ * https://web.dev/cls/
+ *
+ * @param {(metric: ClsMetric) => any} callback
+ * @param {{ maxTimeout?: number }} [options]
+ */
+
+export function collectCls(callback, options = {}) {
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   let cummulativeValue = 0
@@ -130,7 +156,7 @@ export function collectCls(cb, opts = {}) {
     cummulativeValue += cls
     totalEntries += lsEntries.length
     if (timeout) clearTimeout(timeout)
-    if (opts.maxTimeout) timeout = setTimeout(emitCls, opts.maxTimeout)
+    if (options.maxTimeout) timeout = setTimeout(emitCls, options.maxTimeout)
   })
   onVisibilityChange(emitCls)
 
@@ -141,17 +167,17 @@ export function collectCls(cb, opts = {}) {
     clsObserver = null
     if (timeout) clearTimeout(timeout)
     if (totalEntries > 0) {
-      cb({ metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sessionDuration: now() } })
+      callback({ metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sessionDuration: now() } })
     }
   }
 }
 
-/** @param {(metric: LoadMetric) => any} cb */
-export function collectLoad(cb) {
+/** @param {(metric: LoadMetric) => any} callback */
+export function collectLoad(callback) {
   onLoad(() => {
     if (!perf || !perf.timing) return
     const t = perf.timing
-    cb({
+    callback({
       metricType: 'load',
       value: round(t.loadEventEnd - t.navigationStart),
       detail: {

@@ -4,9 +4,15 @@ import { raf } from './index'
 let loadCallbacks = []
 let isLoadEnabled = false
 
-export function onLoad(cb) {
-  if (document.readyState === 'complete') return raf(cb)
-  loadCallbacks.push(cb)
+/**
+ * Listen for `load` event, or fire immediately.
+ *
+ * @param {function} callback
+ */
+
+export function onLoad(callback) {
+  if (document.readyState === 'complete') return raf(() => callback())
+  loadCallbacks.push(callback)
   if (isLoadEnabled) return
   isLoadEnabled = true
 
