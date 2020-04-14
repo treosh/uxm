@@ -1,13 +1,13 @@
-import { observeEntries } from '../..'
-import { round, getSelector } from '../../src/utils/index'
-import { onVisibilityChange } from '../../src/utils/visibility-change'
-import { onLoad } from '../../src/utils/load'
+import { observeEntries } from '../performance-observer'
+import { round, getSelector } from '../utils/index'
+import { onVisibilityChange } from '../utils/visibility-change'
+import { onLoad } from '../utils/load'
 import { filterInputDelays } from './cumulative-input-delay'
 import { observeHistory } from './history'
 
-/** @typedef {import('../../src/performance-observer').Entry} Entry */
-/** @typedef {import('../../src/performance-observer').ObserverOpts} ObserverOpts */
-/** @typedef {import('../../src/performance-observer').ObserverCallback} ObserverCallback */
+/** @typedef {import('../performance-observer').Entry} Entry */
+/** @typedef {import('../performance-observer').ObserverOpts} ObserverOpts */
+/** @typedef {import('../performance-observer').ObserverCallback} ObserverCallback */
 
 /**
  * Record all performance observer events in one trace.

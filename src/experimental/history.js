@@ -1,5 +1,5 @@
-import { now } from '../..'
-import { loc } from '../../src/utils'
+import { now } from '../user-timing'
+import { loc } from '../utils'
 
 /** @typedef {'popstate' | 'pushstate' | 'replacestate'} EventType */
 /**

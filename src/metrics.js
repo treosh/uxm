@@ -75,7 +75,7 @@ export function collectFid(cb) {
 
 /** @param {(metric: LcpMetric) => any} cb */
 export function collectLcp(cb, opts = {}) {
-  const maxTimeout = opts.maxTimeout || 5000
+  const maxTimeout = opts.maxTimeout || 10000
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   /** @type {LcpMetric | null} */
