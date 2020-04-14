@@ -1,8 +1,9 @@
 import { observeEntries } from '../performance-observer'
-import { round, getSelector } from '../utils'
+import { round, getSelector } from '../utils/index'
 import { onVisibilityChange } from '../utils/visibility-change'
 import { onLoad } from '../utils/load'
 import { filterInputDelays } from './cumulative-input-delay'
+import { observeHistory } from './history'
 
 /** @typedef {import('../performance-observer').Entry} Entry */
 /** @typedef {import('../performance-observer').ObserverOpts} ObserverOpts */
@@ -11,8 +12,8 @@ import { filterInputDelays } from './cumulative-input-delay'
 /**
  * Record all performance observer events in one trace.
  *
- * @param {function} cb
- * @param {{ noResource?: boolean, filterMeasure?: function, filterMarks?: function }} [opts]
+ * @param {(entries: Entry[]) => any} cb
+ * @param {{ noResource?: boolean, filterMeasure?: (e: Entry) => boolean, filterMarks?: (e: Entry) => boolean }} [opts]
  */
 
 export function recordTrace(cb, opts = {}) {
@@ -27,7 +28,9 @@ export function recordTrace(cb, opts = {}) {
     observers.forEach((o) => o.disconnect && o.disconnect())
     cb(result)
   })
-
+  observeHistory((e) => {
+    push([{ entryType: '_history', startTime: e.startTime, type: e.type, name: e.url, prevUrl: e.prevUrl }])
+  })
   observe('paint', (es) => {
     push(es.map((e) => ({ entryType: e.entryType, name: e.name, startTime: round(e.startTime) })))
   })

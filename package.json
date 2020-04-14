@@ -1,29 +1,31 @@
 {
   "name": "uxm",
-  "version": "2.0.0-beta4",
+  "version": "2.0.0-beta5",
   "description": "User experience metrics",
   "repository": "treosh/uxm",
   "bugs": "https://github.com/treosh/uxm/issues",
-  "author": "Aleksey Kulikov <alekseykulikov@me.com>",
   "license": "MIT",
   "source": "src/index.js",
-  "sideEffects": false,
-  "main": "dist/uxm.js",
-  "umd:main": "dist/uxm.umd.js",
   "module": "src/index.js",
-  "types": "types/index.d.ts",
+  "sideEffects": false,
+  "types": "dist/index.d.js",
+  "main": "dist/uxm.js",
   "exports": {
     ".": {
       "browser": "./src/index.js",
       "import": "./src/index.js",
-      "umd": "./dist/uxm.umd.js",
       "require": "./dist/uxm.js"
+    },
+    "./experimental": {
+      "browser": "./src/experimental/index.js",
+      "import": "./src/experimental/index.js",
+      "require": "./dist/experimental.js"
     }
   },
   "files": [
     "dist",
     "src",
-    "types"
+    "experimental"
   ],
   "keywords": [
     "web performance",
@@ -43,17 +45,18 @@
     "device memory"
   ],
   "scripts": {
-    "build": "rm -rf dist && microbundle build --no-sourcemap --format=cjs,umd && yarn build:declarations",
-    "build:declarations": "rm -rf types && tsc --declaration --noEmit false --outDir dist -p . && rm -rf dist/test && rm -r dist/src/*.js dist/src/**/*.js && mv dist/src types",
-    "test": "prettier -c src/** test/** && tsc -p . && rollup -c test/rollup.js && ava && yarn build && size-limit"
+    "build": "rm -rf dist && yarn build:declarations && yarn build:core && yarn build:experimental",
+    "build:declarations": "tsc --declaration --noEmit false --outDir dist/ --allowJs src/index.js src/experimental/index.js && rm -r dist/*.js dist/**/*.js",
+    "build:core": "microbundle build --no-sourcemap --format=cjs",
+    "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
+    "test": "prettier -c src/** test/** examples/** && tsc -p . && yarn build && ava && size-limit"
   },
   "ava": {
     "require": [
       "esm"
     ],
     "files": [
-      "test/*.js",
-      "!test/rollup.js"
+      "test/*.js"
     ]
   },
   "devDependencies": {
@@ -65,18 +68,37 @@
     "microbundle": "^0.12.0-next.8",
     "prettier": "^2.0.4",
     "puppeteer": "^2.1.1",
-    "rollup": "^2.4.0",
-    "rollup-plugin-commonjs": "^10.1.0",
-    "rollup-plugin-node-resolve": "^5.2.0",
-    "rollup-plugin-terser": "^5.3.0",
     "size-limit": "^4.4.5",
     "typescript": "^3.8.3"
   },
   "size-limit": [
     {
-      "path": "./dist/uxm.js",
-      "webpack": false,
-      "limit": "2.5KB"
+      "limit": "2.5KB",
+      "path": "./src/index.js"
+    },
+    {
+      "limit": "2.5KB",
+      "path": "./src/experimental/index.js"
+    },
+    {
+      "limit": "1.55KB",
+      "path": "./examples/user-centric-metrics.js"
+    },
+    {
+      "limit": "1.55KB",
+      "path": "./examples/crux-metrics.js"
+    },
+    {
+      "limit": "0.65KB",
+      "path": "./examples/react-use-time-hook.js"
+    },
+    {
+      "limit": "0.8KB",
+      "path": "./examples/custom-layout-shift.js"
+    },
+    {
+      "limit": "0.7KB",
+      "path": "./examples/google-analytics-reporter.js"
     }
   ]
 }

@@ -4,15 +4,22 @@ import fs from 'fs'
 import { join } from 'path'
 
 const url = 'https://treo.sh/'
-const uxmBundle = fs.readFileSync(join(__dirname, '../dist/uxm.bundle.js'), 'utf8')
+const uxmSrc = fs.readFileSync(join(__dirname, '../dist/uxm.js'), 'utf8')
+const setupUxm = `
+  window.uxm=(function(exports){
+    ${uxmSrc};
+    return exports
+  })({})
+`
 
 test.serial('booking.com - default settings', async (t) => {
   // launch a url
 
   const browser = await puppeteer.launch()
   const page = await browser.newPage()
-  await page.evaluateOnNewDocument(uxmBundle)
+  await page.evaluateOnNewDocument(setupUxm)
   await page.goto(url)
+  await page.click('h1')
 
   // collect metrics
 
@@ -22,7 +29,7 @@ test.serial('booking.com - default settings', async (t) => {
     const metrics = {}
     let load = null
     collectMetrics(
-      ['fcp', 'fid', { type: 'cls', maxTimeout: 1000 }, { type: 'lcp', maxTimeout: 1000 }],
+      ['fcp', 'fid', 'lcp', { type: 'cls', maxTimeout: 1000 }],
       (metric) => (metrics[metric.metricType] = metric)
     )
     collectLoad((l) => (load = l))
@@ -56,6 +63,17 @@ test.serial('booking.com - default settings', async (t) => {
   t.deepEqual(Object.keys(metrics.fcp).sort(), ['metricType', 'value'])
   t.is(metrics.fcp.metricType, 'fcp')
   t.is(typeof metrics.fcp.value, 'number')
+
+  t.deepEqual(Object.keys(metrics.fid).sort(), ['detail', 'metricType', 'value'])
+  t.is(metrics.fid.metricType, 'fid')
+  t.is(typeof metrics.fid.value, 'number')
+  t.deepEqual(Object.keys(metrics.fid.detail).sort(), [
+    'duration',
+    'name',
+    'processingEnd',
+    'processingStart',
+    'startTime',
+  ])
 
   t.deepEqual(Object.keys(metrics.lcp).sort(), ['detail', 'metricType', 'value'])
   t.deepEqual(Object.keys(metrics.lcp.detail).sort(), ['elementSelector', 'size'])

@@ -75,7 +75,7 @@ export function collectFid(cb) {
 
 /** @param {(metric: LcpMetric) => any} cb */
 export function collectLcp(cb, opts = {}) {
-  const maxTimeout = opts.maxTimeout || 5000
+  const maxTimeout = opts.maxTimeout || 10000
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   /** @type {LcpMetric | null} */
@@ -96,13 +96,18 @@ export function collectLcp(cb, opts = {}) {
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(emitLcp, maxTimeout)
   })
+  /** @type {PerformanceObserver | null} */
+  let fidObserver = observeEntries('first-input', emitLcp)
+
   onVisibilityChange(emitLcp)
 
   function emitLcp() {
-    if (!lcpObserver) return
+    if (!lcpObserver || !fidObserver) return
     lcpObserver.takeRecords() // force pending values
     lcpObserver.disconnect()
     lcpObserver = null
+    fidObserver.disconnect()
+    fidObserver = null
     if (timeout) clearTimeout(timeout)
     if (lcpMetric) cb(lcpMetric)
   }

@@ -1,0 +1,11 @@
+{
+  "name": "@uxm/experimental",
+  "private": true,
+  "description": "Experimental functions to explore posibilities of RUM",
+  "source": "../src/experimental/index.js",
+  "module": "../src/experimental/index.js",
+  "sideEffects": false,
+  "main": "../dist/experimental.js",
+  "types": "../dist/experimental/index.d.ts",
+  "license": "MIT"
+}

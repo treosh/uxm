@@ -1,7 +1,7 @@
-import { onVisibilityChange } from '../utils/visibility-change'
-import { round } from '../utils/index'
 import { observeEntries } from '../performance-observer'
 import { now } from '../user-timing'
+import { onVisibilityChange } from '../utils/visibility-change'
+import { round } from '../utils/index'
 
 /** @typedef {{ metricType: 'cid', value: number, detail: { totalEntries: number, sessionDuration: number } }} CidMetric */
 
