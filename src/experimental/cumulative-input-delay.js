@@ -31,13 +31,11 @@ export function collectCid(callback, opts = {}) {
     cidObserver.disconnect()
     cidObserver = null
     if (timeout) clearTimeout(timeout)
-    if (totalEntries > 0) {
-      callback({
-        metricType: 'cid',
-        value: round(cummulativeValue, 2),
-        detail: { totalEntries, sessionDuration: now() },
-      })
-    }
+    callback({
+      metricType: 'cid',
+      value: round(cummulativeValue, 2),
+      detail: { totalEntries, sessionDuration: now() },
+    })
   }
 }
 
