@@ -1,7 +1,7 @@
 {
   "name": "uxm",
-  "version": "2.0.0-beta5",
-  "description": "User experience metrics",
+  "version": "2.0.0-beta6",
+  "description": "A modular front-end performance library to collect User eXperience Metrics (UXM).",
   "repository": "treosh/uxm",
   "bugs": "https://github.com/treosh/uxm/issues",
   "license": "MIT",
@@ -50,7 +50,7 @@
     "build:core": "microbundle build --no-sourcemap --format=cjs",
     "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
     "test": "prettier -c src/** test/** examples/** && tsc -p . && yarn build && ava && size-limit",
-    "prepublish": "yarn build"
+    "prepare": "yarn build"
   },
   "ava": {
     "require": [

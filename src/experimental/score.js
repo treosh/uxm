@@ -24,6 +24,9 @@ const defaultRanks = {
 /**
  * Calc Lighthouse-like speed score, based on 4 RUM metrics.
  *
+ * Test any metric:
+ * node -r esm -e "console.log(require('./src/experimental/score').calcSpeedScore({ ttfb: 300 }, { ttfb: { podr: 300, median: 1000, weight: 1 } }))"
+ *
  * @param {{ fcp: number, lcp?: number, fid?: number, cls?: number }} values
  * @param {{ fcp?: Rank, lcp?: Rank, fid?: Rank, cls?: Rank }} ranks
  */
