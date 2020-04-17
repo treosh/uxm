@@ -10,7 +10,7 @@ import { onLoad } from './utils/load'
 /** @typedef {{ metricType: 'cls', value: number, detail: { totalEntries: number, sessionDuration: number } }} ClsMetric */
 /** @typedef {{ metricType: 'load', value: number, detail: { timeToFirstByte: number, domContentLoaded: number } }} LoadMetric */
 /** @typedef {'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
-/** @typedef {{ type: MetricType, maxTimeout?: number }} CollectMetricOptions */
+/** @typedef {{ type: MetricType, maxTimeout?: number, emit?: boolean }} CollectMetricOptions */
 
 const FCP = 'fcp'
 const FID = 'fid'
@@ -90,7 +90,7 @@ export function collectFid(callback) {
  * https://web.dev/lcp/
  *
  * @param {(metric: LcpMetric) => any} callback
- * @param {{ maxTimeout?: number }} [options]
+ * @param {{ maxTimeout?: number, emit?: boolean }} [options]
  */
 
 export function collectLcp(callback, options = {}) {
@@ -114,6 +114,7 @@ export function collectLcp(callback, options = {}) {
     }
     if (timeout) clearTimeout(timeout)
     timeout = setTimeout(emitLcp, maxTimeout)
+    if (options.emit) callback(lcpMetric)
   })
   /** @type {PerformanceObserver | null} */
   let fidObserver = observeEntries('first-input', emitLcp)
@@ -137,7 +138,7 @@ export function collectLcp(callback, options = {}) {
  * https://web.dev/cls/
  *
  * @param {(metric: ClsMetric) => any} callback
- * @param {{ maxTimeout?: number }} [options]
+ * @param {{ maxTimeout?: number, emit?: boolean }} [options]
  */
 
 export function collectCls(callback, options = {}) {
@@ -157,6 +158,7 @@ export function collectCls(callback, options = {}) {
     totalEntries += lsEntries.length
     if (timeout) clearTimeout(timeout)
     if (options.maxTimeout) timeout = setTimeout(emitCls, options.maxTimeout)
+    if (options.emit) callback(getClsMetric())
   })
   onVisibilityChange(emitCls)
 
@@ -166,9 +168,12 @@ export function collectCls(callback, options = {}) {
     clsObserver.disconnect()
     clsObserver = null
     if (timeout) clearTimeout(timeout)
-    if (totalEntries > 0) {
-      callback({ metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sessionDuration: now() } })
-    }
+    callback(getClsMetric())
+  }
+
+  /** @return {ClsMetric} */
+  function getClsMetric() {
+    return { metricType: CLS, value: round(cummulativeValue, 4), detail: { totalEntries, sessionDuration: now() } }
   }
 }
 
