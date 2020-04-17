@@ -3,8 +3,14 @@
 > Prototype.
 
 ```bash
-# install
-chrome://extensions/
+# extensions docs
+https://developer.chrome.com/extensions/devguide
+
+# build extension/dist with webpack
+yarn build:extension
+
+# setup
+visit chrome://extensions/
 Load Unpacked -> extension/dist
 
 # colors

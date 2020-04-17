@@ -11,7 +11,6 @@ const isProd = process.env.NODE_ENV === 'production'
 module.exports = {
   mode: isProd ? 'production' : 'development',
   target: 'web',
-  devtool: process.env.SOURCE_MAPS ? 'source-map' : false,
   context: resolve('extension'),
   entry: {
     background: './src/background.js',
@@ -48,12 +47,12 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: compact([MiniCssExtractPlugin.loader, 'css-loader']),
+        use: [{ loader: MiniCssExtractPlugin.loader }, { loader: 'css-loader' }],
       },
     ],
   },
   plugins: compact([
-    new MiniCssExtractPlugin({ filename: `website/css/[name].css` }),
+    new MiniCssExtractPlugin({ filename: `[name].css` }),
     new HtmlWebpackPlugin({
       filename: 'popup.html',
       minify: isProd,
