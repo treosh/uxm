@@ -1,12 +1,12 @@
 import './icons/icon-16.png'
 import './icons/icon-48.png'
 import './icons/icon-128.png'
-import './icons/icon-on.png'
+import iconOn from './icons/icon-on.png'
 import iconError from './icons/icon-error.png'
 import { calcSpeedScore } from '../../src/experimental'
 
 /** @typedef {{ score: number, values: { fcp?: number, lcp?: number, fid?: number, cls?: number }, error?: string }} UxmResult */
-/** @type {Map<number,UxmResult>} */
+/** @type {Map<number,UxmResult | null>} */
 const store = new Map()
 
 // colors (https://coolors.co/ef6853-ffc15e-42b29a-4357ad-171219)
@@ -17,9 +17,11 @@ const redColor = '$EF6853'
 
 // When a tab is updated: load `content.js` and handle error
 
-chrome.tabs.onUpdated.addListener((_tabId, changeInfo, tab) => {
-  if (changeInfo.status == 'complete' && tab.url?.startsWith('http') && tab.active) {
-    const tabId = tab.id
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status !== 'complete') {
+    setIconLoading(tabId)
+    store.set(tabId, null)
+  } else if (changeInfo.status == 'complete' && tab.url?.startsWith('http') && tab.active) {
     chrome.tabs.executeScript({ file: 'content.js' }, () => {
       // Catch errors such as "This page cannot be scripted due to an ExtensionsSettings policy."
       const { lastError } = chrome.runtime
@@ -59,5 +61,12 @@ function setIconResult(tabId, result) {
 /** @param {number} tabId */
 function setIconError(tabId) {
   chrome.browserAction.setIcon({ path: iconError, tabId })
+  chrome.browserAction.setBadgeText({ text: '', tabId })
+}
+
+/** @param {number} tabId */
+function setIconLoading(tabId) {
+  chrome.browserAction.setIcon({ path: iconOn })
+  chrome.browserAction.setTitle({ title: 'Loading' })
   chrome.browserAction.setBadgeText({ text: '', tabId })
 }
