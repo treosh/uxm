@@ -45,12 +45,12 @@
     "device memory"
   ],
   "scripts": {
-    "build": "rm -rf dist && yarn build:declarations && yarn build:core && yarn build:experimental",
+    "build": "rm -rf dist && yarn build:declarations && yarn build:core && yarn build:experimental && yarn build:extension",
     "build:declarations": "tsc --declaration --noEmit false --outDir dist/ --allowJs src/index.js src/experimental/index.js && rm -r dist/*.js dist/**/*.js",
     "build:core": "microbundle build --no-sourcemap --format=cjs",
     "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
-    "build:extension": "rm -rf extension/dist && NODE_ENV=production webpack --hide-modules --config extension/webpack.config.js && cp extension/manifest.json extension/dist",
-    "test": "prettier -c src/** test/** examples/** extension/** && tsc -p . && yarn build && ava && size-limit",
+    "build:extension": "rm -rf extension/dist && NODE_ENV=production webpack --hide-modules --config extension/webpack.config.js",
+    "test": "prettier -c src/** test/** examples/** extension/src/** extension/webpack.config.js README.md && tsc -p . && yarn build && ava && size-limit",
     "prepack": "yarn build"
   },
   "ava": {
@@ -62,19 +62,17 @@
     ]
   },
   "devDependencies": {
-    "@babel/core": "^7.9.0",
-    "@babel/plugin-transform-react-jsx": "^7.9.4",
-    "@babel/plugin-transform-runtime": "^7.9.0",
-    "@babel/preset-env": "^7.9.5",
     "@size-limit/preset-small-lib": "^4.4.5",
+    "@types/babel__core": "^7.1.7",
     "@types/chrome": "^0.0.104",
     "@types/node": "12",
     "@types/puppeteer": "^2.0.1",
     "ava": "^3.6.0",
-    "babel-loader": "^8.1.0",
+    "copy-webpack-plugin": "^5.1.1",
     "css-loader": "^3.5.2",
     "esm": "^3.2.25",
     "file-loader": "^6.0.0",
+    "htm": "^3.0.4",
     "html-webpack-plugin": "^4.2.0",
     "linaria": "^2.0.0-alpha.1",
     "microbundle": "^0.12.0-next.8",
@@ -102,7 +100,7 @@
       "path": "./examples/user-centric-metrics.js"
     },
     {
-      "limit": "1.55KB",
+      "limit": "1.6KB",
       "path": "./examples/crux-metrics.js"
     },
     {

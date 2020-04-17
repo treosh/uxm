@@ -9,6 +9,7 @@ import { onLoad } from './utils/load'
 /** @typedef {{ metricType: 'lcp', value: number, detail: { size: number, elementSelector: ?string } }} LcpMetric */
 /** @typedef {{ metricType: 'cls', value: number, detail: { totalEntries: number, sessionDuration: number } }} ClsMetric */
 /** @typedef {{ metricType: 'load', value: number, detail: { timeToFirstByte: number, domContentLoaded: number } }} LoadMetric */
+/** @typedef {FcpMetric | LcpMetric | ClsMetric | FidMetric} Metric */
 /** @typedef {'fcp' | 'lcp' | 'fid' | 'cls'} MetricType */
 /** @typedef {{ type: MetricType, maxTimeout?: number, emit?: boolean }} CollectMetricOptions */
 
@@ -21,7 +22,7 @@ const CLS = 'cls'
  * Collect metrics.
  *
  * @param {(MetricType | CollectMetricOptions)[]} metricsOptions
- * @param {(metric: FcpMetric | LcpMetric | ClsMetric | FidMetric) => any} callback
+ * @param {(metric: Metric) => any} callback
  */
 
 export function collectMetrics(metricsOptions, callback) {

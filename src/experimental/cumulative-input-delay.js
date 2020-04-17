@@ -5,8 +5,8 @@ import { round } from '../utils/index'
 
 /** @typedef {{ metricType: 'cid', value: number, detail: { totalEntries: number, sessionDuration: number } }} CidMetric */
 
-/** @param {(metric: CidMetric) => any} callback */
-export function collectCid(callback, opts = {}) {
+/** @param {(metric: CidMetric) => any} callback @param {{ maxTimeout?: number }} [options] */
+export function collectCid(callback, options = {}) {
   /** @type {NodeJS.Timeout | null} */
   let timeout = null
   let cummulativeValue = 0
@@ -21,7 +21,7 @@ export function collectCid(callback, opts = {}) {
     cummulativeValue += cid
     totalEntries += filteredInputDelays.length
     if (timeout) clearTimeout(timeout)
-    if (opts.maxTimeout) timeout = setTimeout(emitCid, opts.maxTimeout)
+    if (options.maxTimeout) timeout = setTimeout(emitCid, options.maxTimeout)
   })
   onVisibilityChange(emitCid)
 
@@ -39,9 +39,11 @@ export function collectCid(callback, opts = {}) {
   }
 }
 
+/** @param {import('..').Entry[]} es */
+
 export function filterInputDelays(es) {
-  const inputDelays = []
-  let groupInputDelays = []
+  const inputDelays = /** @type {import('..').Entry[]} */ ([])
+  let groupInputDelays = /** @type {import('..').Entry[]} */ ([])
   es.forEach((e, index) => {
     const nextEvent = es[index + 1]
     groupInputDelays.push(e)

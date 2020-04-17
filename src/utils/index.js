@@ -5,7 +5,7 @@ export function round(val, precision = 0) {
   return +(Math.round(`${val}e+${precision}`) + `e-${precision}`)
 }
 
-/** @param {object} obj */
+/** @param {any} obj */
 export function isObject(obj) {
   return obj && Object.keys(obj).length !== 0 && obj.constructor === Object
 }

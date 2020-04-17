@@ -12,13 +12,13 @@ import { observeHistory } from './history'
 /**
  * Record all performance observer events in one trace.
  *
- * @param {(entries: Entry[]) => any} callback
+ * @param {(entries: object[]) => any} callback
  * @param {{ noResource?: boolean, filterMeasure?: (e: Entry) => boolean, filterMarks?: (e: Entry) => boolean }} [opts]
  */
 
 export function recordTrace(callback, opts = {}) {
-  const result = []
-  const observers = []
+  const result = /** @type {object[]} */ ([])
+  const observers = /** @type {PerformanceObserver[]} */ ([])
   const push = /** @param {object[]} values */ (values) => values.length && result.push(...values)
   const observe = /** @param {ObserverOptions} opts @param {ObserverCallback} callback */ (opts, callback) =>
     observers.push(observeEntries(opts, callback))
@@ -54,7 +54,7 @@ export function recordTrace(callback, opts = {}) {
     if (!opts.noResource) observe('resource', (es) => push(es.map(formatResource)))
   })
 
-  const lcpKeys = []
+  const lcpKeys = /** @type {string[]} */ ([])
   observe('largest-contentful-paint', (es) => {
     push(
       es

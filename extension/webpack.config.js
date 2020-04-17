@@ -3,6 +3,7 @@ const { resolve } = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
+const CopyPlugin = require('copy-webpack-plugin')
 
 // bundle for the web
 
@@ -25,7 +26,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        use: [{ loader: 'babel-loader' }, { loader: 'linaria/loader' }],
+        use: [{ loader: 'linaria/loader' }],
       },
       {
         test: /\.(jpeg|png)$/,
@@ -47,5 +48,6 @@ module.exports = {
       chunks: ['popup'],
     }),
     isProd ? new OptimizeCssAssetsPlugin() : null,
+    new CopyPlugin([{ from: './manifest.json', to: '.' }]),
   ]),
 }

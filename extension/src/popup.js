@@ -1,10 +1,11 @@
-import { h, render } from 'preact'
+import { render } from 'preact'
+import { html } from 'htm/preact'
 import { css } from 'linaria'
 
 // init `App`
 
 function App() {
-  return <div className={style.root}>Živjo!</div>
+  return html`<div className=${style.root}>Živjo!</div>`
 }
 
 const style = {
@@ -19,5 +20,5 @@ const style = {
 
 const $root = document.getElementById('root')
 if ($root) {
-  render(<App />, $root)
+  render(html`<${App} />`, $root)
 }

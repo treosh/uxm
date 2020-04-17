@@ -11,7 +11,7 @@ import { onVisibilityChange } from './utils/visibility-change'
  *
  * @param {string} url
  * @param {{ initial?: object, beforeSend?: function, onSend?: (url: string, values: object) => any }} [options]
- * @return {(metrics: object) => void}
+ * @return {(metrics: Object<string,any>) => void}
  */
 
 export function createApiReporter(url, options = {}) {

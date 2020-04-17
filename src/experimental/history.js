@@ -11,7 +11,7 @@ import { loc } from '../utils'
 
 export function observeHistory(callback) {
   let prevUrl = getUrlWithOrigin()
-  const submitEvent = /** @param {EventType} type */ (type, url = null) => {
+  const submitEvent = /** @param {EventType} type @param {string} [url] */ (type, url) => {
     url = getUrlWithOrigin(url)
     if (prevUrl !== url) {
       callback({ startTime: now(), type, url, prevUrl })
@@ -23,22 +23,27 @@ export function observeHistory(callback) {
   })
   if (typeof history.pushState === 'function') {
     history.pushState = (function (_pushState) {
+      // @ts-ignore
       return function (_state, _title, url) {
         submitEvent('pushstate', url)
+        // @ts-ignore
         return _pushState.apply(this, arguments)
       }
     })(history.pushState)
   }
   if (typeof history.replaceState === 'function') {
     history.replaceState = (function (_replaceState) {
+      // @ts-ignore
       return function (_state, _title, url) {
         submitEvent('replacestate', url)
+        // @ts-ignore
         return _replaceState.apply(this, arguments)
       }
     })(history.replaceState)
   }
 }
 
+/** @param {string} [url] */
 function getUrlWithOrigin(url) {
   if (!loc) return ''
   return loc.origin + (url || `${loc.pathname || ''}${loc.search || ''}`)
