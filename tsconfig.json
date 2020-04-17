@@ -7,9 +7,11 @@
     "checkJs": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,
-    "strictNullChecks": true,
+    "strict": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "jsx": "react",
+    "jsxFactory": "h"
   },
   "include": ["extension/src", "src", "test"]
 }

@@ -2,7 +2,6 @@ const { compact } = require('lodash')
 const { resolve } = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
-const HtmlWebpackInlineSourcePlugin = require('html-webpack-inline-source-plugin')
 const OptimizeCssAssetsPlugin = require('optimize-css-assets-webpack-plugin')
 
 // bundle for the web
@@ -26,19 +25,7 @@ module.exports = {
     rules: [
       {
         test: /\.js$/,
-        use: [
-          {
-            loader: 'babel-loader',
-            options: {
-              presets: [['@babel/preset-env', { bugfixes: true, targets: { esmodules: true } }], 'linaria/babel'],
-              plugins: [
-                ['@babel/plugin-transform-runtime', { helpers: true, regenerator: false, useESModules: true }],
-                ['@babel/plugin-transform-react-jsx', { pragma: 'h', pragmaFrag: 'preact.Fragment' }],
-              ],
-            },
-          },
-          { loader: 'linaria/loader' },
-        ],
+        use: [{ loader: 'babel-loader' }, { loader: 'linaria/loader' }],
       },
       {
         test: /\.(jpeg|png)$/,
@@ -56,10 +43,9 @@ module.exports = {
     new HtmlWebpackPlugin({
       filename: 'popup.html',
       minify: isProd,
+      template: './src/popup.html',
       chunks: ['popup'],
-      inlineSource: isProd ? '.(js|css)$' : '',
     }),
-    new HtmlWebpackInlineSourcePlugin(HtmlWebpackPlugin),
     isProd ? new OptimizeCssAssetsPlugin() : null,
   ]),
 }
