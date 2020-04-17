@@ -15,10 +15,10 @@
  */
 
 const defaultRanks = {
-  fcp: { podr: 400 /* 1000 => 90 */, median: 3000, weight: 15 },
-  lcp: { podr: 2250 /* 2500 => 90 */, median: 4000, weight: 35 },
-  fid: { podr: 40 /* 100 => 90 */, median: 300, weight: 30 },
-  cls: { podr: 0.055 /* 0.1 => 90 */, median: 0.25, weight: 20 },
+  fcp: { podr: 400 /* 1000 => 90 */, median: 3000, weight: 25 },
+  lcp: { podr: 2250 /* 2500 => 90 */, median: 4000, weight: 40 },
+  fid: { podr: 40 /* 100 => 90 */, median: 300, weight: 20 },
+  cls: { podr: 0.055 /* 0.1 => 90 */, median: 0.25, weight: 15 },
 }
 
 /**
