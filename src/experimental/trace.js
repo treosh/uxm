@@ -6,27 +6,27 @@ import { filterInputDelays } from './cumulative-input-delay'
 import { observeHistory } from './history'
 
 /** @typedef {import('../performance-observer').Entry} Entry */
-/** @typedef {import('../performance-observer').ObserverOpts} ObserverOpts */
+/** @typedef {import('../performance-observer').ObserverOptions} ObserverOptions */
 /** @typedef {import('../performance-observer').ObserverCallback} ObserverCallback */
 
 /**
  * Record all performance observer events in one trace.
  *
- * @param {(entries: Entry[]) => any} cb
+ * @param {(entries: object[]) => any} callback
  * @param {{ noResource?: boolean, filterMeasure?: (e: Entry) => boolean, filterMarks?: (e: Entry) => boolean }} [opts]
  */
 
-export function recordTrace(cb, opts = {}) {
-  const result = []
-  const observers = []
+export function recordTrace(callback, opts = {}) {
+  const result = /** @type {object[]} */ ([])
+  const observers = /** @type {PerformanceObserver[]} */ ([])
   const push = /** @param {object[]} values */ (values) => values.length && result.push(...values)
-  const observe = /** @param {ObserverOpts} opts @param {ObserverCallback} cb */ (opts, cb) =>
-    observers.push(observeEntries(opts, cb))
+  const observe = /** @param {ObserverOptions} opts @param {ObserverCallback} callback */ (opts, callback) =>
+    observers.push(observeEntries(opts, callback))
 
   onVisibilityChange(() => {
     observers.forEach((o) => o.takeRecords && o.takeRecords())
     observers.forEach((o) => o.disconnect && o.disconnect())
-    cb(result)
+    callback(result)
   })
   observeHistory((e) => {
     push([{ entryType: '_history', startTime: e.startTime, type: e.type, name: e.url, prevUrl: e.prevUrl }])
@@ -54,7 +54,7 @@ export function recordTrace(cb, opts = {}) {
     if (!opts.noResource) observe('resource', (es) => push(es.map(formatResource)))
   })
 
-  const lcpKeys = []
+  const lcpKeys = /** @type {string[]} */ ([])
   observe('largest-contentful-paint', (es) => {
     push(
       es

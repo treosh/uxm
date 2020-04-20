@@ -15,25 +15,30 @@
  */
 
 const defaultRanks = {
-  fcp: { podr: 400 /* 1000 => 90 */, median: 3000, weight: 15 },
-  lcp: { podr: 2250 /* 2500 => 90 */, median: 4000, weight: 35 },
-  fid: { podr: 40 /* 100 => 90 */, median: 300, weight: 30 },
-  cls: { podr: 0.055 /* 0.1 => 90 */, median: 0.25, weight: 20 },
+  fcp: { podr: 400 /* 1000 => 90 */, median: 3000, weight: 25 },
+  lcp: { podr: 2250 /* 2500 => 90 */, median: 4000, weight: 40 },
+  fid: { podr: 40 /* 100 => 90 */, median: 300, weight: 20 },
+  cls: { podr: 0.055 /* 0.1 => 90 */, median: 0.25, weight: 15 },
 }
 
 /**
  * Calc Lighthouse-like speed score, based on 4 RUM metrics.
  *
- * @param {{ fcp: number, lcp?: number, fid?: number, cls?: number }} values
+ * Test any metric:
+ * node -r esm -e "console.log(require('./src/experimental/score').calcSpeedScore({ ttfb: 300 }, { ttfb: { podr: 300, median: 1000, weight: 1 } }))"
+ *
+ * @param {{ fcp?: number, lcp?: number, fid?: number, cls?: number }} values
  * @param {{ fcp?: Rank, lcp?: Rank, fid?: Rank, cls?: Rank }} ranks
  */
 
 export function calcSpeedScore(values, ranks = {}) {
   if (!values || Object.keys(values).length === 0) throw new Error('Provide values')
   const items = Object.keys(values).map((metric) => {
-    const value = values[metric]
-    const rank = ranks[metric] || defaultRanks[metric]
-    if (!rank) throw new Error(`Invalid metric: ${metric}`)
+    const m = /** @type {'fcp' | 'lcp' | 'fid' | 'cls'}  */ (metric)
+    const value = values[m]
+    const rank = ranks[m] || defaultRanks[m]
+    if (!rank) throw new Error(`Invalid metric: ${m}`)
+    if (typeof value !== 'number') throw new Error(`Invalid value: ${m}=${value}`)
     const score = computeLogNormalScore(value, rank.podr, rank.median)
     return { score, weight: rank.weight }
   })
@@ -84,6 +89,7 @@ function getLogNormalDistribution(median, falloff) {
   const shape = Math.sqrt(1 - 3 * logRatio - Math.sqrt((logRatio - 3) * (logRatio - 3) - 8)) / 2
 
   return {
+    /** @param {number} x */
     computeComplementaryPercentile(x) {
       const standardizedX = (Math.log(x) - location) / (Math.SQRT2 * shape)
       return (1 - erf(standardizedX)) / 2

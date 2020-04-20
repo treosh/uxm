@@ -21,7 +21,7 @@ export function mark(markName, markOptions) {
       const entries = perf.getEntriesByName(markName)
       m = entries[entries.length - 1]
     }
-    if (isObject(markOptions) && m && !m.detail) m.detail = markOptions
+    if (isObject(markOptions) && m && !m.detail) m.detail = /** @type {object} */ (markOptions)
     return m ? { entryType: 'mark', name: m.name, startTime: round(m.startTime), detail: m.detail || null } : null
   } catch (err) {
     console.warn(err)
@@ -46,7 +46,7 @@ export function measure(measureName, startOrMeasureOptions, endMark) {
       const entries = perf.getEntriesByName(measureName)
       m = entries[entries.length - 1]
     }
-    if (isObject(startOrMeasureOptions) && m && !m.detail) m.detail = startOrMeasureOptions
+    if (isObject(startOrMeasureOptions) && m && !m.detail) m.detail = /** @type {object} */ (startOrMeasureOptions)
     return m
       ? {
           entryType: 'measure',

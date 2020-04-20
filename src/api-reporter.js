@@ -10,19 +10,19 @@ import { onVisibilityChange } from './utils/visibility-change'
  * Use `onSend` argument to implement a custom logic.
  *
  * @param {string} url
- * @param {{ initial?: object, beforeSend?: function, onSend?: (url: string, values: object) => any }} [opts]
- * @return {(metrics: object) => void}
+ * @param {{ initial?: object, beforeSend?: function, onSend?: (url: string, values: object) => any }} [options]
+ * @return {(metrics: Object<string,any>) => void}
  */
 
-export function createApiReporter(url, opts = {}) {
+export function createApiReporter(url, options = {}) {
   let isSent = false
-  const values = opts.initial || Object.create(null)
+  const values = options.initial || Object.create(null)
   const sendValues = () => {
     if (isSent) console.warn('data is already sent')
     isSent = true
-    if (opts.beforeSend) opts.beforeSend()
-    if (opts.onSend) {
-      opts.onSend(url, values)
+    if (options.beforeSend) options.beforeSend()
+    if (options.onSend) {
+      options.onSend(url, values)
     } else {
       if (typeof navigator === 'undefined') return
       if (navigator.sendBeacon) return navigator.sendBeacon(url, JSON.stringify(values))

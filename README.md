@@ -141,7 +141,7 @@ observeHistory((e) => {
 </details>
 
 <details>
-  <summary>Collect CrUX-like metrics (1.55Kb)</summary>
+  <summary>Collect CrUX-like metrics (1.6Kb)</summary>
 
 [Chrome UX Report (CrUX)](https://developers.google.com/web/tools/chrome-user-experience-report/) is a great way to see
 how real-world Chrome users experience the speed of your website. But for privacy reasons, CrUX aggregates data only per origin.

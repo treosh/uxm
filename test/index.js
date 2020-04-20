@@ -12,7 +12,7 @@ const setupUxm = `
   })({})
 `
 
-test.serial('booking.com - default settings', async (t) => {
+test.serial('treo.sh - default settings', async (t) => {
   // launch a url
 
   const browser = await puppeteer.launch()
@@ -26,13 +26,13 @@ test.serial('booking.com - default settings', async (t) => {
   const result = await page.evaluate(() => {
     // @ts-ignore
     const { getDeviceInfo, collectMetrics, collectLoad } = window.uxm
-    const metrics = {}
-    let load = null
+    const metrics = /** @type {Object<string,object>} */ ({})
+    let load = {}
     collectMetrics(
       ['fcp', 'fid', 'lcp', { type: 'cls', maxTimeout: 1000 }],
-      (metric) => (metrics[metric.metricType] = metric)
+      /** @param {import('../src').Metric} metric */ (metric) => (metrics[metric.metricType] = metric)
     )
-    collectLoad((l) => (load = l))
+    collectLoad(/** @param {import('../src').LoadMetric} l */ (l) => (load = l))
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
