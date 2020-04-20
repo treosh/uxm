@@ -12,7 +12,7 @@ const setupUxm = `
   })({})
 `
 
-test.serial('booking.com - default settings', async (t) => {
+test.serial('treo.sh - default settings', async (t) => {
   // launch a url
 
   const browser = await puppeteer.launch()

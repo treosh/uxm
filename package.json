@@ -50,7 +50,7 @@
     "build:core": "microbundle build --no-sourcemap --format=cjs",
     "build:experimental": "microbundle build --cwd experimental --no-sourcemap --format=cjs",
     "build:extension": "yarn rollup -c extension/rollup.config.js",
-    "test": "prettier -c src/** test/** examples/** extension/src/** extension/webpack.config.js README.md && tsc -p . && yarn build && ava && size-limit",
+    "test": "prettier -c src/** test/** examples/** extension/src/** README.md && tsc -p . && yarn build && ava && size-limit",
     "prepack": "yarn build"
   },
   "ava": {
