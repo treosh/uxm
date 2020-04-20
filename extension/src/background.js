@@ -1,8 +1,3 @@
-import '../icons/icon-16.png'
-import '../icons/icon-48.png'
-import '../icons/icon-128.png'
-import iconOn from '../icons/icon-on.png'
-import iconError from '../icons/icon-error.png'
 import { calcSpeedScore } from '../../src/experimental'
 
 /** @typedef {{ score: number, values: { fcp?: number, lcp?: number, fid?: number, cls?: number }, error?: string }} UxmResult */
@@ -11,6 +6,8 @@ const store = new Map()
 
 // colors (https://coolors.co/ef6853-ffc15e-42b29a-4357ad-171219)
 
+const iconError = '/icons/icon-error.png'
+const iconOn = '/icons/icon-on.png'
 const greenColor = '#42B29A'
 const yellowColor = '#FFC15E'
 const redColor = '$EF6853'
@@ -22,7 +19,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     setIconLoading(tabId)
     store.set(tabId, null)
   } else if (changeInfo.status == 'complete' && tab.url && tab.url.startsWith('http') && tab.active) {
-    chrome.tabs.executeScript({ file: 'content.js' }, () => {
+    chrome.tabs.executeScript({ file: 'assets/content.js' }, () => {
       // Catch errors such as "This page cannot be scripted due to an ExtensionsSettings policy."
       const { lastError } = chrome.runtime
       if (lastError && tabId) {

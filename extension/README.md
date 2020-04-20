@@ -6,12 +6,12 @@
 # extensions docs
 https://developer.chrome.com/extensions/devguide
 
-# build extension/dist with webpack
+# build extension/dist with rollup
 yarn build:extension
 
 # setup
 visit chrome://extensions/
-Load Unpacked -> extension/dist
+Load Unpacked -> extension/build
 
 # colors
 https://coolors.co/43b39a-fb6d57-f7bb62-171219-364156 # main color theme

@@ -3,17 +3,17 @@
   "description": "Show User Experience Metrics (UXM) for the active tab",
   "version": "0.1",
   "background": {
-    "scripts": ["background.js"],
+    "scripts": ["assets/background.js"],
     "persistent": false
   },
   "permissions": ["storage", "activeTab", "http://*/*", "https://*/*"],
   "icons": {
-    "16": "files/icon-16.png",
-    "48": "files/icon-48.png",
-    "128": "files/icon-128.png"
+    "16": "icons/icon-16.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
   },
   "browser_action": {
-    "default_icon": "files/icon-on.png",
+    "default_icon": "icons/icon-on.png",
     "default_popup": "popup.html",
     "default_title": "Click to see web performance metrics for your session"
   },
