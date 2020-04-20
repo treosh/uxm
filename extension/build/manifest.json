@@ -2,6 +2,12 @@
   "name": "UX Metrics",
   "description": "Show User Experience Metrics (UXM) for the active tab",
   "version": "0.1",
+  "content_scripts": [
+    {
+      "matches": ["http://*/*", "https://*/*"],
+      "js": ["assets/content.js"]
+    }
+  ],
   "background": {
     "scripts": ["assets/background.js"],
     "persistent": false
